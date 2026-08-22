@@ -1,0 +1,15 @@
+/* docs/07-frontend-foundation.md §7: Jameel Noori Nastaleeq, self-hosted .woff2 (not a CDN).
+   GAP (carried forward from the Phase 8 backend report, section I): no project anywhere — neither
+   backend nor frontend — has ever received the actual font file from the client. This @font-face
+   rule references the expected path so the real asset can simply be dropped in later with zero
+   code changes; until then the browser silently fails this src and falls through to the
+   documented fallback stack (set as the default Tailwind fontFamily in tailwind.config.js), so
+   the app is never visually broken by the missing file — Urdu still renders, just not in the
+   specific licensed typeface. */
+@font-face {
+  font-family: 'Jameel Noori Nastaleeq';
+  src: url('../assets/fonts/JameelNooriNastaleeq.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}

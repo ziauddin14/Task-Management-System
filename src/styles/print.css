@@ -1,0 +1,9 @@
+/* docs/07-frontend-foundation.md §9 — structure-only skeleton for this sub-phase. The real
+   PrintView component (components/dashboard/PrintView.jsx) and its full rule set are built in a
+   later sub-phase; this file just establishes the convention it will extend: a `.no-print`
+   utility class that disappears when the browser's print dialog is actually triggered. */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
