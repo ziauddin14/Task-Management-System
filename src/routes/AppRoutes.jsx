@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore.js';
 import ProtectedRoute from '../components/common/ProtectedRoute.jsx';
 import RoleGuard from '../components/common/RoleGuard.jsx';
+import AppLayout from '../layouts/AppLayout.jsx';
 import LoginPage from '../pages/LoginPage.jsx';
 import DashboardPage from '../pages/DashboardPage.jsx';
 import UsersPage from '../pages/UsersPage.jsx';
@@ -29,11 +30,13 @@ function AppRoutes() {
       <Route path="/login" element={<LoginRoute />} />
 
       <Route element={<ProtectedRoute />}>
-        <Route path="/" element={<DashboardPage />} />
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<DashboardPage />} />
 
-        <Route element={<RoleGuard role="admin" />}>
-          <Route path="/users" element={<UsersPage />} />
-          <Route path="/reports/user-summary" element={<UserSummaryReportPage />} />
+          <Route element={<RoleGuard role="admin" />}>
+            <Route path="/users" element={<UsersPage />} />
+            <Route path="/reports/user-summary" element={<UserSummaryReportPage />} />
+          </Route>
         </Route>
       </Route>
 

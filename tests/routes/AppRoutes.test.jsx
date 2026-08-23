@@ -2,6 +2,7 @@ import React from 'react'; // explicit import — see src/App.jsx's comment for 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AppRoutes from '../../src/routes/AppRoutes.jsx';
 import { useAuthStore } from '../../src/store/authStore.js';
 
@@ -9,11 +10,17 @@ function resetStore() {
   useAuthStore.setState({ user: null, token: null, isAuthenticated: false });
 }
 
+// Phase 10.2 note: LoginPage now calls useLoginWithGoogle() (a real React Query mutation) and
+// AppLayout calls useQueryClient() — both need a real QueryClientProvider in the tree to render
+// without throwing. @react-oauth/google itself is mocked globally (src/setupTests.js).
 function renderAt(path) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <MemoryRouter initialEntries={[path]}>
-      <AppRoutes />
-    </MemoryRouter>
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[path]}>
+        <AppRoutes />
+      </MemoryRouter>
+    </QueryClientProvider>
   );
 }
 
