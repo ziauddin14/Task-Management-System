@@ -43,6 +43,24 @@ describe('LoginPage (docs/11-auth.md §2.2-2.3)', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
+  // docs/08-ui-ux.md §2 — the Login screen's actual visual content (a gap the Phase 10.2 kickoff
+  // never covered — see Phase 10.7 report §B).
+  it('renders the system name, Urdu department name, and the fixed salutation line', () => {
+    renderLoginPage();
+    expect(screen.getByRole('heading', { name: 'Task Management System' })).toBeInTheDocument();
+    expect(screen.getByText('خود کفالت شعبہ جات (دعوتِ اسلامی)')).toBeInTheDocument();
+    expect(screen.getByText('صلوٰۃ علی الحبیب ﷺ')).toBeInTheDocument();
+  });
+
+  it("Google's own sign-in failure (not a backend rejection) also shows the generic message inline, not just a toast", async () => {
+    renderLoginPage();
+
+    fireEvent.click(screen.getByText('Mock Google Error'));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Login mumkin nahi hua, dobara koshish karein');
+    expect(loginWithGoogle).not.toHaveBeenCalled(); // this path never reaches the backend at all
+  });
+
   it.each([
     ['USER_NOT_FOUND', 'Yeh email system mein register nahi hai. Admin se rabta karein.'],
     ['USER_INACTIVE', 'Aap ka account fi-alhaal band hai'],

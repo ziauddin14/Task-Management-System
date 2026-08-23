@@ -18,6 +18,7 @@ import { getCurrentUser } from '../src/services/auth.api.js';
 // resolved/empty data so DashboardPage settles immediately, same as every other dependency here.
 vi.mock('../src/services/tasks.api.js', () => ({
   getTasks: vi.fn().mockResolvedValue({ items: [], meta: { page: 1, limit: 25, total: 0, totalPages: 1 } }),
+  getTask: vi.fn(),
   closeTask: vi.fn(),
   createTask: vi.fn(),
   updateTask: vi.fn(),
@@ -27,6 +28,11 @@ vi.mock('../src/services/dashboard.api.js', () => ({
 }));
 vi.mock('../src/services/users.api.js', () => ({ getUsers: vi.fn().mockResolvedValue({ items: [], meta: {} }) }));
 vi.mock('../src/services/lookupLists.api.js', () => ({ getLookupList: vi.fn().mockResolvedValue([]) }));
+// UpdateModal/PreviousUpdatesModal are always mounted on DashboardPage now (Phase 10.4), but stay
+// closed here (no task selected) — their useTask/useTaskUpdates calls are disabled, so these
+// never actually fire. Mocked anyway for the same reason as the block above: keeps the module
+// import itself safe regardless of internal enabled-gating.
+vi.mock('../src/services/taskUpdates.api.js', () => ({ getTaskUpdates: vi.fn(), createTaskUpdate: vi.fn() }));
 
 function resetStore() {
   useAuthStore.setState({ user: null, token: null, isAuthenticated: false });
@@ -48,7 +54,7 @@ describe('App — session restore sequence (docs/11-auth.md §4)', () => {
     render(<App />);
 
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
-    expect(await screen.findByRole('heading', { name: 'Login' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Task Management System' })).toBeInTheDocument();
     expect(getCurrentUser).not.toHaveBeenCalled();
   });
 

@@ -1,11 +1,12 @@
 import React, { useState } from 'react'; // explicit import — see src/App.jsx's comment for why
 import { Columns3 } from 'lucide-react';
-import { COLUMN_DEFINITIONS } from '../../utils/dashboardColumns.js';
 
 // docs/08-ui-ux.md §6 — "a small 'columns' icon button at the end of the header row opening a
 // checklist dropdown." docs/09-frontend-features.md §7 — locked columns shown disabled/checked so
-// the control is self-explanatory rather than needing separate instructional text.
-function ColumnToggle({ isVisible, onToggle }) {
+// the control is self-explanatory rather than needing separate instructional text. Generalized in
+// Phase 10.6 (columns now a prop, not a hardcoded import) so UserSummaryReportPage's column-hide
+// control (docs/08-ui-ux.md §9 — "same pattern") can reuse this component against its own set.
+function ColumnToggle({ columns, isVisible, onToggle }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -21,7 +22,7 @@ function ColumnToggle({ isVisible, onToggle }) {
       </button>
       {open && (
         <div className="absolute end-0 z-10 mt-1 w-56 rounded-lg border border-gray-200 bg-white p-2 shadow-lg">
-          {COLUMN_DEFINITIONS.map((col) => (
+          {columns.map((col) => (
             <label
               key={col.key}
               className="flex h-10 items-center gap-2 rounded px-2 text-sm hover:bg-gray-50"

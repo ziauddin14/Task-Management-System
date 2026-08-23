@@ -8,6 +8,14 @@ export function formatDate(value) {
   return isValid(date) ? format(date, 'dd MMM yyyy') : '-';
 }
 
+// docs/08-ui-ux.md §7 — Previous Updates history entries show a date (with time, since a
+// conversation-style thread of same-day updates reads better disambiguated).
+export function formatDateTime(value) {
+  if (!value) return '-';
+  const date = value instanceof Date ? value : new Date(value);
+  return isValid(date) ? format(date, 'dd MMM yyyy, HH:mm') : '-';
+}
+
 // docs/08-ui-ux.md §6 — Time Status column example wording: "3 din baaqi" / "2 din taxeer se".
 // timeStatus: { type: 'remaining'|'overdue'|'early'|'late', days: number } (backend/src/models/Task.js).
 export function formatTimeStatusLabel(timeStatus) {

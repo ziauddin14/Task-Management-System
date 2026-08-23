@@ -1,26 +1,34 @@
 import React, { useRef, useState } from 'react'; // explicit import — see src/App.jsx's comment for why
-import { Plus } from 'lucide-react';
+import { Plus, Printer, BellRing } from 'lucide-react';
 import { useAuthStore } from '../store/authStore.js';
 import { useDashboardFilters } from '../hooks/useDashboardFilters.js';
 import { usePageSize } from '../hooks/usePageSize.js';
 import { useTasks } from '../hooks/useTasks.js';
 import { useDashboardSummary } from '../hooks/useDashboardSummary.js';
 import { useCloseTask } from '../hooks/useCloseTask.js';
+import { useColumnVisibility } from '../hooks/useColumnVisibility.js';
+import { useExportReport } from '../hooks/useExportReport.js';
+import { useTriggerReminders } from '../hooks/useTriggerReminders.js';
 import KpiCard from '../components/dashboard/KpiCard.jsx';
 import FilterBar from '../components/dashboard/FilterBar.jsx';
 import TaskTable from '../components/dashboard/TaskTable.jsx';
+import PrintView from '../components/dashboard/PrintView.jsx';
 import TaskFormModal from '../components/task/TaskFormModal.jsx';
+import UpdateModal from '../components/task/UpdateModal.jsx';
+import PreviousUpdatesModal from '../components/task/PreviousUpdatesModal.jsx';
+import ExportMenu from '../components/reports/ExportMenu.jsx';
 import ConfirmDialog from '../components/common/ConfirmDialog.jsx';
 import Spinner from '../components/common/Spinner.jsx';
 import { STATUS_META, getStatusMeta, getPerformanceMeta, PERFORMANCE_SUMMARY_KEY_TO_VALUE } from '../utils/taskDisplay.js';
+import { COLUMN_DEFINITIONS } from '../utils/dashboardColumns.js';
 
 const STATUS_KEYS = Object.keys(STATUS_META);
 const PERFORMANCE_SUMMARY_KEYS = Object.keys(PERFORMANCE_SUMMARY_KEY_TO_VALUE);
+const COLUMN_STORAGE_KEY = 'dashboard.visibleColumns.v1';
 
 // docs/08-ui-ux.md §3 — top to bottom: header (AppLayout, already wired), KPI cards, filter bar,
-// task table (+ column control, frozen header, pagination). Update Modal, Previous Updates Modal,
-// attachment upload, Users page, and Reports/Export are explicitly out of scope for this
-// sub-phase — the table's Update/Previous Updates buttons are rendered but inert (TaskTable.jsx).
+// Print View toggle + Export (item 6), task table (+ column control, frozen header, pagination),
+// Update Modal, Previous Updates Modal.
 function DashboardPage() {
   const user = useAuthStore((state) => state.user);
   const isAdmin = user?.role === 'admin';
@@ -36,7 +44,17 @@ function DashboardPage() {
 
   const [formModal, setFormModal] = useState(null); // { mode: 'create' } | { mode: 'edit', task }
   const [closingTask, setClosingTask] = useState(null);
+  const [updatingTask, setUpdatingTask] = useState(null);
+  const [viewingUpdatesTask, setViewingUpdatesTask] = useState(null);
+  const [printMode, setPrintMode] = useState(false);
   const closeTaskMutation = useCloseTask(closingTask?.id);
+
+  // docs/09-frontend-features.md §8: columnVisibility is lifted here (rather than owned inside
+  // TaskTable, as it was through Phase 10.5) so the Export flow reads the SAME visible-columns
+  // state the table itself is showing — one source of truth, not two that could drift apart.
+  const columnVisibility = useColumnVisibility(COLUMN_STORAGE_KEY, COLUMN_DEFINITIONS);
+  const exportReportHook = useExportReport();
+  const triggerRemindersMutation = useTriggerReminders();
 
   function handleKpiClick(paramKey, value) {
     toggleKpiFilter(paramKey, value);
@@ -49,26 +67,50 @@ function DashboardPage() {
     });
   }
 
+  // docs/09-frontend-features.md §8 step 2 — "automatically carries the dashboard's current URL
+  // query params (filters/search/sort) and the current visible-columns list." apiFilters carries
+  // page/limit too (needed for the task LIST), but GET /reports/export is unpaginated by design
+  // (backend/src/validators/report.validator.js omits page/limit entirely) — dropped here.
+  function handleDashboardExport(format, reportType) {
+    const { page: _page, limit: _limit, ...taskFilters } = apiFilters;
+    const columns = COLUMN_DEFINITIONS.filter((col) => columnVisibility.isVisible(col.key)).map((col) => col.key);
+    return exportReportHook.run({ ...taskFilters, format, reportType, columns: columns.join(',') });
+  }
+
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
+      <div className="no-print flex items-center justify-between">
         <h1 className="text-xl font-bold">Dashboard</h1>
-        {isAdmin && (
-          <button
-            type="button"
-            onClick={() => setFormModal({ mode: 'create' })}
-            className="flex h-10 items-center gap-1 rounded-lg bg-brand px-4 text-white hover:bg-brand/90"
-          >
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            Naya Kaam
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => triggerRemindersMutation.mutate()}
+              disabled={triggerRemindersMutation.isPending}
+              title="Deadline/overdue reminders foran bhejein (daily cron ka manual trigger)"
+              className="flex h-10 items-center gap-1 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            >
+              <BellRing className="h-4 w-4" aria-hidden="true" />
+              Reminders Bhejein
+            </button>
+          )}
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => setFormModal({ mode: 'create' })}
+              className="flex h-10 items-center gap-1 rounded-lg bg-brand px-4 text-white hover:bg-brand/90"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              Naya Kaam
+            </button>
+          )}
+        </div>
       </div>
 
       {summaryQuery.isLoading && <Spinner label="Khulasa load ho raha hai..." />}
 
       {summaryQuery.data && (
-        <div className="flex flex-col gap-3">
+        <div className="no-print flex flex-col gap-3">
           <div>
             <p className="mb-1 text-sm font-medium text-gray-500">Kaam ki Kaifiyat</p>
             <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin] snap-x md:flex-wrap md:overflow-visible">
@@ -115,7 +157,7 @@ function DashboardPage() {
               // setFilters for why two separate toggleKpiFilter() calls here would silently
               // clobber each other instead of clearing both.
               onClick={() => setFilters({ status: undefined, performanceRating: undefined })}
-              className="w-fit text-sm text-brand hover:underline"
+              className="flex h-10 w-fit items-center text-sm text-brand hover:underline"
             >
               × Clear filter
             </button>
@@ -123,22 +165,55 @@ function DashboardPage() {
         </div>
       )}
 
-      <FilterBar filtersHook={filtersHook} isAdmin={isAdmin} />
+      <div className="no-print">
+        <FilterBar filtersHook={filtersHook} isAdmin={isAdmin} />
+      </div>
+
+      {/* docs/08-ui-ux.md §3 item 6 — Print View toggle + Export sit together, same side as the
+          filter bar's own action buttons. */}
+      <div className="no-print flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setPrintMode((prev) => !prev)}
+          aria-pressed={printMode}
+          className="flex h-10 items-center gap-1 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 hover:bg-gray-50"
+        >
+          <Printer className="h-4 w-4" aria-hidden="true" />
+          Print View
+        </button>
+        {printMode && (
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="flex h-10 items-center gap-1 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 hover:bg-gray-50"
+          >
+            Print Karein
+          </button>
+        )}
+        <ExportMenu mode="dashboard" onExport={handleDashboardExport} isLoading={exportReportHook.isLoading} />
+      </div>
 
       <div ref={tableRef}>
-        <TaskTable
-          tasks={tasksQuery.data?.items || []}
-          meta={tasksQuery.data?.meta}
-          isLoading={tasksQuery.isLoading}
-          isError={tasksQuery.isError}
-          isAdmin={isAdmin}
-          page={page}
-          pageSize={pageSize}
-          onPageChange={setPage}
-          onPageSizeChange={setPageSize}
-          onEdit={(task) => setFormModal({ mode: 'edit', task })}
-          onClose={(task) => setClosingTask(task)}
-        />
+        {printMode ? (
+          <PrintView tasks={tasksQuery.data?.items || []} isVisible={columnVisibility.isVisible} />
+        ) : (
+          <TaskTable
+            tasks={tasksQuery.data?.items || []}
+            meta={tasksQuery.data?.meta}
+            isLoading={tasksQuery.isLoading}
+            isError={tasksQuery.isError}
+            isAdmin={isAdmin}
+            page={page}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            onEdit={(task) => setFormModal({ mode: 'edit', task })}
+            onClose={(task) => setClosingTask(task)}
+            onUpdate={(task) => setUpdatingTask(task)}
+            onViewUpdates={(task) => setViewingUpdatesTask(task)}
+            columnVisibility={columnVisibility}
+          />
+        )}
       </div>
 
       {isAdmin && (
@@ -162,6 +237,14 @@ function DashboardPage() {
           isLoading={closeTaskMutation.isPending}
         />
       )}
+
+      <UpdateModal isOpen={Boolean(updatingTask)} taskId={updatingTask?.id} onClose={() => setUpdatingTask(null)} />
+
+      <PreviousUpdatesModal
+        isOpen={Boolean(viewingUpdatesTask)}
+        taskId={viewingUpdatesTask?.id}
+        onClose={() => setViewingUpdatesTask(null)}
+      />
     </div>
   );
 }

@@ -29,7 +29,7 @@ describe('AppRoutes (docs/07-frontend-foundation.md §5)', () => {
 
   it('/login renders LoginPage when unauthenticated', () => {
     renderAt('/login');
-    expect(screen.getByRole('heading', { name: 'Login' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Task Management System' })).toBeInTheDocument();
   });
 
   it('/login redirects to / when already authenticated', () => {
@@ -40,7 +40,7 @@ describe('AppRoutes (docs/07-frontend-foundation.md §5)', () => {
 
   it('/ redirects to /login when unauthenticated', () => {
     renderAt('/');
-    expect(screen.getByRole('heading', { name: 'Login' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Task Management System' })).toBeInTheDocument();
   });
 
   it('/ renders DashboardPage for any authenticated role', () => {
@@ -63,7 +63,7 @@ describe('AppRoutes (docs/07-frontend-foundation.md §5)', () => {
 
   it('/users redirects an unauthenticated visitor to /login (ProtectedRoute wraps RoleGuard)', () => {
     renderAt('/users');
-    expect(screen.getByRole('heading', { name: 'Login' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Task Management System' })).toBeInTheDocument();
   });
 
   it('/reports/user-summary renders UserSummaryReportPage for an admin', () => {

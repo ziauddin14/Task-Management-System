@@ -13,12 +13,18 @@ import toast from 'react-hot-toast';
  * useOneTap + the standard button always render together (progressive enhancement — One Tap can
  * be dismissed or blocked, so it must never be the only path in, per §2.2).
  */
-function GoogleSignInButton({ loginMutation }) {
+function GoogleSignInButton({ loginMutation, onGoogleError }) {
   return (
     <GoogleLogin
       useOneTap
       onSuccess={(credentialResponse) => loginMutation.mutate({ idToken: credentialResponse.credential })}
-      onError={() => toast.error('Login mumkin nahi hua, dobara koshish karein')}
+      onError={() => {
+        toast.error('Login mumkin nahi hua, dobara koshish karein');
+        // docs/08-ui-ux.md §2 step 5 — the generic message must show inline on this screen too,
+        // not just as a toast (Google's own client-side sign-in failure never reaches
+        // loginMutation, which only tracks OUR backend call — so LoginPage needs its own signal).
+        onGoogleError?.();
+      }}
     />
   );
 }

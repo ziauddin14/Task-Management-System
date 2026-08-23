@@ -44,6 +44,7 @@ const { summary, sampleTask } = vi.hoisted(() => ({
 vi.mock('../../src/services/dashboard.api.js', () => ({ getDashboardSummary: vi.fn().mockResolvedValue(summary) }));
 vi.mock('../../src/services/tasks.api.js', () => ({
   getTasks: vi.fn().mockResolvedValue({ items: [sampleTask], meta: { page: 1, limit: 25, total: 1, totalPages: 1 } }),
+  getTask: vi.fn().mockResolvedValue(sampleTask),
   closeTask: vi.fn().mockResolvedValue({ ...sampleTask, status: 'closed' }),
   createTask: vi.fn(),
   updateTask: vi.fn(),
@@ -54,8 +55,20 @@ vi.mock('../../src/services/users.api.js', () => ({
 vi.mock('../../src/services/lookupLists.api.js', () => ({
   getLookupList: vi.fn().mockResolvedValue([{ id: 'r1', value: 'IT', isActive: true }]),
 }));
+vi.mock('../../src/services/taskUpdates.api.js', () => ({
+  getTaskUpdates: vi.fn().mockResolvedValue({ items: [], meta: { page: 1, totalPages: 1, total: 0 } }),
+  createTaskUpdate: vi.fn(),
+}));
+vi.mock('../../src/services/reports.api.js', () => ({
+  exportReport: vi.fn().mockResolvedValue(new Blob(['x'])),
+  exportUserSummary: vi.fn(),
+  triggerReminders: vi.fn().mockResolvedValue({ remindersSent: 3 }),
+}));
+vi.mock('file-saver', () => ({ saveAs: vi.fn() }));
 
 import { closeTask } from '../../src/services/tasks.api.js';
+import { getTaskUpdates } from '../../src/services/taskUpdates.api.js';
+import { exportReport, triggerReminders } from '../../src/services/reports.api.js';
 
 function resetStore() {
   useAuthStore.setState({ user: null, token: null, isAuthenticated: false });
@@ -76,7 +89,11 @@ function renderDashboard(role = 'user') {
 describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §2, §6)', () => {
   beforeEach(() => {
     resetStore();
+    window.localStorage.clear();
     closeTask.mockClear();
+    getTaskUpdates.mockClear();
+    exportReport.mockClear();
+    triggerReminders.mockClear();
   });
 
   function findKpiCardButton(label) {
@@ -164,5 +181,77 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
     fireEvent.click(screen.getByText('Haan, Close Karein'));
 
     await waitFor(() => expect(closeTask).toHaveBeenCalledWith('t1'));
+  });
+
+  it('"Update" opens the Update Modal for that task (available to both roles)', async () => {
+    renderDashboard('user');
+    await screen.findByText('260801');
+
+    fireEvent.click(screen.getByText('Update'));
+
+    expect(await screen.findByRole('dialog', { name: 'Kaam Update Karein' })).toBeInTheDocument();
+  });
+
+  it('"Purani Updates" opens the Previous Updates Modal for that task, lazily fetching only once opened', async () => {
+    renderDashboard('user');
+    await screen.findByText('260801');
+
+    expect(getTaskUpdates).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByText('Purani Updates'));
+
+    expect(await screen.findByRole('dialog', { name: 'Purani Updates' })).toBeInTheDocument();
+    await waitFor(() => expect(getTaskUpdates).toHaveBeenCalled());
+  });
+
+  it('Print View toggle switches the table into the denser read-only variant', async () => {
+    renderDashboard('admin');
+    await screen.findByText('260801');
+    expect(screen.getByText('Edit')).toBeInTheDocument(); // regular TaskTable's Admin action
+
+    fireEvent.click(screen.getByText('Print View'));
+
+    expect(screen.queryByText('Edit')).not.toBeInTheDocument();
+    expect(screen.queryByText('Update')).not.toBeInTheDocument();
+    expect(screen.getByText('260801')).toBeInTheDocument(); // task data itself still shows
+  });
+
+  it('Export: the request carries the CURRENT filters and visible-columns state, not re-asked of the user', async () => {
+    renderDashboard('admin');
+    await screen.findByText('260801');
+
+    // Apply a status filter via a KPI card, and hide the "Zimmedari" (responsibility) column.
+    fireEvent.click(findKpiCardButton('Jari'));
+    fireEvent.click(screen.getByLabelText('Columns'));
+    fireEvent.click(screen.getByLabelText('Zimmedari'));
+
+    fireEvent.click(screen.getByText('Export'));
+    fireEvent.click(screen.getByText('Confirm'));
+
+    await waitFor(() => expect(exportReport).toHaveBeenCalled());
+    const params = exportReport.mock.calls[0][0];
+    expect(params.status).toBe('ongoing'); // the active KPI filter
+    expect(params.format).toBe('excel');
+    expect(params.reportType).toBe('summary');
+    expect(params.page).toBeUndefined(); // unpaginated by design (backend omits page/limit)
+    expect(params.limit).toBeUndefined();
+    const columns = params.columns.split(',');
+    expect(columns).not.toContain('responsibility'); // hidden column excluded
+    expect(columns).toContain('codeNumber'); // locked column still included
+  });
+
+  it('Admin-only "Reminders Bhejein" button triggers the reminder job and toasts the count', async () => {
+    renderDashboard('admin');
+    await screen.findByText('260801');
+
+    fireEvent.click(screen.getByText('Reminders Bhejein'));
+
+    await waitFor(() => expect(triggerReminders).toHaveBeenCalled());
+  });
+
+  it('User role: no "Reminders Bhejein" button', async () => {
+    renderDashboard('user');
+    await screen.findByText('260801');
+    expect(screen.queryByText('Reminders Bhejein')).not.toBeInTheDocument();
   });
 });

@@ -2,6 +2,8 @@ import React from 'react'; // explicit import — see src/App.jsx's comment for 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import TaskTable from '../../../src/components/dashboard/TaskTable.jsx';
+import { useColumnVisibility } from '../../../src/hooks/useColumnVisibility.js';
+import { COLUMN_DEFINITIONS } from '../../../src/utils/dashboardColumns.js';
 
 const baseTask = {
   id: 't1',
@@ -21,13 +23,24 @@ const baseTask = {
   performanceRating: '-',
 };
 
+// TaskTable no longer owns its column-visibility state (Phase 10.6 lifted it to DashboardPage.jsx
+// so the Export flow can read the same visible-columns set) — this harness wires up the real hook
+// exactly as DashboardPage does, so every existing column-toggle/persistence assertion below still
+// exercises real behavior unchanged.
+function Harness(props) {
+  const columnVisibility = useColumnVisibility('dashboard.visibleColumns.v1', COLUMN_DEFINITIONS);
+  return <TaskTable columnVisibility={columnVisibility} {...props} />;
+}
+
 function renderTable(overrides = {}) {
   const onPageChange = vi.fn();
   const onPageSizeChange = vi.fn();
   const onEdit = vi.fn();
   const onClose = vi.fn();
+  const onUpdate = vi.fn();
+  const onViewUpdates = vi.fn();
   const utils = render(
-    <TaskTable
+    <Harness
       tasks={[baseTask]}
       meta={{ page: 1, totalPages: 3 }}
       isLoading={false}
@@ -39,10 +52,12 @@ function renderTable(overrides = {}) {
       onPageSizeChange={onPageSizeChange}
       onEdit={onEdit}
       onClose={onClose}
+      onUpdate={onUpdate}
+      onViewUpdates={onViewUpdates}
       {...overrides}
     />
   );
-  return { ...utils, onPageChange, onPageSizeChange, onEdit, onClose };
+  return { ...utils, onPageChange, onPageSizeChange, onEdit, onClose, onUpdate, onViewUpdates };
 }
 
 describe('TaskTable (docs/08-ui-ux.md §6)', () => {
@@ -73,10 +88,18 @@ describe('TaskTable (docs/08-ui-ux.md §6)', () => {
     expect(screen.getByText('+1 more')).toBeInTheDocument();
   });
 
-  it('renders Update/Previous Updates as inert (disabled) buttons', () => {
-    renderTable();
+  it('Update/Previous Updates call their handlers with the task (available to both roles)', () => {
+    const { onUpdate, onViewUpdates } = renderTable();
+    fireEvent.click(screen.getByText('Update'));
+    expect(onUpdate).toHaveBeenCalledWith(baseTask);
+    fireEvent.click(screen.getByText('Purani Updates'));
+    expect(onViewUpdates).toHaveBeenCalledWith(baseTask);
+  });
+
+  it('Update is disabled on an already-closed task; Previous Updates stays enabled', () => {
+    renderTable({ tasks: [{ ...baseTask, status: 'closed' }] });
     expect(screen.getByText('Update')).toBeDisabled();
-    expect(screen.getByText('Purani Updates')).toBeDisabled();
+    expect(screen.getByText('Purani Updates')).not.toBeDisabled();
   });
 
   it('User role: no Edit/Close row actions', () => {

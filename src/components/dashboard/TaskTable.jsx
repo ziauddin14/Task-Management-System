@@ -4,14 +4,15 @@ import Spinner from '../common/Spinner.jsx';
 import EmptyState from '../common/EmptyState.jsx';
 import Pagination from '../common/Pagination.jsx';
 import ColumnToggle from './ColumnToggle.jsx';
-import { useColumnVisibility } from '../../hooks/useColumnVisibility.js';
+import { COLUMN_DEFINITIONS } from '../../utils/dashboardColumns.js';
 import { formatDate, formatTimeStatusLabel, getTimeStatusColorClass } from '../../utils/formatDate.js';
 import { getStatusMeta, getPerformanceMeta } from '../../utils/taskDisplay.js';
 
 // docs/08-ui-ux.md §6 — column set, RTL reading order, frozen header, column show/hide, mobile
-// horizontal scroll. docs/09-frontend-features.md §2 — Edit is Admin-only; the Actions column's
-// Update/Previous Updates buttons are rendered but inert here (Frontend Features §12/kickoff scope
-// — those flows are wired up in a later sub-phase, not this one).
+// horizontal scroll. docs/09-frontend-features.md §2 — Edit is Admin-only. Update/Previous
+// Updates are available to both roles (Admin, or an assignee — docs/05-apis.md §11's role
+// matrix); Update is disabled on an already-closed task, matching taskUpdate.service.js's own
+// "Yeh kaam close ho chuka hai" rejection (Previous Updates stays enabled — it's read-only).
 function AssigneeChips({ assignees }) {
   const visible = assignees.slice(0, 2);
   const extra = assignees.length - visible.length;
@@ -27,13 +28,31 @@ function AssigneeChips({ assignees }) {
   );
 }
 
-function TaskTable({ tasks, meta, isLoading, isError, isAdmin, page, pageSize, onPageChange, onPageSizeChange, onEdit, onClose }) {
-  const { isVisible, toggleColumn } = useColumnVisibility();
+function TaskTable({
+  tasks,
+  meta,
+  isLoading,
+  isError,
+  isAdmin,
+  page,
+  pageSize,
+  onPageChange,
+  onPageSizeChange,
+  onEdit,
+  onClose,
+  onUpdate,
+  onViewUpdates,
+  columnVisibility,
+}) {
+  // Lifted to DashboardPage.jsx (Phase 10.6) so the Export flow can read the SAME visible-columns
+  // state (docs/09-frontend-features.md §8: "the current visible-columns list") without a second,
+  // out-of-sync source of truth.
+  const { isVisible, toggleColumn } = columnVisibility;
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white">
-      <div className="flex items-center justify-end border-b border-gray-200 p-2">
-        <ColumnToggle isVisible={isVisible} onToggle={toggleColumn} />
+      <div className="no-print flex items-center justify-end border-b border-gray-200 p-2">
+        <ColumnToggle columns={COLUMN_DEFINITIONS} isVisible={isVisible} onToggle={toggleColumn} />
       </div>
 
       {isLoading && <Spinner label="Kaam load ho rahe hain..." />}
@@ -59,7 +78,7 @@ function TaskTable({ tasks, meta, isLoading, isError, isAdmin, page, pageSize, o
                 {isVisible('timeStatus') && <th className="whitespace-nowrap px-3 py-2 font-medium">Time Status</th>}
                 {isVisible('completionPercent') && <th className="whitespace-nowrap px-3 py-2 font-medium">Completion %</th>}
                 {isVisible('performance') && <th className="whitespace-nowrap px-3 py-2 font-medium">Performance</th>}
-                <th className="whitespace-nowrap px-3 py-2 font-medium">Actions</th>
+                <th className="no-print whitespace-nowrap px-3 py-2 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -110,14 +129,21 @@ function TaskTable({ tasks, meta, isLoading, isError, isAdmin, page, pageSize, o
                         </span>
                       </td>
                     )}
-                    <td className="whitespace-nowrap px-3 py-2">
+                    <td className="no-print whitespace-nowrap px-3 py-2">
                       <div className="flex items-center gap-1">
-                        {/* TODO(Phase 10.4): wire up Update Modal — inert per this sub-phase's scope. */}
-                        <button type="button" disabled className="h-10 min-w-[40px] rounded-lg border border-gray-200 px-2 text-xs text-gray-400">
+                        <button
+                          type="button"
+                          onClick={() => onUpdate(task)}
+                          disabled={isClosed}
+                          className="h-10 min-w-[40px] rounded-lg border border-gray-300 px-2 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                        >
                           Update
                         </button>
-                        {/* TODO(Phase 10.4): wire up Previous Updates Modal — inert per this sub-phase's scope. */}
-                        <button type="button" disabled className="h-10 min-w-[40px] rounded-lg border border-gray-200 px-2 text-xs text-gray-400">
+                        <button
+                          type="button"
+                          onClick={() => onViewUpdates(task)}
+                          className="h-10 min-w-[40px] rounded-lg border border-gray-300 px-2 text-xs text-gray-700 hover:bg-gray-50"
+                        >
                           Purani Updates
                         </button>
                         {isAdmin && (
@@ -150,7 +176,7 @@ function TaskTable({ tasks, meta, isLoading, isError, isAdmin, page, pageSize, o
         </div>
       )}
 
-      <div className="px-3">
+      <div className="no-print px-3">
         <Pagination
           page={page}
           totalPages={meta?.totalPages || 1}

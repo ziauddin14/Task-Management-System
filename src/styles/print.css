@@ -1,9 +1,36 @@
-/* docs/07-frontend-foundation.md §9 — structure-only skeleton for this sub-phase. The real
-   PrintView component (components/dashboard/PrintView.jsx) and its full rule set are built in a
-   later sub-phase; this file just establishes the convention it will extend: a `.no-print`
-   utility class that disappears when the browser's print dialog is actually triggered. */
+/* docs/07-frontend-foundation.md §9 — real @media print rules: hides navigation/buttons (the
+   `.no-print` convention scaffolded in Phase 10.1) and cleans up spacing when the browser's print
+   dialog is actually triggered (Ctrl+P / window.print()), regardless of whether the Print View
+   toggle was engaged first — a safety net for an ad hoc print, not just the curated PrintView. */
 @media print {
   .no-print {
     display: none !important;
+  }
+
+  body {
+    background: #fff;
+    margin: 0;
+    padding: 0;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+
+  /* Browsers strip background colors/borders by default when printing unless told otherwise —
+     status/performance badges and table borders would otherwise render as plain, unstyled text. */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    border: 1px solid #d1d5db;
   }
 }
