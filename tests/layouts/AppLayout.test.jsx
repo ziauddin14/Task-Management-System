@@ -96,4 +96,32 @@ describe('AppLayout (docs/07-frontend-foundation.md §2, docs/11-auth.md §5)', 
     expect(() => fireEvent.click(screen.getByText('لاگ آؤٹ'))).not.toThrow();
     expect(mockNavigate).toHaveBeenCalledWith('/login');
   });
+
+  it("renders the user's responsibility alongside name and role when present", () => {
+    useAuthStore.getState().login(
+      { id: '1', name: 'Om Prakash', role: 'user', responsibility: 'IT' },
+      'jwt-abc'
+    );
+    renderLayout();
+
+    expect(screen.getByText('Om Prakash')).toBeInTheDocument();
+    expect(screen.getByText('IT')).toBeInTheDocument();
+    expect(screen.getByText('user')).toBeInTheDocument();
+  });
+
+  it('admin role: both nav links are rendered in the header', () => {
+    useAuthStore.getState().login({ id: '2', name: 'Admin', role: 'admin' }, 'jwt-admin');
+    renderLayout();
+
+    expect(screen.getByRole('link', { name: /تمام صارفین/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /یوزر سمری رپورٹ/i })).toBeInTheDocument();
+  });
+
+  it('user role: admin nav links are NOT rendered', () => {
+    useAuthStore.getState().login({ id: '1', name: 'Om', role: 'user' }, 'jwt-abc');
+    renderLayout();
+
+    expect(screen.queryByRole('link', { name: /تمام صارفین/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /یوزر سمری رپورٹ/i })).not.toBeInTheDocument();
+  });
 });
