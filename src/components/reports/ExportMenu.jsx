@@ -37,7 +37,7 @@ function ExportMenu({ mode, onExport, isLoading }) {
       </button>
 
       {open && (
-        <div className="absolute end-0 z-10 mt-1 w-56 rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
+        <div className="absolute start-0 z-10 mt-1 w-56 max-w-[calc(100vw-2rem)] rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
           <label className="mb-2 block text-sm">
             Format
             <select
