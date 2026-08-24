@@ -30,7 +30,7 @@ describe('WhatsAppShareButton', () => {
 
     render(<WhatsAppShareButton file={sampleFile} />);
 
-    const button = screen.getByText('Share via WhatsApp');
+    const button = screen.getByText('واٹس ایپ پر شیئر کریں');
     fireEvent.click(button);
 
     expect(share).toHaveBeenCalledWith({ files: [sampleFile], title: 'Task Report' });
@@ -41,7 +41,7 @@ describe('WhatsAppShareButton', () => {
 
     expect(() => render(<WhatsAppShareButton file={sampleFile} />)).not.toThrow();
     expect(screen.getByText('Faisal ki gayi file WhatsApp Desktop/Web mein manually attach kar dein')).toBeInTheDocument();
-    expect(screen.queryByText('Share via WhatsApp')).not.toBeInTheDocument();
+    expect(screen.queryByText('واٹس ایپ پر شیئر کریں')).not.toBeInTheDocument();
   });
 
   it('shows the fallback hint when canShare returns false for this specific file', () => {

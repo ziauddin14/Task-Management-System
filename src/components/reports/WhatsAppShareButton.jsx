@@ -35,7 +35,7 @@ function WhatsAppShareButton({ file }) {
       className="mt-2 flex h-10 w-fit items-center gap-2 rounded-lg border border-green-600 px-3 text-sm text-green-700 hover:bg-green-50"
     >
       <MessageCircle className="h-4 w-4" aria-hidden="true" />
-      Share via WhatsApp
+      واٹس ایپ پر شیئر کریں
     </button>
   );
 }

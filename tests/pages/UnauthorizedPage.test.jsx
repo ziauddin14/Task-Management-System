@@ -15,12 +15,12 @@ describe('UnauthorizedPage', () => {
 
   it('renders the documented Urdu message', () => {
     render(<UnauthorizedPage />);
-    expect(screen.getByText('Aap ko is safhe tak rasai nahi hai.')).toBeInTheDocument();
+    expect(screen.getByText('آپ کو اس صفحے تک رسائی نہیں ہے')).toBeInTheDocument();
   });
 
   it('the button navigates back to the Dashboard', () => {
     render(<UnauthorizedPage />);
-    fireEvent.click(screen.getByText('Dashboard par jayein'));
+    fireEvent.click(screen.getByText('ڈیش بورڈ پر جائیں'));
     expect(mockNavigate).toHaveBeenCalledWith('/');
   });
 });

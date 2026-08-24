@@ -28,7 +28,7 @@ describe('UserSummaryReportPage (docs/08-ui-ux.md §9)', () => {
   it('the column-hide control persists to its own localStorage key, distinct from the dashboard\'s', () => {
     const { unmount } = render(<UserSummaryReportPage />);
     fireEvent.click(screen.getByLabelText('Columns'));
-    fireEvent.click(screen.getByLabelText('Closed'));
+    fireEvent.click(screen.getByLabelText('بند'));
     unmount();
 
     expect(JSON.parse(window.localStorage.getItem('userSummary.visibleColumns.v1'))).toMatchObject({ closed: false });
@@ -38,7 +38,7 @@ describe('UserSummaryReportPage (docs/08-ui-ux.md §9)', () => {
   it('"Name" is locked (cannot be hidden)', () => {
     render(<UserSummaryReportPage />);
     fireEvent.click(screen.getByLabelText('Columns'));
-    expect(screen.getByLabelText('Name')).toBeDisabled();
+    expect(screen.getByLabelText('نام')).toBeDisabled();
   });
 
   it('Export reuses the shared ExportMenu and carries the current column-hide state into the request', async () => {
@@ -47,9 +47,9 @@ describe('UserSummaryReportPage (docs/08-ui-ux.md §9)', () => {
 
     // Hide "Closed" before exporting.
     fireEvent.click(screen.getByLabelText('Columns'));
-    fireEvent.click(screen.getByLabelText('Closed'));
+    fireEvent.click(screen.getByLabelText('بند'));
 
-    fireEvent.click(screen.getByText('Export'));
+    fireEvent.click(screen.getByText('ایکسپورٹ کریں'));
     fireEvent.click(screen.getByText('Confirm'));
 
     await waitFor(() => expect(exportUserSummary).toHaveBeenCalled());

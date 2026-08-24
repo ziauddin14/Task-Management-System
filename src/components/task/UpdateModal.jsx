@@ -75,7 +75,7 @@ function UpdateModal({ isOpen, onClose, taskId }) {
     } catch {
       return; // global mutations.onError (App.jsx) already toasted the error.
     }
-    toast.success('Update save ho gayi');
+    toast.success('اپڈیٹ محفوظ ہو گئی');
     onClose();
   }
 
@@ -92,7 +92,7 @@ function UpdateModal({ isOpen, onClose, taskId }) {
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
             <div>
               <label htmlFor="update-description" className="mb-1 block text-sm font-medium text-gray-700">
-                Description
+                تفصیل
               </label>
               <textarea
                 id="update-description"
@@ -109,7 +109,7 @@ function UpdateModal({ isOpen, onClose, taskId }) {
 
             <div>
               <label htmlFor="update-percent" className="mb-1 block text-sm font-medium text-gray-700">
-                Completion %
+                تکمیل فیصد
               </label>
               <div className="flex items-center gap-2">
                 <input
@@ -150,21 +150,21 @@ function UpdateModal({ isOpen, onClose, taskId }) {
               onClick={() => setShowHistory((prev) => !prev)}
               className="flex h-10 w-fit items-center text-sm text-brand hover:underline"
             >
-              {showHistory ? 'Purani Updates chupayein' : 'Purani Updates dekhein'}
+              {showHistory ? 'پرانی اپڈیٹس چھپائیں' : 'پرانی اپڈیٹس دیکھیں'}
             </button>
 
             {showHistory && <PreviousUpdatesContent taskId={taskId} />}
 
             <div className="mt-2 flex justify-end gap-2">
               <button type="button" onClick={onClose} className="h-10 min-w-[40px] rounded-lg px-4 text-gray-700 hover:bg-gray-100">
-                Cancel
+                منسوخ کریں
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting || attachmentStatus === 'uploading'}
                 className="h-10 min-w-[40px] rounded-lg bg-brand px-4 text-white hover:bg-brand/90 disabled:opacity-50"
               >
-                Save
+                محفوظ کریں
               </button>
             </div>
           </form>

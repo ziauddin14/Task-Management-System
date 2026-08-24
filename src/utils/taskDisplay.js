@@ -2,17 +2,17 @@
 // appears (KPI cards, table, modals). Urdu labels for the two KPI groups ("Kaam ki Kaifiyat" /
 // "Karkardagi") follow the same wording style as the document's own examples ("Jari", "Mumtaz").
 export const STATUS_META = {
-  ongoing: { label: 'Jari', badgeClass: 'bg-blue-100 text-blue-800' },
-  pending: { label: 'Zer-e-Iltiwa', badgeClass: 'bg-orange-100 text-orange-800' },
-  complete: { label: 'Mukammal', badgeClass: 'bg-green-100 text-green-800' },
-  closed: { label: 'Band', badgeClass: 'bg-gray-200 text-gray-700' },
+  ongoing: { label: 'جاری', badgeClass: 'bg-blue-100 text-blue-800' },
+  pending: { label: 'زیر التواء', badgeClass: 'bg-orange-100 text-orange-800' },
+  complete: { label: 'مکمل', badgeClass: 'bg-green-100 text-green-800' },
+  closed: { label: 'بند', badgeClass: 'bg-gray-200 text-gray-700' },
 };
 
 export const PERFORMANCE_META = {
-  excellent: { label: 'Mumtaz', badgeClass: 'bg-green-100 text-green-800' },
-  good: { label: 'Acha', badgeClass: 'bg-blue-100 text-blue-800' },
-  fair: { label: 'Darmiyana', badgeClass: 'bg-amber-100 text-amber-800' },
-  weak: { label: 'Kamzor', badgeClass: 'bg-red-100 text-red-800' },
+  excellent: { label: 'ممتاز', badgeClass: 'bg-green-100 text-green-800' },
+  good: { label: 'اچھا', badgeClass: 'bg-blue-100 text-blue-800' },
+  fair: { label: 'درمیانہ', badgeClass: 'bg-amber-100 text-amber-800' },
+  weak: { label: 'کمزور', badgeClass: 'bg-red-100 text-red-800' },
   '-': { label: '-', badgeClass: 'bg-gray-100 text-gray-500' },
 };
 

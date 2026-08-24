@@ -17,7 +17,7 @@ describe('ExportMenu (docs/08-ui-ux.md §10, docs/09-frontend-features.md §8)',
     const onExport = vi.fn().mockResolvedValue(sampleFile);
     render(<ExportMenu mode="dashboard" onExport={onExport} isLoading={false} />);
 
-    fireEvent.click(screen.getByText('Export'));
+    fireEvent.click(screen.getByText('ایکسپورٹ کریں'));
     fireEvent.change(screen.getByLabelText('Format', { selector: 'select' }), { target: { value: 'pdf' } });
     fireEvent.change(screen.getByLabelText('Report Type', { selector: 'select' }), { target: { value: 'detailed' } });
     fireEvent.click(screen.getByText('Confirm'));
@@ -29,7 +29,7 @@ describe('ExportMenu (docs/08-ui-ux.md §10, docs/09-frontend-features.md §8)',
     const onExport = vi.fn().mockResolvedValue(sampleFile);
     render(<ExportMenu mode="userSummary" onExport={onExport} isLoading={false} />);
 
-    fireEvent.click(screen.getByText('Export'));
+    fireEvent.click(screen.getByText('ایکسپورٹ کریں'));
     expect(screen.queryByText('Report Type')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByText('Confirm'));
@@ -39,7 +39,7 @@ describe('ExportMenu (docs/08-ui-ux.md §10, docs/09-frontend-features.md §8)',
 
   it('shows a loading/disabled state during generation', () => {
     render(<ExportMenu mode="dashboard" onExport={vi.fn()} isLoading />);
-    fireEvent.click(screen.getByText('Export'));
+    fireEvent.click(screen.getByText('ایکسپورٹ کریں'));
 
     const confirmButton = screen.getByText('Generate ho raha hai...');
     expect(confirmButton).toBeDisabled();
@@ -49,7 +49,7 @@ describe('ExportMenu (docs/08-ui-ux.md §10, docs/09-frontend-features.md §8)',
     const onExport = vi.fn().mockResolvedValue(sampleFile);
     render(<ExportMenu mode="dashboard" onExport={onExport} isLoading={false} />);
 
-    fireEvent.click(screen.getByText('Export'));
+    fireEvent.click(screen.getByText('ایکسپورٹ کریں'));
     fireEvent.click(screen.getByText('Confirm'));
 
     expect(
@@ -61,7 +61,7 @@ describe('ExportMenu (docs/08-ui-ux.md §10, docs/09-frontend-features.md §8)',
     const onExport = vi.fn().mockRejectedValue(new Error('Export mumkin nahi hua.'));
     render(<ExportMenu mode="dashboard" onExport={onExport} isLoading={false} />);
 
-    fireEvent.click(screen.getByText('Export'));
+    fireEvent.click(screen.getByText('ایکسپورٹ کریں'));
     fireEvent.click(screen.getByText('Confirm'));
 
     await waitFor(() => expect(onExport).toHaveBeenCalled());

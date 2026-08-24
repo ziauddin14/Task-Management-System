@@ -22,14 +22,14 @@ function LoginPage() {
         {/* Logo placeholder — reserved above the title until official Dawat-e-Islami branding
             assets arrive (docs/07-frontend-foundation.md §8's client-responsibility item). */}
         <div className="h-16 w-16 rounded-full bg-brand-light" aria-hidden="true" />
-        <h1 className="text-2xl font-bold text-brand">Task Management System</h1>
+        <h1 className="text-2xl font-bold text-brand">ٹاسک مینیجمینٹ سسٹم</h1>
         <p className="text-lg text-brand">خود کفالت شعبہ جات (دعوتِ اسلامی)</p>
         <p className="text-base text-gray-600">صلوٰۃ علی الحبیب ﷺ</p>
       </div>
 
       <GoogleSignInButton
         loginMutation={loginMutation}
-        onGoogleError={() => setGoogleError('Login mumkin nahi hua, dobara koshish karein')}
+        onGoogleError={() => setGoogleError('لاگ ان ممکن نہیں ہوا، دوبارہ کوشش کریں')}
       />
 
       {errorMessage && (

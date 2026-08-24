@@ -90,42 +90,42 @@ describe('TaskTable (docs/08-ui-ux.md §6)', () => {
 
   it('Update/Previous Updates call their handlers with the task (available to both roles)', () => {
     const { onUpdate, onViewUpdates } = renderTable();
-    fireEvent.click(screen.getByText('Update'));
+    fireEvent.click(screen.getByText('اپڈیٹ کریں'));
     expect(onUpdate).toHaveBeenCalledWith(baseTask);
-    fireEvent.click(screen.getByText('Purani Updates'));
+    fireEvent.click(screen.getByText('پرانی اپڈیٹس'));
     expect(onViewUpdates).toHaveBeenCalledWith(baseTask);
   });
 
   it('Update is disabled on an already-closed task; Previous Updates stays enabled', () => {
     renderTable({ tasks: [{ ...baseTask, status: 'closed' }] });
-    expect(screen.getByText('Update')).toBeDisabled();
-    expect(screen.getByText('Purani Updates')).not.toBeDisabled();
+    expect(screen.getByText('اپڈیٹ کریں')).toBeDisabled();
+    expect(screen.getByText('پرانی اپڈیٹس')).not.toBeDisabled();
   });
 
   it('User role: no Edit/Close row actions', () => {
     renderTable({ isAdmin: false });
-    expect(screen.queryByText('Edit')).not.toBeInTheDocument();
-    expect(screen.queryByText('Close')).not.toBeInTheDocument();
+    expect(screen.queryByText('ترمیم کریں')).not.toBeInTheDocument();
+    expect(screen.queryByText('کام بند کریں')).not.toBeInTheDocument();
   });
 
   it('Admin role: Edit/Close row actions appear and call their handlers', () => {
     const { onEdit, onClose } = renderTable({ isAdmin: true });
-    fireEvent.click(screen.getByText('Edit'));
+    fireEvent.click(screen.getByText('ترمیم کریں'));
     expect(onEdit).toHaveBeenCalledWith(baseTask);
-    fireEvent.click(screen.getByText('Close'));
+    fireEvent.click(screen.getByText('کام بند کریں'));
     expect(onClose).toHaveBeenCalledWith(baseTask);
   });
 
   it('Admin role: Edit/Close are disabled for an already-closed task', () => {
     renderTable({ isAdmin: true, tasks: [{ ...baseTask, status: 'closed' }] });
-    expect(screen.getByText('Edit')).toBeDisabled();
-    expect(screen.getByText('Close')).toBeDisabled();
+    expect(screen.getByText('ترمیم کریں')).toBeDisabled();
+    expect(screen.getByText('کام بند کریں')).toBeDisabled();
   });
 
   it('column toggle hides a toggleable column, and locked columns have no checkbox to hide them', () => {
     renderTable();
     fireEvent.click(screen.getByLabelText('Columns'));
-    const responsibilityCheckbox = screen.getByLabelText('Zimmedari');
+    const responsibilityCheckbox = screen.getByLabelText('ذمہ داری');
     const codeNumberCheckbox = screen.getByLabelText('Code Number');
 
     expect(codeNumberCheckbox).toBeDisabled();
@@ -138,7 +138,7 @@ describe('TaskTable (docs/08-ui-ux.md §6)', () => {
   it('column visibility persists to localStorage across remounts (versioned key)', () => {
     const { unmount } = renderTable();
     fireEvent.click(screen.getByLabelText('Columns'));
-    fireEvent.click(screen.getByLabelText('Zimmedari'));
+    fireEvent.click(screen.getByLabelText('ذمہ داری'));
     unmount();
 
     expect(JSON.parse(window.localStorage.getItem('dashboard.visibleColumns.v1'))).toMatchObject({

@@ -25,10 +25,10 @@ describe('PrintView', () => {
 
     expect(screen.getByText('260801')).toBeInTheDocument();
     expect(screen.getByText('A sample task')).toBeInTheDocument();
-    expect(screen.queryByText('Update')).not.toBeInTheDocument();
-    expect(screen.queryByText('Purani Updates')).not.toBeInTheDocument();
-    expect(screen.queryByText('Edit')).not.toBeInTheDocument();
-    expect(screen.queryByText('Close')).not.toBeInTheDocument();
+    expect(screen.queryByText('اپڈیٹ کریں')).not.toBeInTheDocument();
+    expect(screen.queryByText('پرانی اپڈیٹس')).not.toBeInTheDocument();
+    expect(screen.queryByText('ترمیم کریں')).not.toBeInTheDocument();
+    expect(screen.queryByText('کام بند کریں')).not.toBeInTheDocument();
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 

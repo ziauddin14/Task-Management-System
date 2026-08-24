@@ -19,7 +19,7 @@ function renderPicker() {
 }
 
 function selectFile(file) {
-  const input = screen.getByLabelText('Attachment');
+  const input = screen.getByLabelText('منسلکہ فائل');
   fireEvent.change(input, { target: { files: [file] } });
 }
 
@@ -71,9 +71,9 @@ describe('AttachmentPicker (docs/09-frontend-features.md §3)', () => {
 
     selectFile(new File(['x'], 'report.pdf', { type: 'application/pdf' }));
     await waitFor(() => expect(onStatusChange).toHaveBeenCalledWith('error', null));
-    expect(screen.getByText('Dobara koshish karein')).toBeInTheDocument();
+    expect(screen.getByText('دوبارہ کوشش کریں')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByText('Dobara koshish karein'));
+    fireEvent.click(screen.getByText('دوبارہ کوشش کریں'));
     await waitFor(() => expect(uploadAttachment).toHaveBeenCalledTimes(2));
     await waitFor(() =>
       expect(onStatusChange).toHaveBeenCalledWith('success', expect.objectContaining({ fileName: 'report.pdf' }))
@@ -87,7 +87,7 @@ describe('AttachmentPicker (docs/09-frontend-features.md §3)', () => {
     selectFile(new File(['x'], 'report.pdf', { type: 'application/pdf' }));
     await waitFor(() => expect(screen.getByText('report.pdf')).toBeInTheDocument());
 
-    fireEvent.click(screen.getByLabelText('Attachment hataayein'));
+    fireEvent.click(screen.getByLabelText('ہٹا دیں'));
 
     expect(screen.queryByText('report.pdf')).not.toBeInTheDocument();
     expect(onStatusChange).toHaveBeenLastCalledWith('idle', null);

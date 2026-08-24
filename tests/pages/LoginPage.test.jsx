@@ -47,7 +47,7 @@ describe('LoginPage (docs/11-auth.md §2.2-2.3)', () => {
   // never covered — see Phase 10.7 report §B).
   it('renders the system name, Urdu department name, and the fixed salutation line', () => {
     renderLoginPage();
-    expect(screen.getByRole('heading', { name: 'Task Management System' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'ٹاسک مینیجمینٹ سسٹم' })).toBeInTheDocument();
     expect(screen.getByText('خود کفالت شعبہ جات (دعوتِ اسلامی)')).toBeInTheDocument();
     expect(screen.getByText('صلوٰۃ علی الحبیب ﷺ')).toBeInTheDocument();
   });
@@ -57,14 +57,14 @@ describe('LoginPage (docs/11-auth.md §2.2-2.3)', () => {
 
     fireEvent.click(screen.getByText('Mock Google Error'));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Login mumkin nahi hua, dobara koshish karein');
+    expect(await screen.findByRole('alert')).toHaveTextContent('لاگ ان ممکن نہیں ہوا، دوبارہ کوشش کریں');
     expect(loginWithGoogle).not.toHaveBeenCalled(); // this path never reaches the backend at all
   });
 
   it.each([
     ['USER_NOT_FOUND', 'Yeh email system mein register nahi hai. Admin se rabta karein.'],
     ['USER_INACTIVE', 'Aap ka account fi-alhaal band hai'],
-    ['INVALID_TOKEN', 'Login mumkin nahi hua, dobara koshish karein'],
+    ['INVALID_TOKEN', 'لاگ ان ممکن نہیں ہوا، دوبارہ کوشش کریں'],
   ])('shows the backend-provided message inline for a %s failure, not just a toast', async (code, message) => {
     loginWithGoogle.mockRejectedValue(Object.assign(new Error(message), { code, name: 'ApiError' }));
     renderLoginPage();

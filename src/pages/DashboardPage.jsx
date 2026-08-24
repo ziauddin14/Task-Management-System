@@ -72,6 +72,7 @@ function DashboardPage() {
   // page/limit too (needed for the task LIST), but GET /reports/export is unpaginated by design
   // (backend/src/validators/report.validator.js omits page/limit entirely) — dropped here.
   function handleDashboardExport(format, reportType) {
+    // eslint-disable-next-line no-unused-vars
     const { page: _page, limit: _limit, ...taskFilters } = apiFilters;
     const columns = COLUMN_DEFINITIONS.filter((col) => columnVisibility.isVisible(col.key)).map((col) => col.key);
     return exportReportHook.run({ ...taskFilters, format, reportType, columns: columns.join(',') });
@@ -80,7 +81,7 @@ function DashboardPage() {
   return (
     <div className="flex flex-col gap-4">
       <div className="no-print flex items-center justify-between">
-        <h1 className="text-xl font-bold">Dashboard</h1>
+        <h1 className="text-xl font-bold">ڈیش بورڈ</h1>
         <div className="flex items-center gap-2">
           {isAdmin && (
             <button
@@ -91,7 +92,7 @@ function DashboardPage() {
               className="flex h-10 items-center gap-1 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
             >
               <BellRing className="h-4 w-4" aria-hidden="true" />
-              Reminders Bhejein
+              یاد دہانیاں بھیجیں
             </button>
           )}
           {isAdmin && (
@@ -101,7 +102,7 @@ function DashboardPage() {
               className="flex h-10 items-center gap-1 rounded-lg bg-brand px-4 text-white hover:bg-brand/90"
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
-              Naya Kaam
+              نیا کام
             </button>
           )}
         </div>
@@ -112,7 +113,7 @@ function DashboardPage() {
       {summaryQuery.data && (
         <div className="no-print flex flex-col gap-3">
           <div>
-            <p className="mb-1 text-sm font-medium text-gray-500">Kaam ki Kaifiyat</p>
+            <p className="mb-1 text-sm font-medium text-gray-500">کام کی کیفیت</p>
             <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin] snap-x md:flex-wrap md:overflow-visible">
               {STATUS_KEYS.map((key) => {
                 const entry = summaryQuery.data.byStatus[key] || { count: 0, percent: 0 };
@@ -131,7 +132,7 @@ function DashboardPage() {
           </div>
 
           <div>
-            <p className="mb-1 text-sm font-medium text-gray-500">Karkardagi</p>
+            <p className="mb-1 text-sm font-medium text-gray-500">کارکردگی</p>
             <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin] snap-x md:flex-wrap md:overflow-visible">
               {PERFORMANCE_SUMMARY_KEYS.map((key) => {
                 const entry = summaryQuery.data.byPerformance[key] || { count: 0, percent: 0 };
@@ -179,7 +180,7 @@ function DashboardPage() {
           className="flex h-10 items-center gap-1 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 hover:bg-gray-50"
         >
           <Printer className="h-4 w-4" aria-hidden="true" />
-          Print View
+          پرنٹ ویو
         </button>
         {printMode && (
           <button
@@ -229,9 +230,9 @@ function DashboardPage() {
         <ConfirmDialog
           isOpen={Boolean(closingTask)}
           title="Kaam Close Karein"
-          message="Is kaam ko close karne ke baad koi nayi update darj nahi ki ja sakegi. Wakai close karna chahte hain?"
+          message="اس کام کو بند کرنے کے بعد کوئی نئی اپڈیٹ درج نہیں کی جا سکے گی۔ کیا واقعی بند کرنا چاہتے ہیں؟"
           confirmLabel="Haan, Close Karein"
-          cancelLabel="Cancel"
+          cancelLabel="منسوخ کریں"
           onConfirm={handleCloseConfirm}
           onCancel={() => setClosingTask(null)}
           isLoading={closeTaskMutation.isPending}

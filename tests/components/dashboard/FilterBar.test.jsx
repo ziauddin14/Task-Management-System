@@ -38,7 +38,7 @@ describe('FilterBar (docs/08-ui-ux.md §5, docs/09-frontend-features.md §5)', (
   it('debounces search input ~400ms before writing to the URL, and resets page to 1', () => {
     renderFilterBar();
 
-    fireEvent.change(screen.getByLabelText('Kaam ya code number talaash karein'), { target: { value: 'foo' } });
+    fireEvent.change(screen.getByLabelText('کام یا کوڈ نمبر تلاش کریں'), { target: { value: 'foo' } });
 
     expect(screen.getByTestId('search-param').textContent).toBe('');
 
@@ -62,13 +62,13 @@ describe('FilterBar (docs/08-ui-ux.md §5, docs/09-frontend-features.md §5)', (
 
   it('shows "Clear all filters" only once a filter is active', () => {
     renderFilterBar();
-    expect(screen.queryByText('Clear all filters')).not.toBeInTheDocument();
+    expect(screen.queryByText('تمام فلٹرز صاف کریں')).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Status filter'), { target: { value: 'ongoing' } });
-    expect(screen.getByText('Clear all filters')).toBeInTheDocument();
+    expect(screen.getByText('تمام فلٹرز صاف کریں')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByText('Clear all filters'));
-    expect(screen.queryByText('Clear all filters')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText('تمام فلٹرز صاف کریں'));
+    expect(screen.queryByText('تمام فلٹرز صاف کریں')).not.toBeInTheDocument();
   });
 });
 

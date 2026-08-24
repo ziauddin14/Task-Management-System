@@ -29,30 +29,30 @@ describe('AppRoutes (docs/07-frontend-foundation.md §5)', () => {
 
   it('/login renders LoginPage when unauthenticated', () => {
     renderAt('/login');
-    expect(screen.getByRole('heading', { name: 'Task Management System' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'ٹاسک مینیجمینٹ سسٹم' })).toBeInTheDocument();
   });
 
   it('/login redirects to / when already authenticated', () => {
     useAuthStore.getState().login({ id: '1', name: 'Om', role: 'user' }, 'jwt');
     renderAt('/login');
-    expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'ڈیش بورڈ' })).toBeInTheDocument();
   });
 
   it('/ redirects to /login when unauthenticated', () => {
     renderAt('/');
-    expect(screen.getByRole('heading', { name: 'Task Management System' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'ٹاسک مینیجمینٹ سسٹم' })).toBeInTheDocument();
   });
 
   it('/ renders DashboardPage for any authenticated role', () => {
     useAuthStore.getState().login({ id: '1', name: 'Om', role: 'user' }, 'jwt');
     renderAt('/');
-    expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'ڈیش بورڈ' })).toBeInTheDocument();
   });
 
   it('/users renders UsersPage for an admin', () => {
     useAuthStore.getState().login({ id: '1', name: 'Admin', role: 'admin' }, 'jwt');
     renderAt('/users');
-    expect(screen.getByRole('heading', { name: 'Users' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'صارفین' })).toBeInTheDocument();
   });
 
   it('/users redirects a non-admin User to /unauthorized', () => {
@@ -63,7 +63,7 @@ describe('AppRoutes (docs/07-frontend-foundation.md §5)', () => {
 
   it('/users redirects an unauthenticated visitor to /login (ProtectedRoute wraps RoleGuard)', () => {
     renderAt('/users');
-    expect(screen.getByRole('heading', { name: 'Task Management System' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'ٹاسک مینیجمینٹ سسٹم' })).toBeInTheDocument();
   });
 
   it('/reports/user-summary renders UserSummaryReportPage for an admin', () => {

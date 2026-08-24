@@ -15,12 +15,12 @@ describe('NotFoundPage', () => {
 
   it('renders the documented Urdu message', () => {
     render(<NotFoundPage />);
-    expect(screen.getByText('Yeh safha nahi mila.')).toBeInTheDocument();
+    expect(screen.getByText('یہ صفحہ نہیں ملا')).toBeInTheDocument();
   });
 
   it('the button navigates back to the Dashboard', () => {
     render(<NotFoundPage />);
-    fireEvent.click(screen.getByText('Dashboard par jayein'));
+    fireEvent.click(screen.getByText('ڈیش بورڈ پر جائیں'));
     expect(mockNavigate).toHaveBeenCalledWith('/');
   });
 });

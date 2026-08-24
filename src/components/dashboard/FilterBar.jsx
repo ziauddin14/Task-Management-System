@@ -42,7 +42,7 @@ function FilterBar({ filtersHook, isAdmin }) {
         aria-label="Status filter"
         className="h-10 rounded-lg border border-gray-300 px-2"
       >
-        <option value="">Har Status</option>
+        <option value="">ہر کیفیت</option>
         {STATUS_OPTIONS.map((status) => (
           <option key={status} value={status}>
             {STATUS_META[status].label}
@@ -56,7 +56,7 @@ function FilterBar({ filtersHook, isAdmin }) {
         aria-label="Responsibility filter"
         className="h-10 rounded-lg border border-gray-300 px-2"
       >
-        <option value="">Har Zimmedari</option>
+        <option value="">ہر ذمہ داری</option>
         {(responsibilities || []).map((entry) => (
           <option key={entry.id} value={entry.value}>
             {entry.value}
@@ -71,7 +71,7 @@ function FilterBar({ filtersHook, isAdmin }) {
           aria-label="Assignee filter"
           className="h-10 rounded-lg border border-gray-300 px-2"
         >
-          <option value="">Har Zimmedar</option>
+          <option value="">ہر ذمہ دار</option>
           {(assignableUsers?.items || []).map((user) => (
             <option key={user.id} value={user.id}>
               {user.name}
@@ -87,8 +87,8 @@ function FilterBar({ filtersHook, isAdmin }) {
           aria-label="Date type"
           className="h-10 rounded-lg border border-gray-300 px-2"
         >
-          <option value="deadline">Deadline</option>
-          <option value="entry">Entry Date</option>
+          <option value="deadline">آخری تاریخ</option>
+          <option value="entry">تاریخِ اندراج</option>
         </select>
         <input
           type="date"
@@ -112,7 +112,7 @@ function FilterBar({ filtersHook, isAdmin }) {
           onClick={clearAllFilters}
           className="h-10 min-w-[40px] rounded-lg px-3 text-sm text-brand hover:underline"
         >
-          Clear all filters
+          تمام فلٹرز صاف کریں
         </button>
       )}
     </div>

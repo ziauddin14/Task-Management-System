@@ -7,7 +7,7 @@ import PreviousUpdatesContent from './PreviousUpdatesContent.jsx';
 // identical content rather than two hand-maintained copies.
 function PreviousUpdatesModal({ isOpen, onClose, taskId }) {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Purani Updates">
+    <Modal isOpen={isOpen} onClose={onClose} title="پرانی اپڈیٹس">
       <PreviousUpdatesContent taskId={taskId} />
     </Modal>
   );

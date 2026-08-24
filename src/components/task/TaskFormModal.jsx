@@ -92,7 +92,7 @@ function TaskFormModal({ isOpen, onClose, mode, task }) {
     }
     // docs/09-frontend-features.md §2 — exact wording specified only for create; edit mode isn't
     // given a documented string, so a plain confirmation is used there instead.
-    toast.success(isEdit ? 'Kaam update ho gaya' : 'Kaam kamyabi se bana diya gaya');
+    toast.success(isEdit ? 'Kaam update ho gaya' : 'کام کامیابی سے بنا دیا گیا');
     onClose();
   }
 
@@ -101,11 +101,11 @@ function TaskFormModal({ isOpen, onClose, mode, task }) {
   );
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? 'Kaam Edit Karein' : 'Naya Kaam'}>
+    <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? 'Kaam Edit Karein' : 'نیا کام'}>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
         <div>
           <label htmlFor="task-title" className="mb-1 block text-sm font-medium text-gray-700">
-            Kaam (Title)
+            کام کا عنوان
           </label>
           <textarea id="task-title" {...register('title')} rows={3} className="w-full rounded-lg border border-gray-300 p-2" />
           {errors.title && (
@@ -117,7 +117,7 @@ function TaskFormModal({ isOpen, onClose, mode, task }) {
 
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="assignee-search">
-            Zimmedar(an)
+            ذمہ دار
           </label>
           <Controller
             control={control}
@@ -184,7 +184,7 @@ function TaskFormModal({ isOpen, onClose, mode, task }) {
 
         <div>
           <label htmlFor="task-responsibility" className="mb-1 block text-sm font-medium text-gray-700">
-            Zimmedari
+            ذمہ داری
           </label>
           <select
             id="task-responsibility"
@@ -207,7 +207,7 @@ function TaskFormModal({ isOpen, onClose, mode, task }) {
 
         <div>
           <label htmlFor="task-deadline" className="mb-1 block text-sm font-medium text-gray-700">
-            Deadline
+            آخری تاریخ
           </label>
           <input
             id="task-deadline"
@@ -224,14 +224,14 @@ function TaskFormModal({ isOpen, onClose, mode, task }) {
 
         <div className="mt-2 flex justify-end gap-2">
           <button type="button" onClick={onClose} className="h-10 min-w-[40px] rounded-lg px-4 text-gray-700 hover:bg-gray-100">
-            Cancel
+            منسوخ کریں
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
             className="h-10 min-w-[40px] rounded-lg bg-brand px-4 text-white hover:bg-brand/90 disabled:opacity-50"
           >
-            Save
+            محفوظ کریں
           </button>
         </div>
       </form>

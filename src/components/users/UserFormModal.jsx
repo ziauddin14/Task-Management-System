@@ -88,11 +88,11 @@ function UserFormModal({ isOpen, onClose, mode, user }) {
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? 'User Edit Karein' : 'Naya User'}>
+      <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? 'User Edit Karein' : 'نیا صارف'}>
         <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-3">
           <div>
             <label htmlFor="user-name" className="mb-1 block text-sm font-medium text-gray-700">
-              Naam
+              نام
             </label>
             <input id="user-name" type="text" {...register('name')} className="h-10 w-full rounded-lg border border-gray-300 px-2" />
             {errors.name && (
@@ -104,7 +104,7 @@ function UserFormModal({ isOpen, onClose, mode, user }) {
 
           <div>
             <label htmlFor="user-email" className="mb-1 block text-sm font-medium text-gray-700">
-              Email
+              ای میل
             </label>
             <input
               id="user-email"
@@ -122,7 +122,7 @@ function UserFormModal({ isOpen, onClose, mode, user }) {
 
           <div>
             <label htmlFor="user-responsibility" className="mb-1 block text-sm font-medium text-gray-700">
-              Zimmedari
+              ذمہ داری
             </label>
             <select
               id="user-responsibility"
@@ -145,7 +145,7 @@ function UserFormModal({ isOpen, onClose, mode, user }) {
 
           <div>
             <label htmlFor="user-role" className="mb-1 block text-sm font-medium text-gray-700">
-              Role
+              کردار
             </label>
             <select id="user-role" {...register('role')} className="h-10 w-full rounded-lg border border-gray-300 px-2">
               <option value="user">User</option>
@@ -161,20 +161,20 @@ function UserFormModal({ isOpen, onClose, mode, user }) {
           {isEdit && (
             <label className="flex h-10 items-center gap-2 text-sm text-gray-700">
               <input type="checkbox" {...register('isActive')} className="h-4 w-4" />
-              Active
+              فعال
             </label>
           )}
 
           <div className="mt-2 flex justify-end gap-2">
             <button type="button" onClick={onClose} className="h-10 min-w-[40px] rounded-lg px-4 text-gray-700 hover:bg-gray-100">
-              Cancel
+              منسوخ کریں
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
               className="h-10 min-w-[40px] rounded-lg bg-brand px-4 text-white hover:bg-brand/90 disabled:opacity-50"
             >
-              Save
+              محفوظ کریں
             </button>
           </div>
         </form>
@@ -183,9 +183,9 @@ function UserFormModal({ isOpen, onClose, mode, user }) {
       <ConfirmDialog
         isOpen={Boolean(pendingValues)}
         title="User Band Karein"
-        message="Is user ko band karne se woh ab login nahi kar sakein ge. Jari rakhein?"
+        message="اس صارف کو بند کرنے سے وہ اب لاگ ان نہیں کر سکیں گے۔ کیا جاری رکھیں؟"
         confirmLabel="Haan, Jari Rakhein"
-        cancelLabel="Cancel"
+        cancelLabel="منسوخ کریں"
         isLoading={mutation.isPending}
         onConfirm={() => {
           const values = pendingValues;

@@ -15,12 +15,12 @@ function UserTable({ users, isLoading, isError, onEdit }) {
       <table className="w-full text-start text-sm">
         <thead className="bg-gray-50 text-gray-600">
           <tr>
-            <th className="whitespace-nowrap px-3 py-2 font-medium">Naam</th>
-            <th className="whitespace-nowrap px-3 py-2 font-medium">Email</th>
-            <th className="whitespace-nowrap px-3 py-2 font-medium">Zimmedari</th>
-            <th className="whitespace-nowrap px-3 py-2 font-medium">Role</th>
-            <th className="whitespace-nowrap px-3 py-2 font-medium">Status</th>
-            <th className="whitespace-nowrap px-3 py-2 font-medium">Actions</th>
+            <th className="whitespace-nowrap px-3 py-2 font-medium">نام</th>
+            <th className="whitespace-nowrap px-3 py-2 font-medium">ای میل</th>
+            <th className="whitespace-nowrap px-3 py-2 font-medium">ذمہ داری</th>
+            <th className="whitespace-nowrap px-3 py-2 font-medium">کردار</th>
+            <th className="whitespace-nowrap px-3 py-2 font-medium">کیفیت</th>
+            <th className="whitespace-nowrap px-3 py-2 font-medium">اقدامات</th>
           </tr>
         </thead>
         <tbody>
@@ -37,7 +37,7 @@ function UserTable({ users, isLoading, isError, onEdit }) {
                     user.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-700'
                   )}
                 >
-                  {user.isActive ? 'Active' : 'Inactive'}
+                  {user.isActive ? 'فعال' : 'غیر فعال'}
                 </span>
               </td>
               <td className="whitespace-nowrap px-3 py-2">
@@ -46,7 +46,7 @@ function UserTable({ users, isLoading, isError, onEdit }) {
                   onClick={() => onEdit(user)}
                   className="h-10 min-w-[40px] rounded-lg border border-gray-300 px-2 text-xs text-gray-700 hover:bg-gray-50"
                 >
-                  Edit
+                  ترمیم کریں
                 </button>
               </td>
             </tr>

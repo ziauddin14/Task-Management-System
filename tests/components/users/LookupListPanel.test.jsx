@@ -70,9 +70,9 @@ describe('LookupListPanel (Phase 10.5 §1 placement decision, docs/09-frontend-f
     renderPanel();
     await screen.findByText('IT');
 
-    fireEvent.click(screen.getAllByText('Edit')[0]);
+    fireEvent.click(screen.getAllByText('ترمیم کریں')[0]);
     fireEvent.change(screen.getByLabelText('Value'), { target: { value: 'Information Technology' } });
-    fireEvent.click(screen.getByText('Save'));
+    fireEvent.click(screen.getByText('محفوظ کریں'));
 
     await waitFor(() =>
       expect(updateLookupValue).toHaveBeenCalledWith('r1', { value: 'Information Technology', sortOrder: 0 })
@@ -91,7 +91,7 @@ describe('LookupListPanel (Phase 10.5 §1 placement decision, docs/09-frontend-f
       )
     ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByText('Cancel'));
+    fireEvent.click(screen.getByText('منسوخ کریں'));
     expect(updateLookupValue).not.toHaveBeenCalled();
   });
 

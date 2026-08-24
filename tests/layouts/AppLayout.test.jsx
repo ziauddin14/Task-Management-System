@@ -65,7 +65,7 @@ describe('AppLayout (docs/07-frontend-foundation.md §2, docs/11-auth.md §5)', 
     window.google = { accounts: { id: { disableAutoSelect } } };
     const { clearSpy } = renderLayout();
 
-    fireEvent.click(screen.getByText('Logout'));
+    fireEvent.click(screen.getByText('لاگ آؤٹ'));
 
     // Step 1: authStore (and its persisted localStorage entry) cleared.
     expect(logoutSpy).toHaveBeenCalled();
@@ -93,7 +93,7 @@ describe('AppLayout (docs/07-frontend-foundation.md §2, docs/11-auth.md §5)', 
     useAuthStore.getState().login({ id: '1', name: 'Om', role: 'user' }, 'jwt-abc');
     renderLayout();
 
-    expect(() => fireEvent.click(screen.getByText('Logout'))).not.toThrow();
+    expect(() => fireEvent.click(screen.getByText('لاگ آؤٹ'))).not.toThrow();
     expect(mockNavigate).toHaveBeenCalledWith('/login');
   });
 });

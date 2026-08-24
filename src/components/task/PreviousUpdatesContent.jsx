@@ -45,16 +45,16 @@ function PreviousUpdatesContent({ taskId }) {
           <span className="font-mono">{task?.codeNumber}</span>
         </div>
         <div className="col-span-2 truncate">{task?.title}</div>
-        <div>Deadline: {formatDate(task?.deadline)}</div>
+        <div>آخری تاریخ: {formatDate(task?.deadline)}</div>
         <div>
-          Status:{' '}
+          کیفیت:{' '}
           <span className={clsx('rounded-full px-2 py-0.5 text-xs font-medium', statusMeta.badgeClass)}>
             {statusMeta.label}
           </span>
         </div>
         <div>{formatTimeStatusLabel(task?.timeStatus)}</div>
         <div>
-          Performance:{' '}
+          کارکردگی:{' '}
           <span className={clsx('rounded-full px-2 py-0.5 text-xs font-medium', performanceMeta.badgeClass)}>
             {performanceMeta.label}
           </span>
@@ -62,7 +62,7 @@ function PreviousUpdatesContent({ taskId }) {
       </div>
 
       {items.length === 0 ? (
-        <EmptyState message="Abhi tak koi update nahi di gayi." />
+        <EmptyState message="ابھی تک کوئی اپڈیٹ نہیں دی گئی۔" />
       ) : (
         <ul className="flex flex-col gap-2">
           {items.map((update) => {
@@ -80,7 +80,7 @@ function PreviousUpdatesContent({ taskId }) {
                 </div>
                 <p className="text-gray-800">{update.description}</p>
                 <div className="mt-1 flex flex-wrap items-center gap-2">
-                  <span className="text-xs text-gray-500">Completion: {update.completionPercent}%</span>
+                  <span className="text-xs text-gray-500">تکمیل فیصد: {update.completionPercent}%</span>
                   {update.attachment && (
                     <a
                       href={update.attachment.url}
@@ -106,7 +106,7 @@ function PreviousUpdatesContent({ taskId }) {
           disabled={updatesQuery.isFetching}
           className="h-10 min-w-[40px] self-center rounded-lg border border-gray-300 px-4 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
         >
-          Purani updates aur dekhein
+          مزید پرانی اپڈیٹس دیکھیں
         </button>
       )}
     </div>

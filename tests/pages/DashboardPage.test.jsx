@@ -105,7 +105,7 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
   it('renders KPI cards from the summary and the task table', async () => {
     renderDashboard('admin');
     expect(await screen.findByText('260801')).toBeInTheDocument();
-    const jariCard = findKpiCardButton('Jari');
+    const jariCard = findKpiCardButton('جاری');
     expect(jariCard).toHaveTextContent('8');
   });
 
@@ -113,7 +113,7 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
     renderDashboard('admin');
     await screen.findByText('260801');
 
-    const jariCard = findKpiCardButton('Jari');
+    const jariCard = findKpiCardButton('جاری');
     expect(jariCard).toHaveAttribute('aria-pressed', 'false');
 
     fireEvent.click(jariCard);
@@ -130,46 +130,46 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
     renderDashboard('admin');
     await screen.findByText('260801');
 
-    fireEvent.click(findKpiCardButton('Jari'));
-    fireEvent.click(findKpiCardButton('Mumtaz'));
+    fireEvent.click(findKpiCardButton('جاری'));
+    fireEvent.click(findKpiCardButton('ممتاز'));
     expect(screen.getByLabelText('Status filter')).toHaveValue('ongoing');
 
     fireEvent.click(screen.getByText('× Clear filter'));
 
     expect(screen.getByLabelText('Status filter')).toHaveValue('');
-    expect(findKpiCardButton('Jari')).toHaveAttribute('aria-pressed', 'false');
-    expect(findKpiCardButton('Mumtaz')).toHaveAttribute('aria-pressed', 'false');
+    expect(findKpiCardButton('جاری')).toHaveAttribute('aria-pressed', 'false');
+    expect(findKpiCardButton('ممتاز')).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('Admin role: sees "Naya Kaam" button and the assignee filter', async () => {
     renderDashboard('admin');
     await screen.findByText('260801');
-    expect(screen.getByText('Naya Kaam')).toBeInTheDocument();
+    expect(screen.getByText('نیا کام')).toBeInTheDocument();
     expect(screen.getByLabelText('Assignee filter')).toBeInTheDocument();
   });
 
   it('User role: no "Naya Kaam" button, no assignee filter, no Edit/Close row actions', async () => {
     renderDashboard('user');
     await screen.findByText('260801');
-    expect(screen.queryByText('Naya Kaam')).not.toBeInTheDocument();
+    expect(screen.queryByText('نیا کام')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Assignee filter')).not.toBeInTheDocument();
-    expect(screen.queryByText('Edit')).not.toBeInTheDocument();
-    expect(screen.queryByText('Close')).not.toBeInTheDocument();
+    expect(screen.queryByText('ترمیم کریں')).not.toBeInTheDocument();
+    expect(screen.queryByText('کام بند کریں')).not.toBeInTheDocument();
   });
 
   it('close action: opens a confirmation with the documented wording; Cancel does not call closeTask', async () => {
     renderDashboard('admin');
     await screen.findByText('260801');
 
-    fireEvent.click(screen.getByText('Close'));
+    fireEvent.click(screen.getByText('کام بند کریں'));
     expect(
-      screen.getByText('Is kaam ko close karne ke baad koi nayi update darj nahi ki ja sakegi. Wakai close karna chahte hain?')
+      screen.getByText('اس کام کو بند کرنے کے بعد کوئی نئی اپڈیٹ درج نہیں کی جا سکے گی۔ کیا واقعی بند کرنا چاہتے ہیں؟')
     ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByText('Cancel'));
+    fireEvent.click(screen.getByText('منسوخ کریں'));
     expect(closeTask).not.toHaveBeenCalled();
     expect(
-      screen.queryByText('Is kaam ko close karne ke baad koi nayi update darj nahi ki ja sakegi. Wakai close karna chahte hain?')
+      screen.queryByText('اس کام کو بند کرنے کے بعد کوئی نئی اپڈیٹ درج نہیں کی جا سکے گی۔ کیا واقعی بند کرنا چاہتے ہیں؟')
     ).not.toBeInTheDocument();
   });
 
@@ -177,7 +177,7 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
     renderDashboard('admin');
     await screen.findByText('260801');
 
-    fireEvent.click(screen.getByText('Close'));
+    fireEvent.click(screen.getByText('کام بند کریں'));
     fireEvent.click(screen.getByText('Haan, Close Karein'));
 
     await waitFor(() => expect(closeTask).toHaveBeenCalledWith('t1'));
@@ -187,7 +187,7 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
     renderDashboard('user');
     await screen.findByText('260801');
 
-    fireEvent.click(screen.getByText('Update'));
+    fireEvent.click(screen.getByText('اپڈیٹ کریں'));
 
     expect(await screen.findByRole('dialog', { name: 'Kaam Update Karein' })).toBeInTheDocument();
   });
@@ -198,21 +198,21 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
 
     expect(getTaskUpdates).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByText('Purani Updates'));
+    fireEvent.click(screen.getByText('پرانی اپڈیٹس'));
 
-    expect(await screen.findByRole('dialog', { name: 'Purani Updates' })).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'پرانی اپڈیٹس' })).toBeInTheDocument();
     await waitFor(() => expect(getTaskUpdates).toHaveBeenCalled());
   });
 
   it('Print View toggle switches the table into the denser read-only variant', async () => {
     renderDashboard('admin');
     await screen.findByText('260801');
-    expect(screen.getByText('Edit')).toBeInTheDocument(); // regular TaskTable's Admin action
+    expect(screen.getByText('ترمیم کریں')).toBeInTheDocument(); // regular TaskTable's Admin action
 
-    fireEvent.click(screen.getByText('Print View'));
+    fireEvent.click(screen.getByText('پرنٹ ویو'));
 
-    expect(screen.queryByText('Edit')).not.toBeInTheDocument();
-    expect(screen.queryByText('Update')).not.toBeInTheDocument();
+    expect(screen.queryByText('ترمیم کریں')).not.toBeInTheDocument();
+    expect(screen.queryByText('اپڈیٹ کریں')).not.toBeInTheDocument();
     expect(screen.getByText('260801')).toBeInTheDocument(); // task data itself still shows
   });
 
@@ -221,11 +221,11 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
     await screen.findByText('260801');
 
     // Apply a status filter via a KPI card, and hide the "Zimmedari" (responsibility) column.
-    fireEvent.click(findKpiCardButton('Jari'));
+    fireEvent.click(findKpiCardButton('جاری'));
     fireEvent.click(screen.getByLabelText('Columns'));
-    fireEvent.click(screen.getByLabelText('Zimmedari'));
+    fireEvent.click(screen.getByLabelText('ذمہ داری'));
 
-    fireEvent.click(screen.getByText('Export'));
+    fireEvent.click(screen.getByText('ایکسپورٹ کریں'));
     fireEvent.click(screen.getByText('Confirm'));
 
     await waitFor(() => expect(exportReport).toHaveBeenCalled());
@@ -244,7 +244,7 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
     renderDashboard('admin');
     await screen.findByText('260801');
 
-    fireEvent.click(screen.getByText('Reminders Bhejein'));
+    fireEvent.click(screen.getByText('یاد دہانیاں بھیجیں'));
 
     await waitFor(() => expect(triggerReminders).toHaveBeenCalled());
   });
@@ -252,6 +252,6 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
   it('User role: no "Reminders Bhejein" button', async () => {
     renderDashboard('user');
     await screen.findByText('260801');
-    expect(screen.queryByText('Reminders Bhejein')).not.toBeInTheDocument();
+    expect(screen.queryByText('یاد دہانیاں بھیجیں')).not.toBeInTheDocument();
   });
 });

@@ -41,7 +41,7 @@ describe('UsersPage (docs/08-ui-ux.md §8)', () => {
     renderPage();
     expect(await screen.findByText('Ali')).toBeInTheDocument();
     expect(screen.getByText('ali@example.com')).toBeInTheDocument();
-    expect(screen.getByText('Inactive')).toBeInTheDocument();
+    expect(screen.getByText('غیر فعال')).toBeInTheDocument();
   });
 
   describe('with fake timers', () => {
@@ -65,16 +65,16 @@ describe('UsersPage (docs/08-ui-ux.md §8)', () => {
     renderPage();
     await screen.findByText('Ali');
 
-    fireEvent.click(screen.getByText('Naya User'));
+    fireEvent.click(screen.getByText('نیا صارف'));
 
-    expect(await screen.findByRole('dialog', { name: 'Naya User' })).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'نیا صارف' })).toBeInTheDocument();
   });
 
   it('row "Edit" opens the form pre-filled in edit mode', async () => {
     renderPage();
     await screen.findByText('Ali');
 
-    fireEvent.click(screen.getAllByText('Edit')[0]);
+    fireEvent.click(screen.getAllByText('ترمیم کریں')[0]);
 
     expect(await screen.findByRole('dialog', { name: 'User Edit Karein' })).toBeInTheDocument();
     expect(screen.getByDisplayValue('Ali')).toBeInTheDocument();

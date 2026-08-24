@@ -54,7 +54,7 @@ describe('App — session restore sequence (docs/11-auth.md §4)', () => {
     render(<App />);
 
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
-    expect(await screen.findByRole('heading', { name: 'Task Management System' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'ٹاسک مینیجمینٹ سسٹم' })).toBeInTheDocument();
     expect(getCurrentUser).not.toHaveBeenCalled();
   });
 
@@ -66,7 +66,7 @@ describe('App — session restore sequence (docs/11-auth.md §4)', () => {
 
     expect(screen.getByRole('status')).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByRole('status')).not.toBeInTheDocument());
-    expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'ڈیش بورڈ' })).toBeInTheDocument();
   });
 
   it('token present + GET /auth/me fails: the loading gate resolves rather than hanging forever', async () => {

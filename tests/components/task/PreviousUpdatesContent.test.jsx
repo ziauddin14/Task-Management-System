@@ -71,7 +71,7 @@ describe('PreviousUpdatesContent (docs/08-ui-ux.md §7, docs/09-frontend-feature
     getTaskUpdates.mockResolvedValue({ items: [], meta: { page: 1, totalPages: 1, total: 0 } });
     renderContent(<PreviousUpdatesContent taskId="t1" />);
 
-    expect(await screen.findByText('Abhi tak koi update nahi di gayi.')).toBeInTheDocument();
+    expect(await screen.findByText('ابھی تک کوئی اپڈیٹ نہیں دی گئی۔')).toBeInTheDocument();
   });
 
   it('renders newest-first history, read-only (no edit/delete controls anywhere)', async () => {
@@ -95,7 +95,7 @@ describe('PreviousUpdatesContent (docs/08-ui-ux.md §7, docs/09-frontend-feature
     await screen.findByText('Second update');
     expect(screen.queryByText('Oldest update')).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByText('Purani updates aur dekhein'));
+    fireEvent.click(screen.getByText('مزید پرانی اپڈیٹس دیکھیں'));
 
     await waitFor(() => expect(screen.getByText('Oldest update')).toBeInTheDocument());
     // The first page's entries are still there — appended, not replaced.
@@ -109,7 +109,7 @@ describe('PreviousUpdatesContent (docs/08-ui-ux.md §7, docs/09-frontend-feature
     renderContent(<PreviousUpdatesContent taskId="t1" />);
 
     await screen.findByText('Second update');
-    expect(screen.queryByText('Purani updates aur dekhein')).not.toBeInTheDocument();
+    expect(screen.queryByText('مزید پرانی اپڈیٹس دیکھیں')).not.toBeInTheDocument();
   });
 
   it('is shared between its own modal and (implicitly) the Update Modal inline expansion — only fetches once mounted', async () => {

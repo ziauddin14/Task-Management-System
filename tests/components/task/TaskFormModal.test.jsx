@@ -62,7 +62,7 @@ describe('TaskFormModal (docs/09-frontend-features.md §2, §10)', () => {
   it('create mode: submitting empty shows required-field errors and does not call createTask', async () => {
     renderModal({ mode: 'create' });
 
-    fireEvent.click(screen.getByText('Save'));
+    fireEvent.click(screen.getByText('محفوظ کریں'));
 
     expect(await screen.findByText('Title is required')).toBeInTheDocument();
     expect(screen.getByText('At least one assignee is required')).toBeInTheDocument();
@@ -73,10 +73,10 @@ describe('TaskFormModal (docs/09-frontend-features.md §2, §10)', () => {
   it('create mode: rejects a past deadline', async () => {
     renderModal({ mode: 'create' });
 
-    fireEvent.change(screen.getByLabelText('Kaam (Title)'), { target: { value: 'My new task' } });
-    fireEvent.change(screen.getByLabelText('Deadline'), { target: { value: pastDate() } });
+    fireEvent.change(screen.getByLabelText('کام کا عنوان'), { target: { value: 'My new task' } });
+    fireEvent.change(screen.getByLabelText('آخری تاریخ'), { target: { value: pastDate() } });
 
-    fireEvent.click(screen.getByText('Save'));
+    fireEvent.click(screen.getByText('محفوظ کریں'));
 
     expect(await screen.findByText('Deadline aaj ya us ke baad honi chahiye')).toBeInTheDocument();
     expect(createTask).not.toHaveBeenCalled();
@@ -86,9 +86,9 @@ describe('TaskFormModal (docs/09-frontend-features.md §2, §10)', () => {
     renderModal({ mode: 'edit', task: existingTask });
 
     await screen.findByDisplayValue('Existing task');
-    expect(screen.getByLabelText('Deadline')).toHaveValue('2020-01-01');
+    expect(screen.getByLabelText('آخری تاریخ')).toHaveValue('2020-01-01');
 
-    fireEvent.click(screen.getByText('Save'));
+    fireEvent.click(screen.getByText('محفوظ کریں'));
 
     await waitFor(() => expect(updateTask).toHaveBeenCalledWith('t1', expect.objectContaining({ deadline: '2020-01-01' })));
     expect(screen.queryByText('Deadline aaj ya us ke baad honi chahiye')).not.toBeInTheDocument();
@@ -98,16 +98,16 @@ describe('TaskFormModal (docs/09-frontend-features.md §2, §10)', () => {
     const onClose = vi.fn();
     renderModal({ mode: 'create', onClose });
 
-    fireEvent.change(screen.getByLabelText('Kaam (Title)'), { target: { value: 'My new task' } });
+    fireEvent.change(screen.getByLabelText('کام کا عنوان'), { target: { value: 'My new task' } });
     fireEvent.click(await screen.findByText('Ali'));
 
-    const responsibilitySelect = screen.getByLabelText('Zimmedari');
+    const responsibilitySelect = screen.getByLabelText('ذمہ داری');
     await waitFor(() => expect(screen.getByText('IT')).toBeInTheDocument());
     fireEvent.change(responsibilitySelect, { target: { value: 'IT' } });
 
-    fireEvent.change(screen.getByLabelText('Deadline'), { target: { value: futureDate() } });
+    fireEvent.change(screen.getByLabelText('آخری تاریخ'), { target: { value: futureDate() } });
 
-    fireEvent.click(screen.getByText('Save'));
+    fireEvent.click(screen.getByText('محفوظ کریں'));
 
     await waitFor(() =>
       expect(createTask).toHaveBeenCalledWith({
@@ -117,7 +117,7 @@ describe('TaskFormModal (docs/09-frontend-features.md §2, §10)', () => {
         deadline: futureDate(),
       })
     );
-    expect(toast.success).toHaveBeenCalledWith('Kaam kamyabi se bana diya gaya');
+    expect(toast.success).toHaveBeenCalledWith('کام کامیابی سے بنا دیا گیا');
     expect(onClose).toHaveBeenCalled();
   });
 
@@ -131,7 +131,7 @@ describe('TaskFormModal (docs/09-frontend-features.md §2, §10)', () => {
 
     fireEvent.click(screen.getByLabelText('Ali hataayein'));
 
-    fireEvent.click(screen.getByText('Save'));
+    fireEvent.click(screen.getByText('محفوظ کریں'));
     expect(await screen.findByText('At least one assignee is required')).toBeInTheDocument();
   });
 });

@@ -39,7 +39,7 @@ describe('UserFormModal (docs/08-ui-ux.md §8, docs/09-frontend-features.md §9)
   it('create mode: submitting empty shows required-field errors and does not call createUser', async () => {
     renderModal({ mode: 'create' });
 
-    fireEvent.click(screen.getByText('Save'));
+    fireEvent.click(screen.getByText('محفوظ کریں'));
 
     expect(await screen.findByText('Name is required')).toBeInTheDocument();
     expect(screen.getByText('A valid email is required')).toBeInTheDocument();
@@ -52,12 +52,12 @@ describe('UserFormModal (docs/08-ui-ux.md §8, docs/09-frontend-features.md §9)
     const onClose = vi.fn();
     renderModal({ mode: 'create', onClose });
 
-    fireEvent.change(screen.getByLabelText('Naam'), { target: { value: 'Bilal' } });
-    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'bilal@example.com' } });
+    fireEvent.change(screen.getByLabelText('نام'), { target: { value: 'Bilal' } });
+    fireEvent.change(screen.getByLabelText('ای میل'), { target: { value: 'bilal@example.com' } });
     await waitFor(() => expect(screen.getByText('IT')).toBeInTheDocument());
-    fireEvent.change(screen.getByLabelText('Zimmedari'), { target: { value: 'IT' } });
+    fireEvent.change(screen.getByLabelText('ذمہ داری'), { target: { value: 'IT' } });
 
-    fireEvent.click(screen.getByText('Save'));
+    fireEvent.click(screen.getByText('محفوظ کریں'));
 
     await waitFor(() =>
       expect(createUser).toHaveBeenCalledWith({ name: 'Bilal', email: 'bilal@example.com', responsibility: 'IT', role: 'user' })
@@ -70,12 +70,12 @@ describe('UserFormModal (docs/08-ui-ux.md §8, docs/09-frontend-features.md §9)
     createUser.mockRejectedValue(Object.assign(new Error('Yeh email pehle se register hai'), { code: 'DUPLICATE_EMAIL' }));
     renderModal({ mode: 'create' });
 
-    fireEvent.change(screen.getByLabelText('Naam'), { target: { value: 'Bilal' } });
-    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'bilal@example.com' } });
+    fireEvent.change(screen.getByLabelText('نام'), { target: { value: 'Bilal' } });
+    fireEvent.change(screen.getByLabelText('ای میل'), { target: { value: 'bilal@example.com' } });
     await waitFor(() => expect(screen.getByText('IT')).toBeInTheDocument());
-    fireEvent.change(screen.getByLabelText('Zimmedari'), { target: { value: 'IT' } });
+    fireEvent.change(screen.getByLabelText('ذمہ داری'), { target: { value: 'IT' } });
 
-    fireEvent.click(screen.getByText('Save'));
+    fireEvent.click(screen.getByText('محفوظ کریں'));
 
     expect(await screen.findByText('Yeh email pehle se register hai')).toBeInTheDocument();
   });
@@ -84,7 +84,7 @@ describe('UserFormModal (docs/08-ui-ux.md §8, docs/09-frontend-features.md §9)
     renderModal({ mode: 'edit', user: existingUser });
 
     expect(await screen.findByDisplayValue('Ali')).toBeInTheDocument();
-    const emailInput = screen.getByLabelText('Email');
+    const emailInput = screen.getByLabelText('ای میل');
     expect(emailInput).toHaveValue('ali@example.com');
     expect(emailInput).toBeDisabled();
   });
@@ -94,8 +94,8 @@ describe('UserFormModal (docs/08-ui-ux.md §8, docs/09-frontend-features.md §9)
     renderModal({ mode: 'edit', user: existingUser });
 
     await screen.findByDisplayValue('Ali');
-    fireEvent.change(screen.getByLabelText('Naam'), { target: { value: 'Ali Updated' } });
-    fireEvent.click(screen.getByText('Save'));
+    fireEvent.change(screen.getByLabelText('نام'), { target: { value: 'Ali Updated' } });
+    fireEvent.click(screen.getByText('محفوظ کریں'));
 
     await waitFor(() =>
       expect(updateUser).toHaveBeenCalledWith('u1', { name: 'Ali Updated', responsibility: 'IT', role: 'user', isActive: true })
@@ -106,16 +106,16 @@ describe('UserFormModal (docs/08-ui-ux.md §8, docs/09-frontend-features.md §9)
     renderModal({ mode: 'edit', user: existingUser });
 
     await screen.findByDisplayValue('Ali');
-    fireEvent.click(screen.getByLabelText('Active'));
-    fireEvent.click(screen.getByText('Save'));
+    fireEvent.click(screen.getByLabelText('فعال'));
+    fireEvent.click(screen.getByText('محفوظ کریں'));
 
     const confirmDialog = await screen.findByRole('dialog', { name: 'User Band Karein' });
     expect(
-      within(confirmDialog).getByText('Is user ko band karne se woh ab login nahi kar sakein ge. Jari rakhein?')
+      within(confirmDialog).getByText('اس صارف کو بند کرنے سے وہ اب لاگ ان نہیں کر سکیں گے۔ کیا جاری رکھیں؟')
     ).toBeInTheDocument();
     expect(updateUser).not.toHaveBeenCalled();
 
-    fireEvent.click(within(confirmDialog).getByText('Cancel'));
+    fireEvent.click(within(confirmDialog).getByText('منسوخ کریں'));
     expect(updateUser).not.toHaveBeenCalled();
     expect(screen.queryByRole('dialog', { name: 'User Band Karein' })).not.toBeInTheDocument();
   });
@@ -125,8 +125,8 @@ describe('UserFormModal (docs/08-ui-ux.md §8, docs/09-frontend-features.md §9)
     renderModal({ mode: 'edit', user: existingUser });
 
     await screen.findByDisplayValue('Ali');
-    fireEvent.click(screen.getByLabelText('Active'));
-    fireEvent.click(screen.getByText('Save'));
+    fireEvent.click(screen.getByLabelText('فعال'));
+    fireEvent.click(screen.getByText('محفوظ کریں'));
     fireEvent.click(await screen.findByText('Haan, Jari Rakhein'));
 
     await waitFor(() =>

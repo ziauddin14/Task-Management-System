@@ -17,14 +17,14 @@ function UsersPage() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">Users</h1>
+        <h1 className="text-xl font-bold">صارفین</h1>
         <button
           type="button"
           onClick={() => setFormModal({ mode: 'create' })}
           className="flex h-10 items-center gap-1 rounded-lg bg-brand px-4 text-white hover:bg-brand/90"
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
-          Naya User
+          نیا صارف
         </button>
       </div>
 

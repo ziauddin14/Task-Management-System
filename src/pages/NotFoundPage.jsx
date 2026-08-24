@@ -9,13 +9,13 @@ function NotFoundPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-4 text-center">
       <h1 className="text-xl font-bold">Not Found</h1>
-      <p className="text-gray-600">Yeh safha nahi mila.</p>
+      <p className="text-gray-600">یہ صفحہ نہیں ملا</p>
       <button
         type="button"
         onClick={() => navigate('/')}
         className="h-10 min-w-[40px] rounded-lg bg-brand px-4 text-white hover:bg-brand/90"
       >
-        Dashboard par jayein
+        ڈیش بورڈ پر جائیں
       </button>
     </div>
   );

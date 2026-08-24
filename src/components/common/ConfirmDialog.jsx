@@ -3,7 +3,7 @@ import Modal from './Modal.jsx';
 
 // docs/09-frontend-features.md §2 — the Close action's "distinct, clearly-separated
 // button/confirmation" (and reused by the Deactivate-user confirmation, §9, in a later sub-phase).
-function ConfirmDialog({ isOpen, title, message, confirmLabel = 'Haan', cancelLabel = 'Cancel', onConfirm, onCancel, isLoading }) {
+function ConfirmDialog({ isOpen, title, message, confirmLabel = 'Haan', cancelLabel = 'منسوخ کریں', onConfirm, onCancel, isLoading }) {
   return (
     <Modal isOpen={isOpen} onClose={onCancel} title={title}>
       <p className="mb-4 text-gray-700">{message}</p>

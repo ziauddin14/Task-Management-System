@@ -83,7 +83,7 @@ function AttachmentPicker({ onStatusChange }) {
           Attachment lagayein (optional)
         </button>
       )}
-      <input ref={inputRef} type="file" onChange={handleFileSelect} className="hidden" aria-label="Attachment" />
+      <input ref={inputRef} type="file" onChange={handleFileSelect} className="hidden" aria-label="منسلکہ فائل" />
 
       {precheckError && (
         <p role="alert" className="mt-1 text-sm text-red-600">
@@ -107,13 +107,13 @@ function AttachmentPicker({ onStatusChange }) {
               className="flex h-10 min-w-[40px] items-center gap-1 text-xs text-brand"
             >
               <RotateCcw className="h-3 w-3" aria-hidden="true" />
-              Dobara koshish karein
+              دوبارہ کوشش کریں
             </button>
           )}
           <button
             type="button"
             onClick={handleRemove}
-            aria-label="Attachment hataayein"
+            aria-label="ہٹا دیں"
             className="flex h-10 w-10 items-center justify-center text-gray-500 hover:text-red-600"
           >
             <X className="h-4 w-4" aria-hidden="true" />

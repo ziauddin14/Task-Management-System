@@ -118,14 +118,14 @@ function LookupListPanel() {
                     onClick={() => saveEdit(entry)}
                     className="h-10 min-w-[40px] rounded-lg bg-brand px-2 text-xs text-white hover:bg-brand/90"
                   >
-                    Save
+                    محفوظ کریں
                   </button>
                   <button
                     type="button"
                     onClick={() => setEditingId(null)}
                     className="h-10 min-w-[40px] rounded-lg px-2 text-xs text-gray-600 hover:bg-gray-100"
                   >
-                    Cancel
+                    منسوخ کریں
                   </button>
                 </>
               ) : (
@@ -136,7 +136,7 @@ function LookupListPanel() {
                     onClick={() => startEdit(entry)}
                     className="h-10 min-w-[40px] rounded-lg border border-gray-300 px-2 text-xs text-gray-700 hover:bg-gray-50"
                   >
-                    Edit
+                    ترمیم کریں
                   </button>
                   <button
                     type="button"
@@ -180,7 +180,7 @@ function LookupListPanel() {
         title="Value Band Karein"
         message="Is value ko band karne ke baad ise dobara active karna filhal is screen se mumkin nahi (sirf active values yahan dikhti hain). Wakai band karna chahte hain?"
         confirmLabel="Haan, Band Karein"
-        cancelLabel="Cancel"
+        cancelLabel="منسوخ کریں"
         isLoading={updateValue.isPending}
         onConfirm={handleConfirmDeactivate}
         onCancel={() => setDeactivatingEntry(null)}

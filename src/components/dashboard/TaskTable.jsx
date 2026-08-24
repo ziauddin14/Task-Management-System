@@ -137,14 +137,14 @@ function TaskTable({
                           disabled={isClosed}
                           className="h-10 min-w-[40px] rounded-lg border border-gray-300 px-2 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-40"
                         >
-                          Update
+                          اپڈیٹ کریں
                         </button>
                         <button
                           type="button"
                           onClick={() => onViewUpdates(task)}
                           className="h-10 min-w-[40px] rounded-lg border border-gray-300 px-2 text-xs text-gray-700 hover:bg-gray-50"
                         >
-                          Purani Updates
+                          پرانی اپڈیٹس
                         </button>
                         {isAdmin && (
                           <>
@@ -154,7 +154,7 @@ function TaskTable({
                               disabled={isClosed}
                               className="h-10 min-w-[40px] rounded-lg border border-gray-300 px-2 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-40"
                             >
-                              Edit
+                              ترمیم کریں
                             </button>
                             <button
                               type="button"
@@ -162,7 +162,7 @@ function TaskTable({
                               disabled={isClosed}
                               className="h-10 min-w-[40px] rounded-lg border border-gray-300 px-2 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-40"
                             >
-                              Close
+                              کام بند کریں
                             </button>
                           </>
                         )}

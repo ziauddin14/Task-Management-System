@@ -42,10 +42,10 @@ function AppLayout() {
             className="flex h-10 items-center gap-1 rounded-lg px-2 text-sm text-gray-600 hover:bg-gray-100"
           >
             <LogOut className="h-4 w-4" aria-hidden="true" />
-            Logout
+            لاگ آؤٹ
           </button>
         </div>
-        <span className="text-sm font-semibold text-brand">Task Management System</span>
+        <span className="text-sm font-semibold text-brand">ٹاسک مینیجمینٹ سسٹم</span>
       </header>
       <main className="flex-1 p-4">
         <Outlet />

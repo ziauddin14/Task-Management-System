@@ -23,9 +23,9 @@ export function formatTimeStatusLabel(timeStatus) {
   const { type, days } = timeStatus;
   switch (type) {
     case 'remaining':
-      return days === 0 ? 'Aaj deadline hai' : `${days} din baaqi`;
+      return days === 0 ? 'Aaj deadline hai' : `${days} دن باقی`;
     case 'overdue':
-      return `${days} din taxeer se`;
+      return `${days} دن تاخیر سے`;
     case 'early':
       return days === 0 ? 'Waqt par mukammal hua' : `${days} din pehle mukammal hua`;
     case 'late':

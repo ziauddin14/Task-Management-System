@@ -49,15 +49,15 @@ describe('UpdateModal (docs/08-ui-ux.md §7, docs/09-frontend-features.md §3)',
   it('pre-fills completion % from the task and shows the read-only header', async () => {
     renderModal();
     expect(await screen.findByText('Sample task')).toBeInTheDocument();
-    expect(screen.getByLabelText('Completion %')).toHaveValue(40);
+    await waitFor(() => expect(screen.getByLabelText('تکمیل فیصد')).toHaveValue(40));
   });
 
   it('rejects a description under 3 characters', async () => {
     renderModal();
     await screen.findByText('Sample task');
 
-    fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'ok' } });
-    fireEvent.click(screen.getByText('Save'));
+    fireEvent.change(screen.getByLabelText('تفصیل'), { target: { value: 'ok' } });
+    fireEvent.click(screen.getByText('محفوظ کریں'));
 
     expect(await screen.findByText('Description kam az kam 3 harf ki honi chahiye')).toBeInTheDocument();
     expect(createTaskUpdate).not.toHaveBeenCalled();
@@ -68,7 +68,7 @@ describe('UpdateModal (docs/08-ui-ux.md §7, docs/09-frontend-features.md §3)',
     await screen.findByText('Sample task');
 
     fireEvent.change(screen.getByLabelText('Completion % slider'), { target: { value: '75' } });
-    expect(screen.getByLabelText('Completion %')).toHaveValue(75);
+    expect(screen.getByLabelText('تکمیل فیصد')).toHaveValue(75);
   });
 
   it('a valid submission (no attachment) calls createTaskUpdate, toasts, and closes', async () => {
@@ -76,13 +76,13 @@ describe('UpdateModal (docs/08-ui-ux.md §7, docs/09-frontend-features.md §3)',
     renderModal({ onClose });
     await screen.findByText('Sample task');
 
-    fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'Made real progress today' } });
-    fireEvent.click(screen.getByText('Save'));
+    fireEvent.change(screen.getByLabelText('تفصیل'), { target: { value: 'Made real progress today' } });
+    fireEvent.click(screen.getByText('محفوظ کریں'));
 
     await waitFor(() =>
       expect(createTaskUpdate).toHaveBeenCalledWith('t1', { description: 'Made real progress today', completionPercent: 40 })
     );
-    expect(toast.success).toHaveBeenCalledWith('Update save ho gayi');
+    expect(toast.success).toHaveBeenCalledWith('اپڈیٹ محفوظ ہو گئی');
     expect(onClose).toHaveBeenCalled();
   });
 
@@ -92,9 +92,9 @@ describe('UpdateModal (docs/08-ui-ux.md §7, docs/09-frontend-features.md §3)',
 
     expect(getTaskUpdates).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByText('Purani Updates dekhein'));
+    fireEvent.click(screen.getByText('پرانی اپڈیٹس دیکھیں'));
 
     await waitFor(() => expect(getTaskUpdates).toHaveBeenCalled());
-    expect(screen.getByText('Purani Updates chupayein')).toBeInTheDocument();
+    expect(screen.getByText('پرانی اپڈیٹس چھپائیں')).toBeInTheDocument();
   });
 });

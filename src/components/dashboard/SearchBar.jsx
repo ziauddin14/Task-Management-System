@@ -11,8 +11,8 @@ function SearchBar({ value, onChange }) {
         type="search"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        placeholder="Kaam ya code number talaash karein…"
-        aria-label="Kaam ya code number talaash karein"
+        placeholder="کام یا کوڈ نمبر تلاش کریں..."
+        aria-label="کام یا کوڈ نمبر تلاش کریں"
         className="h-10 w-full rounded-lg border border-gray-300 ps-9 pe-3 focus:border-brand focus:outline-none"
       />
     </div>
