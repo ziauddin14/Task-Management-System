@@ -47,8 +47,11 @@ describe('AppLayout (docs/07-frontend-foundation.md §2, docs/11-auth.md §5)', 
     useAuthStore.getState().login({ id: '1', name: 'Om Prakash', role: 'user' }, 'jwt-abc');
     renderLayout();
 
-    expect(screen.getByText('Om Prakash')).toBeInTheDocument();
-    expect(screen.getByText('user')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Om Prakash/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Om Prakash/i }));
+    
+    // Once open, the dropdown shows 'User' (capitalized)
+    expect(screen.getByText('User')).toBeInTheDocument();
   });
 
   it('renders the page content passed through the Outlet', () => {
@@ -65,6 +68,8 @@ describe('AppLayout (docs/07-frontend-foundation.md §2, docs/11-auth.md §5)', 
     window.google = { accounts: { id: { disableAutoSelect } } };
     const { clearSpy } = renderLayout();
 
+    // Open dropdown
+    fireEvent.click(screen.getByRole('button', { name: /Om/i }));
     fireEvent.click(screen.getByText('لاگ آؤٹ'));
 
     // Step 1: authStore (and its persisted localStorage entry) cleared.
@@ -93,6 +98,7 @@ describe('AppLayout (docs/07-frontend-foundation.md §2, docs/11-auth.md §5)', 
     useAuthStore.getState().login({ id: '1', name: 'Om', role: 'user' }, 'jwt-abc');
     renderLayout();
 
+    fireEvent.click(screen.getByRole('button', { name: /Om/i }));
     expect(() => fireEvent.click(screen.getByText('لاگ آؤٹ'))).not.toThrow();
     expect(mockNavigate).toHaveBeenCalledWith('/login');
   });
@@ -104,24 +110,23 @@ describe('AppLayout (docs/07-frontend-foundation.md §2, docs/11-auth.md §5)', 
     );
     renderLayout();
 
-    expect(screen.getByText('Om Prakash')).toBeInTheDocument();
-    expect(screen.getByText('IT')).toBeInTheDocument();
-    expect(screen.getByText('user')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Om Prakash/i }));
+    expect(screen.getByText('IT (User)')).toBeInTheDocument();
   });
 
   it('admin role: both nav links are rendered in the header', () => {
     useAuthStore.getState().login({ id: '2', name: 'Admin', role: 'admin' }, 'jwt-admin');
     renderLayout();
 
-    expect(screen.getByRole('link', { name: /تمام صارفین/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /یوزر سمری رپورٹ/i })).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: /تمام یوزرز/i }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: /یوزر سمری رپورٹ/i }).length).toBeGreaterThan(0);
   });
 
   it('user role: admin nav links are NOT rendered', () => {
     useAuthStore.getState().login({ id: '1', name: 'Om', role: 'user' }, 'jwt-abc');
     renderLayout();
 
-    expect(screen.queryByRole('link', { name: /تمام صارفین/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /تمام یوزرز/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /یوزر سمری رپورٹ/i })).not.toBeInTheDocument();
   });
 });
