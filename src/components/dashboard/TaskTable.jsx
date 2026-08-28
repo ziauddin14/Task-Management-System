@@ -110,21 +110,35 @@ function TaskTable({
   const titleCol = COLUMN_DEFINITIONS.find((c) => c.key === 'title');
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white">
-      <div className="no-print flex items-center justify-end border-b border-gray-200 p-2">
+    // Prompt 5E — h-full + flex-col so this component fills whatever height DashboardPage's
+    // flex-1 table slot hands it, with ONLY the middle (table) region scrolling — the column
+    // toggle bar and pagination row stay put (shrink-0) above/below it, matching the "only the
+    // table itself should scroll" requirement.
+    <div className="flex h-full flex-col rounded-lg border border-gray-200 bg-white">
+      <div className="no-print flex shrink-0 items-center justify-end border-b border-gray-200 p-2">
         <ColumnToggle columns={COLUMN_DEFINITIONS} isVisible={isVisible} onToggle={toggleColumn} />
       </div>
 
-      {isLoading && <Spinner label="Kaam load ho rahe hain..." />}
+      {isLoading && (
+        <div className="min-h-0 flex-1">
+          <Spinner label="کام لوڈ ہو رہے ہیں…" />
+        </div>
+      )}
 
-      {!isLoading && isError && <EmptyState message="Kaam load nahi ho sake. Dobara koshish karein." />}
+      {!isLoading && isError && (
+        <div className="min-h-0 flex-1">
+          <EmptyState message="کام لوڈ نہیں ہو سکے۔ دوبارہ کوشش کریں۔" />
+        </div>
+      )}
 
       {!isLoading && !isError && tasks.length === 0 && (
-        <EmptyState message="Koi kaam is filter se mutabiq nahi mila." />
+        <div className="min-h-0 flex-1">
+          <EmptyState message="اس فلٹر سے مطابقت رکھنے والا کوئی کام نہیں ملا۔" />
+        </div>
       )}
 
       {!isLoading && !isError && tasks.length > 0 && (
-        <div className="max-h-[70vh] overflow-auto">
+        <div className="min-h-0 flex-1 overflow-auto">
           <table className="w-full text-start text-sm">
             <thead className="sticky top-0 z-[1] bg-gray-50 text-gray-600">
               <tr>
@@ -191,7 +205,7 @@ function TaskTable({
                 const performanceMeta = getPerformanceMeta(task.performanceRating);
                 const isClosed = task.status === 'closed';
                 return (
-                  <tr key={task.id} className="border-t border-gray-100">
+                  <tr key={task.id} className="border-t border-gray-100 hover:bg-brand-light/40">
                     <td className="whitespace-nowrap px-3 py-2 font-mono">{task.codeNumber}</td>
                     <td className="max-w-[220px] truncate px-3 py-2" title={task.title}>
                       {task.title}
@@ -280,7 +294,7 @@ function TaskTable({
         </div>
       )}
 
-      <div className="no-print px-3">
+      <div className="no-print shrink-0 px-3">
         <Pagination
           page={page}
           totalPages={meta?.totalPages || 1}

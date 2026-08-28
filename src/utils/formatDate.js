@@ -16,6 +16,14 @@ export function formatDateTime(value) {
   return isValid(date) ? format(date, 'dd MMM yyyy, HH:mm') : '-';
 }
 
+// Prompt 5A — the redesigned "Previous Updates" table shows تاریخ (Date) and وقت (Time) as two
+// separate columns rather than one combined string, so this splits out just the time-of-day half.
+export function formatTime(value) {
+  if (!value) return '-';
+  const date = value instanceof Date ? value : new Date(value);
+  return isValid(date) ? format(date, 'HH:mm') : '-';
+}
+
 // docs/08-ui-ux.md §6 — Time Status column example wording: "3 din baaqi" / "2 din taxeer se".
 // timeStatus: { type: 'remaining'|'overdue'|'early'|'late', days: number } (backend/src/models/Task.js).
 // Prompt 2G fix — every branch (including the days===0 edge cases) is now proper Urdu script;

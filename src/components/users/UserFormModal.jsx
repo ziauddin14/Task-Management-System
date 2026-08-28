@@ -70,7 +70,7 @@ function UserFormModal({ isOpen, onClose, mode, user }) {
       }
       return;
     }
-    toast.success(isEdit ? 'User update ho gaya' : 'User kamyabi se bana diya gaya');
+    toast.success(isEdit ? 'صارف اپڈیٹ ہو گیا' : 'صارف کامیابی سے بنا دیا گیا');
     onClose();
   }
 
@@ -86,7 +86,7 @@ function UserFormModal({ isOpen, onClose, mode, user }) {
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? 'User Edit Karein' : 'نیا صارف'}>
+      <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? 'صارف میں ترمیم کریں' : 'نیا صارف'}>
         <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-3">
           <div>
             <label htmlFor="user-name" className="mb-1 block text-sm font-medium text-gray-700">
@@ -179,9 +179,9 @@ function UserFormModal({ isOpen, onClose, mode, user }) {
 
       <ConfirmDialog
         isOpen={Boolean(pendingValues)}
-        title="User Band Karein"
+        title="صارف بند کریں"
         message="اس صارف کو بند کرنے سے وہ اب لاگ ان نہیں کر سکیں گے۔ کیا جاری رکھیں؟"
-        confirmLabel="Haan, Jari Rakhein"
+        confirmLabel="ہاں، جاری رکھیں"
         cancelLabel="منسوخ کریں"
         isLoading={mutation.isPending}
         onConfirm={() => {

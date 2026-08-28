@@ -40,7 +40,7 @@ describe('WhatsAppShareButton', () => {
     clearNavigatorShare(); // simulate a browser with no Web Share API at all
 
     expect(() => render(<WhatsAppShareButton file={sampleFile} />)).not.toThrow();
-    expect(screen.getByText('Faisal ki gayi file WhatsApp Desktop/Web mein manually attach kar dein')).toBeInTheDocument();
+    expect(screen.getByText('ڈاؤن لوڈ ہونے والی فائل کو واٹس ایپ ڈیسک ٹاپ/ویب میں خود اٹیچ کر لیں۔')).toBeInTheDocument();
     expect(screen.queryByText('واٹس ایپ پر شیئر کریں')).not.toBeInTheDocument();
   });
 
@@ -49,6 +49,6 @@ describe('WhatsAppShareButton', () => {
 
     render(<WhatsAppShareButton file={sampleFile} />);
 
-    expect(screen.getByText('Faisal ki gayi file WhatsApp Desktop/Web mein manually attach kar dein')).toBeInTheDocument();
+    expect(screen.getByText('ڈاؤن لوڈ ہونے والی فائل کو واٹس ایپ ڈیسک ٹاپ/ویب میں خود اٹیچ کر لیں۔')).toBeInTheDocument();
   });
 });

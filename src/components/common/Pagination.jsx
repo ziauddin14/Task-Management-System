@@ -9,7 +9,7 @@ function Pagination({ page, totalPages, onPageChange, pageSize, onPageSizeChange
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 py-3">
       <label className="flex items-center gap-2 text-sm text-gray-600">
-        <span>Har safhe par</span>
+        <span>ہر صفحے پر</span>
         <select
           value={pageSize}
           onChange={(event) => onPageSizeChange(Number(event.target.value))}
@@ -30,7 +30,7 @@ function Pagination({ page, totalPages, onPageChange, pageSize, onPageSizeChange
           disabled={page <= 1}
           className="flex h-10 min-w-[40px] items-center justify-center rounded-lg border border-gray-300 px-3 disabled:opacity-40"
         >
-          Peechay
+          پیچھے
         </button>
         <span className="text-sm text-gray-600">
           {page} / {safeTotalPages}
@@ -41,7 +41,7 @@ function Pagination({ page, totalPages, onPageChange, pageSize, onPageSizeChange
           disabled={page >= safeTotalPages}
           className="flex h-10 min-w-[40px] items-center justify-center rounded-lg border border-gray-300 px-3 disabled:opacity-40"
         >
-          Agay
+          آگے
         </button>
       </div>
     </div>

@@ -17,11 +17,11 @@ function LoginPage() {
   const errorMessage = loginMutation.isError ? loginMutation.error.message : googleError;
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-white px-4 py-10 text-center">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-gradient-to-b from-brand-light/60 to-white px-4 py-10 text-center">
       <div className="flex flex-col items-center gap-2">
         {/* Logo placeholder — reserved above the title until official Dawat-e-Islami branding
             assets arrive (docs/07-frontend-foundation.md §8's client-responsibility item). */}
-        <div className="h-16 w-16 rounded-full bg-brand-light" aria-hidden="true" />
+        <div className="h-16 w-16 rounded-full border-2 border-brand bg-brand-light shadow-sm" aria-hidden="true" />
         <h1 className="text-2xl font-bold text-brand">ٹاسک مینیجمینٹ سسٹم</h1>
         <p className="text-lg text-brand">خود کفالت شعبہ جات (دعوتِ اسلامی)</p>
         <p className="text-base text-gray-600">صلوٰۃ علی الحبیب ﷺ</p>

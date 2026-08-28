@@ -59,7 +59,7 @@ describe('UpdateModal (docs/08-ui-ux.md §7, docs/09-frontend-features.md §3)',
     fireEvent.change(screen.getByLabelText('تفصیل'), { target: { value: 'ok' } });
     fireEvent.click(screen.getByText('محفوظ کریں'));
 
-    expect(await screen.findByText('Description kam az kam 3 harf ki honi chahiye')).toBeInTheDocument();
+    expect(await screen.findByText('تفصیل کم از کم 3 حروف کی ہونی چاہیے')).toBeInTheDocument();
     expect(createTaskUpdate).not.toHaveBeenCalled();
   });
 

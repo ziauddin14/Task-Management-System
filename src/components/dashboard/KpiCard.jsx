@@ -15,8 +15,8 @@ function KpiCard({ label, count, percent, active, onClick, icon: Icon }) {
       onClick={onClick}
       aria-pressed={active}
       className={clsx(
-        'flex min-h-[80px] min-w-[140px] shrink-0 snap-start flex-col justify-between gap-2 rounded-lg border p-3 transition-colors',
-        active ? 'border-brand bg-brand-light' : 'border-gray-200 bg-white hover:border-gray-300'
+        'flex min-h-[80px] min-w-[140px] shrink-0 snap-start flex-col justify-between gap-2 rounded-lg border p-3 shadow-sm transition-colors',
+        active ? 'border-brand bg-brand-light shadow-brand/20' : 'border-gray-200 bg-white hover:border-brand/40 hover:bg-brand-light/30'
       )}
     >
       <div className="flex w-full items-center justify-center gap-2 text-gray-500">

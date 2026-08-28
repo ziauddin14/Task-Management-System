@@ -37,7 +37,7 @@ function buildSchema(mode) {
       .refine((value) => {
         if (mode !== 'create') return true;
         return startOfDay(value) >= startOfDay(new Date());
-      }, 'Deadline aaj ya us ke baad honi chahiye'),
+      }, 'آخری تاریخ آج یا اس کے بعد کی ہونی چاہیے'),
   });
 }
 
@@ -104,7 +104,7 @@ function TaskFormModal({ isOpen, onClose, mode, task }) {
     }
     // docs/09-frontend-features.md §2 — exact wording specified only for create; edit mode isn't
     // given a documented string, so a plain confirmation is used there instead.
-    toast.success(isEdit ? 'Kaam update ho gaya' : 'کام کامیابی سے بنا دیا گیا');
+    toast.success(isEdit ? 'کام اپڈیٹ ہو گیا' : 'کام کامیابی سے بنا دیا گیا');
     onClose();
   }
 
@@ -113,7 +113,7 @@ function TaskFormModal({ isOpen, onClose, mode, task }) {
   );
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? 'Kaam Edit Karein' : 'نیا کام'}>
+    <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? 'کام میں ترمیم کریں' : 'نیا کام'}>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
         <div>
           <label htmlFor="task-title" className="mb-1 block text-sm font-medium text-gray-700">
@@ -154,7 +154,7 @@ function TaskFormModal({ isOpen, onClose, mode, task }) {
                           <button
                             type="button"
                             onClick={() => field.onChange(field.value.filter((v) => v !== id))}
-                            aria-label={`${person.name} hataayein`}
+                            aria-label={`${person.name} ہٹا دیں`}
                           >
                             &times;
                           </button>
@@ -167,7 +167,7 @@ function TaskFormModal({ isOpen, onClose, mode, task }) {
                     type="text"
                     value={assigneeSearch}
                     onChange={(event) => setAssigneeSearch(event.target.value)}
-                    placeholder="Talaash…"
+                    placeholder="تلاش…"
                     className="mb-1 h-10 w-full rounded-lg border border-gray-300 px-2 text-sm"
                   />
                   {/* Prompt 3B — previously this list rendered silently empty whether the query was
@@ -230,7 +230,7 @@ function TaskFormModal({ isOpen, onClose, mode, task }) {
               disabled={usersLoading}
               className="h-10 w-full rounded-lg border border-gray-300 px-1 text-sm disabled:bg-gray-100"
             >
-              <option value="">Intekhab karein</option>
+              <option value="">انتخاب کریں</option>
               {responsibilityOptions.map((value) => (
                 <option key={value} value={value}>
                   {value}

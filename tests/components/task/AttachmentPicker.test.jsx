@@ -30,7 +30,7 @@ describe('AttachmentPicker (docs/09-frontend-features.md §3)', () => {
     const { onStatusChange } = renderPicker();
     selectFile(new File(['x'], 'virus.exe', { type: 'application/x-msdownload' }));
 
-    expect(screen.getByText('Yeh file format support nahi hai.')).toBeInTheDocument();
+    expect(screen.getByText('یہ فائل فارمیٹ سپورٹ نہیں ہے۔')).toBeInTheDocument();
     expect(uploadAttachment).not.toHaveBeenCalled();
     expect(onStatusChange).not.toHaveBeenCalledWith('uploading', expect.anything());
   });
@@ -41,7 +41,7 @@ describe('AttachmentPicker (docs/09-frontend-features.md §3)', () => {
     Object.defineProperty(bigFile, 'size', { value: 101 * 1024 * 1024 });
     selectFile(bigFile);
 
-    expect(screen.getByText('File 100MB se zyada hai.')).toBeInTheDocument();
+    expect(screen.getByText('فائل 100MB سے زیادہ ہے۔')).toBeInTheDocument();
     expect(uploadAttachment).not.toHaveBeenCalled();
   });
 

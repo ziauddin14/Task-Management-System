@@ -63,7 +63,7 @@ describe('UsersPage (docs/08-ui-ux.md §8)', () => {
       renderPage();
       await act(async () => {}); // let the initial fetch settle
 
-      fireEvent.change(screen.getByLabelText('Naam ya email talaash karein'), { target: { value: 'ali' } });
+      fireEvent.change(screen.getByLabelText('نام یا ای میل تلاش کریں'), { target: { value: 'ali' } });
       act(() => vi.advanceTimersByTime(399));
       expect(getUsers).not.toHaveBeenCalledWith({ search: 'ali' });
 
@@ -87,7 +87,7 @@ describe('UsersPage (docs/08-ui-ux.md §8)', () => {
 
     fireEvent.click(screen.getAllByText('ترمیم کریں')[0]);
 
-    expect(await screen.findByRole('dialog', { name: 'User Edit Karein' })).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'صارف میں ترمیم کریں' })).toBeInTheDocument();
     expect(screen.getByDisplayValue('Ali')).toBeInTheDocument();
     expect(screen.getByDisplayValue('ali@example.com')).toBeInTheDocument();
   });

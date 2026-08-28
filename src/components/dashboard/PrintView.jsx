@@ -17,11 +17,13 @@ function columnLabel(key) {
 // hidden there stays hidden here too) but with no way to change it from this view.
 function PrintView({ tasks, isVisible }) {
   if (tasks.length === 0) {
-    return <EmptyState message="Koi kaam is filter se mutabiq nahi mila." />;
+    return <EmptyState message="اس فلٹر سے مطابقت رکھنے والا کوئی کام نہیں ملا۔" />;
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white">
+    // Prompt 5E — same contained-scroll treatment as TaskTable.jsx, so switching Print View on
+    // doesn't reintroduce the whole-page scroll the table's own h-full/overflow-auto avoids.
+    <div className="h-full overflow-auto rounded-lg border border-gray-200 bg-white">
       <table className="w-full text-start text-xs">
         <thead className="bg-gray-50 text-gray-600">
           <tr>

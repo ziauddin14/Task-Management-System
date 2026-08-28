@@ -21,10 +21,10 @@ export const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024;
 // or null when the file is fine.
 export function validateAttachmentFile(file) {
   if (!ALLOWED_MIME_TYPES.has(file.type)) {
-    return 'Yeh file format support nahi hai.';
+    return 'یہ فائل فارمیٹ سپورٹ نہیں ہے۔';
   }
   if (file.size > MAX_FILE_SIZE_BYTES) {
-    return 'File 100MB se zyada hai.';
+    return 'فائل 100MB سے زیادہ ہے۔';
   }
   return null;
 }

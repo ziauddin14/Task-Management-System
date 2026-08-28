@@ -85,7 +85,7 @@ describe('TaskFormModal (docs/09-frontend-features.md §2, §10)', () => {
 
     fireEvent.click(screen.getByText('محفوظ کریں'));
 
-    expect(await screen.findByText('Deadline aaj ya us ke baad honi chahiye')).toBeInTheDocument();
+    expect(await screen.findByText('آخری تاریخ آج یا اس کے بعد کی ہونی چاہیے')).toBeInTheDocument();
     expect(createTask).not.toHaveBeenCalled();
   });
 
@@ -98,7 +98,7 @@ describe('TaskFormModal (docs/09-frontend-features.md §2, §10)', () => {
     fireEvent.click(screen.getByText('محفوظ کریں'));
 
     await waitFor(() => expect(updateTask).toHaveBeenCalledWith('t1', expect.objectContaining({ deadline: '2020-01-01' })));
-    expect(screen.queryByText('Deadline aaj ya us ke baad honi chahiye')).not.toBeInTheDocument();
+    expect(screen.queryByText('آخری تاریخ آج یا اس کے بعد کی ہونی چاہیے')).not.toBeInTheDocument();
   });
 
   it('create mode: a valid submission calls createTask, toasts the documented message, and closes', async () => {
@@ -134,9 +134,9 @@ describe('TaskFormModal (docs/09-frontend-features.md §2, §10)', () => {
     await screen.findByDisplayValue('Existing task');
     // The chip only resolves the assignee's name once useAssignableUsers' fetch lands (it looks
     // the id up in `users?.items`) — wait for that before asserting the chip/its remove button.
-    expect(await screen.findByLabelText('Ali hataayein')).toBeInTheDocument();
+    expect(await screen.findByLabelText('Ali ہٹا دیں')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByLabelText('Ali hataayein'));
+    fireEvent.click(screen.getByLabelText('Ali ہٹا دیں'));
 
     fireEvent.click(screen.getByText('محفوظ کریں'));
     expect(await screen.findByText('At least one assignee is required')).toBeInTheDocument();

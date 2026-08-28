@@ -18,8 +18,8 @@ function UsersPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">صارفین</h1>
+      <div className="flex items-center justify-between border-b-2 border-brand/10 pb-3">
+        <h1 className="text-3xl font-bold text-gray-900">صارفین</h1>
         <button
           type="button"
           onClick={() => setFormModal({ mode: 'create' })}
@@ -34,8 +34,8 @@ function UsersPage() {
         type="search"
         value={searchInput}
         onChange={(event) => setSearchInput(event.target.value)}
-        placeholder="Naam ya email talaash karein…"
-        aria-label="Naam ya email talaash karein"
+        placeholder="نام یا ای میل تلاش کریں…"
+        aria-label="نام یا ای میل تلاش کریں"
         className="h-10 w-full max-w-sm rounded-lg border border-gray-300 px-3 focus:border-brand focus:outline-none"
       />
 

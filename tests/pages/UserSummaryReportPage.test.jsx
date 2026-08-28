@@ -22,7 +22,7 @@ describe('UserSummaryReportPage (docs/08-ui-ux.md §9)', () => {
   it('renders the heading and an explanation that no live preview is available (real API gap — see Phase 10.6 report §J)', () => {
     render(<UserSummaryReportPage />);
     expect(screen.getByRole('heading', { name: 'User Summary Report' })).toBeInTheDocument();
-    expect(screen.getByText('Live preview yahan uplabdh nahi hai — Export button se report file hasil karein.')).toBeInTheDocument();
+    expect(screen.getByText('یہاں لائیو پیش منظر دستیاب نہیں — ایکسپورٹ بٹن سے رپورٹ فائل حاصل کریں۔')).toBeInTheDocument();
   });
 
   it('the column-hide control persists to its own localStorage key, distinct from the dashboard\'s', () => {

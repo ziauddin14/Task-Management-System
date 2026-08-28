@@ -80,7 +80,7 @@ function AttachmentPicker({ onStatusChange }) {
           className="flex h-10 items-center gap-2 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 hover:bg-gray-50"
         >
           <Paperclip className="h-4 w-4" aria-hidden="true" />
-          Attachment lagayein (optional)
+          اٹیچمنٹ لگائیں (اختیاری)
         </button>
       )}
       <input ref={inputRef} type="file" onChange={handleFileSelect} className="hidden" aria-label="منسلکہ فائل" />

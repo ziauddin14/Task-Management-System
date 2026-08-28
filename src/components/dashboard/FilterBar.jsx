@@ -40,7 +40,7 @@ function FilterBar({ filtersHook, isAdmin }) {
         value={params.status || ''}
         onChange={(event) => setFilter('status', event.target.value || undefined)}
         aria-label="Status filter"
-        className="h-10 rounded-lg border border-gray-300 px-2"
+        className="h-10 rounded-lg border border-gray-300 px-2 focus:border-brand focus:outline-none"
       >
         <option value="">ہر کیفیت</option>
         {STATUS_OPTIONS.map((status) => (
@@ -54,7 +54,7 @@ function FilterBar({ filtersHook, isAdmin }) {
         value={params.responsibility || ''}
         onChange={(event) => setFilter('responsibility', event.target.value || undefined)}
         aria-label="Responsibility filter"
-        className="h-10 rounded-lg border border-gray-300 px-2"
+        className="h-10 rounded-lg border border-gray-300 px-2 focus:border-brand focus:outline-none"
       >
         <option value="">ہر ذمہ داری</option>
         {(responsibilities || []).map((entry) => (
@@ -69,7 +69,7 @@ function FilterBar({ filtersHook, isAdmin }) {
           value={params.assigneeId || ''}
           onChange={(event) => setFilter('assigneeId', event.target.value || undefined)}
           aria-label="Assignee filter"
-          className="h-10 rounded-lg border border-gray-300 px-2"
+          className="h-10 rounded-lg border border-gray-300 px-2 focus:border-brand focus:outline-none"
         >
           <option value="">ہر ذمہ دار</option>
           {(assignableUsers?.items || []).map((user) => (
@@ -85,7 +85,7 @@ function FilterBar({ filtersHook, isAdmin }) {
           value={dateType}
           onChange={(event) => setFilter('dateType', event.target.value)}
           aria-label="Date type"
-          className="h-10 rounded-lg border border-gray-300 px-2"
+          className="h-10 rounded-lg border border-gray-300 px-2 focus:border-brand focus:outline-none"
         >
           <option value="deadline">آخری تاریخ</option>
           <option value="entry">تاریخِ اندراج</option>
@@ -94,15 +94,15 @@ function FilterBar({ filtersHook, isAdmin }) {
           type="date"
           value={params.from || ''}
           onChange={(event) => setFilter('from', event.target.value || undefined)}
-          aria-label="Az tareekh"
-          className="h-10 rounded-lg border border-gray-300 px-2"
+          aria-label="از تاریخ"
+          className="h-10 rounded-lg border border-gray-300 px-2 focus:border-brand focus:outline-none"
         />
         <input
           type="date"
           value={params.to || ''}
           onChange={(event) => setFilter('to', event.target.value || undefined)}
-          aria-label="Ta tareekh"
-          className="h-10 rounded-lg border border-gray-300 px-2"
+          aria-label="تا تاریخ"
+          className="h-10 rounded-lg border border-gray-300 px-2 focus:border-brand focus:outline-none"
         />
       </div>
 

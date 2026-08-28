@@ -44,12 +44,12 @@ describe('LookupListPanel (Phase 10.5 §1 placement decision, docs/09-frontend-f
     renderPanel();
     await screen.findByText('IT');
 
-    fireEvent.change(screen.getByLabelText('Nayi Zimmedari'), { target: { value: 'HR' } });
+    fireEvent.change(screen.getByLabelText('نئی ذمہ داری'), { target: { value: 'HR' } });
     fireEvent.click(screen.getByText('Add'));
 
     await waitFor(() => expect(createLookupValue).toHaveBeenCalledWith({ listType: 'responsibility', value: 'HR' }));
-    expect(toast.success).toHaveBeenCalledWith('Value shamil kar di gayi');
-    expect(screen.getByLabelText('Nayi Zimmedari')).toHaveValue('');
+    expect(toast.success).toHaveBeenCalledWith('ویلیو شامل کر دی گئی');
+    expect(screen.getByLabelText('نئی ذمہ داری')).toHaveValue('');
   });
 
   it('a duplicate value (409) shows an inline error under the add-value input, not just a toast', async () => {
@@ -59,7 +59,7 @@ describe('LookupListPanel (Phase 10.5 §1 placement decision, docs/09-frontend-f
     renderPanel();
     await screen.findByText('IT');
 
-    fireEvent.change(screen.getByLabelText('Nayi Zimmedari'), { target: { value: 'IT' } });
+    fireEvent.change(screen.getByLabelText('نئی ذمہ داری'), { target: { value: 'IT' } });
     fireEvent.click(screen.getByText('Add'));
 
     expect(await screen.findByText('Yeh value pehle se is list mein maujood hai.')).toBeInTheDocument();
@@ -87,7 +87,7 @@ describe('LookupListPanel (Phase 10.5 §1 placement decision, docs/09-frontend-f
 
     expect(
       await screen.findByText(
-        'Is value ko band karne ke baad ise dobara active karna filhal is screen se mumkin nahi (sirf active values yahan dikhti hain). Wakai band karna chahte hain?'
+        'اس ویلیو کو بند کرنے کے بعد اسے دوبارہ ایکٹیو کرنا فی الحال اس اسکرین سے ممکن نہیں (صرف ایکٹیو ویلیوز یہاں دکھائی دیتی ہیں)۔ واقعی بند کرنا چاہتے ہیں؟'
       )
     ).toBeInTheDocument();
 
@@ -101,7 +101,7 @@ describe('LookupListPanel (Phase 10.5 §1 placement decision, docs/09-frontend-f
     await screen.findByText('IT');
 
     fireEvent.click(screen.getAllByText('Deactivate')[0]);
-    fireEvent.click(await screen.findByText('Haan, Band Karein'));
+    fireEvent.click(await screen.findByText('ہاں، بند کریں'));
 
     await waitFor(() => expect(updateLookupValue).toHaveBeenCalledWith('r1', { isActive: false }));
   });

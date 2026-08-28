@@ -6,9 +6,9 @@ import EmptyState from '../common/EmptyState.jsx';
 // Prompt 3E — Name, Zimmedari (Responsibility), Email, Role, Status (Active/Inactive), per-row
 // Edit action, in this exact right-to-left order. No delete action anywhere on this page.
 function UserTable({ users, isLoading, isError, onEdit }) {
-  if (isLoading) return <Spinner label="Users load ho rahe hain..." />;
-  if (isError) return <EmptyState message="Users load nahi ho sake. Dobara koshish karein." />;
-  if (users.length === 0) return <EmptyState message="Koi user is talaash se mutabiq nahi mila." />;
+  if (isLoading) return <Spinner label="صارفین لوڈ ہو رہے ہیں…" />;
+  if (isError) return <EmptyState message="صارفین لوڈ نہیں ہو سکے۔ دوبارہ کوشش کریں۔" />;
+  if (users.length === 0) return <EmptyState message="اس تلاش سے مطابقت رکھنے والا کوئی صارف نہیں ملا۔" />;
 
   return (
     <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
@@ -25,7 +25,7 @@ function UserTable({ users, isLoading, isError, onEdit }) {
         </thead>
         <tbody>
           {users.map((user) => (
-            <tr key={user.id} className="border-t border-gray-100">
+            <tr key={user.id} className="border-t border-gray-100 hover:bg-brand-light/40">
               <td className="whitespace-nowrap px-3 py-2">{user.name}</td>
               <td className="whitespace-nowrap px-3 py-2">{user.responsibility}</td>
               <td className="whitespace-nowrap px-3 py-2">{user.email}</td>

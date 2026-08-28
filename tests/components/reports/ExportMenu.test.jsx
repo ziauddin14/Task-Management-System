@@ -41,7 +41,7 @@ describe('ExportMenu (docs/08-ui-ux.md §10, docs/09-frontend-features.md §8)',
     render(<ExportMenu mode="dashboard" onExport={vi.fn()} isLoading />);
     fireEvent.click(screen.getByText('ایکسپورٹ کریں'));
 
-    const confirmButton = screen.getByText('Generate ho raha hai...');
+    const confirmButton = screen.getByText('تیار ہو رہا ہے۔۔۔');
     expect(confirmButton).toBeDisabled();
   });
 
@@ -53,7 +53,7 @@ describe('ExportMenu (docs/08-ui-ux.md §10, docs/09-frontend-features.md §8)',
     fireEvent.click(screen.getByText('Confirm'));
 
     expect(
-      await screen.findByText('Faisal ki gayi file WhatsApp Desktop/Web mein manually attach kar dein')
+      await screen.findByText('ڈاؤن لوڈ ہونے والی فائل کو واٹس ایپ ڈیسک ٹاپ/ویب میں خود اٹیچ کر لیں۔')
     ).toBeInTheDocument();
   });
 

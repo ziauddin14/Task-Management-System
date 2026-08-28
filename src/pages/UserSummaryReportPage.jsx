@@ -32,8 +32,8 @@ function UserSummaryReportPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">User Summary Report</h1>
+      <div className="flex items-center justify-between border-b-2 border-brand/10 pb-3">
+        <h1 className="text-3xl font-bold text-gray-900">User Summary Report</h1>
         <div className="flex items-center gap-2">
           <ColumnToggle
             columns={USER_SUMMARY_COLUMN_DEFINITIONS}
@@ -44,7 +44,7 @@ function UserSummaryReportPage() {
         </div>
       </div>
 
-      <EmptyState message="Live preview yahan uplabdh nahi hai — Export button se report file hasil karein." />
+      <EmptyState message="یہاں لائیو پیش منظر دستیاب نہیں — ایکسپورٹ بٹن سے رپورٹ فائل حاصل کریں۔" />
     </div>
   );
 }

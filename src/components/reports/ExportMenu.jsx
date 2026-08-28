@@ -71,7 +71,7 @@ function ExportMenu({ mode, onExport, isLoading }) {
             disabled={isLoading}
             className="h-10 w-full rounded-lg bg-brand px-3 text-sm text-white hover:bg-brand/90 disabled:opacity-50"
           >
-            {isLoading ? 'Generate ho raha hai...' : 'Confirm'}
+            {isLoading ? 'تیار ہو رہا ہے۔۔۔' : 'Confirm'}
           </button>
         </div>
       )}

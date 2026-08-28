@@ -13,8 +13,8 @@ import { useCreateTaskUpdate } from '../../hooks/useCreateTaskUpdate.js';
 // docs/09-frontend-features.md §3 — description required min 3 chars; completionPercent required
 // 0-100 (mirrors backend/src/validators/taskUpdate.validator.js's createTaskUpdateSchema).
 const updateSchema = z.object({
-  description: z.string().trim().min(3, 'Description kam az kam 3 harf ki honi chahiye'),
-  completionPercent: z.coerce.number({ invalid_type_error: 'Completion % zaroori hai' }).min(0).max(100),
+  description: z.string().trim().min(3, 'تفصیل کم از کم 3 حروف کی ہونی چاہیے'),
+  completionPercent: z.coerce.number({ invalid_type_error: 'تکمیل فیصد درج کرنا ضروری ہے' }).min(0).max(100),
 });
 
 // docs/08-ui-ux.md §7 — opened by the row's "Update" button. Read-only task summary header,
@@ -80,9 +80,9 @@ function UpdateModal({ isOpen, onClose, taskId }) {
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Kaam Update Karein">
+    <Modal isOpen={isOpen} onClose={onClose} title="کام اپڈیٹ کریں">
       {isTaskLoading ? (
-        <Spinner label="Load ho raha hai..." />
+        <Spinner label="لوڈ ہو رہا ہے…" />
       ) : (
         <>
           <div className="mb-3 rounded-lg bg-gray-50 p-2 text-sm text-gray-600">

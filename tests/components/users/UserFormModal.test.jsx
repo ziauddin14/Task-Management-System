@@ -58,7 +58,7 @@ describe('UserFormModal (docs/08-ui-ux.md §8, docs/09-frontend-features.md §9)
     await waitFor(() =>
       expect(createUser).toHaveBeenCalledWith({ name: 'Bilal', email: 'bilal@example.com', responsibility: 'IT', role: 'user' })
     );
-    expect(toast.success).toHaveBeenCalledWith('User kamyabi se bana diya gaya');
+    expect(toast.success).toHaveBeenCalledWith('صارف کامیابی سے بنا دیا گیا');
     expect(onClose).toHaveBeenCalled();
   });
 
@@ -104,7 +104,7 @@ describe('UserFormModal (docs/08-ui-ux.md §8, docs/09-frontend-features.md §9)
     fireEvent.click(screen.getByLabelText('فعال'));
     fireEvent.click(screen.getByText('محفوظ کریں'));
 
-    const confirmDialog = await screen.findByRole('dialog', { name: 'User Band Karein' });
+    const confirmDialog = await screen.findByRole('dialog', { name: 'صارف بند کریں' });
     expect(
       within(confirmDialog).getByText('اس صارف کو بند کرنے سے وہ اب لاگ ان نہیں کر سکیں گے۔ کیا جاری رکھیں؟')
     ).toBeInTheDocument();
@@ -112,7 +112,7 @@ describe('UserFormModal (docs/08-ui-ux.md §8, docs/09-frontend-features.md §9)
 
     fireEvent.click(within(confirmDialog).getByText('منسوخ کریں'));
     expect(updateUser).not.toHaveBeenCalled();
-    expect(screen.queryByRole('dialog', { name: 'User Band Karein' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'صارف بند کریں' })).not.toBeInTheDocument();
   });
 
   it('edit mode: confirming the deactivation calls updateUser with isActive:false', async () => {
@@ -122,7 +122,7 @@ describe('UserFormModal (docs/08-ui-ux.md §8, docs/09-frontend-features.md §9)
     await screen.findByDisplayValue('Ali');
     fireEvent.click(screen.getByLabelText('فعال'));
     fireEvent.click(screen.getByText('محفوظ کریں'));
-    fireEvent.click(await screen.findByText('Haan, Jari Rakhein'));
+    fireEvent.click(await screen.findByText('ہاں، جاری رکھیں'));
 
     await waitFor(() =>
       expect(updateUser).toHaveBeenCalledWith('u1', { name: 'Ali', responsibility: 'IT', role: 'user', isActive: false })

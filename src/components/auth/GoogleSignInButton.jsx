@@ -19,7 +19,7 @@ function GoogleSignInButton({ loginMutation, onGoogleError }) {
       useOneTap
       onSuccess={(credentialResponse) => loginMutation.mutate({ idToken: credentialResponse.credential })}
       onError={() => {
-        toast.error('Login mumkin nahi hua, dobara koshish karein');
+        toast.error('لاگ ان ممکن نہیں ہوا، دوبارہ کوشش کریں');
         // docs/08-ui-ux.md §2 step 5 — the generic message must show inline on this screen too,
         // not just as a toast (Google's own client-side sign-in failure never reaches
         // loginMutation, which only tracks OUR backend call — so LoginPage needs its own signal).

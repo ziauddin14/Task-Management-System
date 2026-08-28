@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import clsx from 'clsx';
-import { LayoutDashboard, Users, FileText, LogOut, X } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, LogOut, X, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import LogoMark from './LogoMark.jsx';
 
 // Matches Tailwind's default `md` breakpoint (768px) — the same one the CSS classes below use to
 // switch the sidebar from an off-canvas mobile drawer to an always-visible desktop panel.
@@ -35,15 +36,18 @@ function useIsDesktop() {
 function navLinkClass({ isActive }) {
   return clsx(
     'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-    isActive ? 'bg-brand/10 text-brand' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+    isActive ? 'bg-brand text-white shadow-sm' : 'text-gray-600 hover:bg-brand-light hover:text-brand'
   );
 }
 
-// Persistent left-side navigation panel (see AppLayout.jsx). Desktop: always visible, part of the
-// normal flex flow (a plain flex sibling placed last in AppLayout's row so it lands on the
-// physical left in this RTL app). Mobile: an overlay drawer, fixed + slid off-screen until
-// `isOpen`, closed via backdrop click, the × button, or navigating to a link.
-function Sidebar({ isOpen, onClose, isAdmin, onLogout }) {
+// Prompt 5C — persistent RIGHT-side navigation panel (moved from the left: this is an RTL app, so
+// the sidebar's natural position is the reading-direction start, the right edge — see
+// AppLayout.jsx's comment on why it's now the FIRST flex child, not the last). Desktop: always
+// visible, part of the normal flex flow. Mobile: an overlay drawer, fixed + slid off-screen until
+// `isOpen`, closed via backdrop click, the × button, or navigating to a link. `collapsed` (new,
+// Prompt 5C.2) shrinks it to an icon-only rail — independent of, and orthogonal to, the mobile
+// open/closed state, so it applies on both desktop and mobile as asked.
+function Sidebar({ isOpen, onClose, isAdmin, onLogout, collapsed, onToggleCollapsed }) {
   const isDesktop = useIsDesktop();
   // Only actually hidden-from-assistive-tech when it's genuinely off-screen (mobile + closed) —
   // on desktop the panel is always visible, so it must never be aria-hidden there regardless of
@@ -59,19 +63,23 @@ function Sidebar({ isOpen, onClose, isAdmin, onLogout }) {
   return (
     <aside
       className={clsx(
-        'no-print fixed inset-y-0 end-0 z-50 flex w-64 shrink-0 flex-col border-s border-gray-200 bg-white shadow-lg transition-transform duration-200 ease-in-out',
+        'no-print fixed inset-y-0 start-0 z-50 flex shrink-0 flex-col border-e border-gray-200 bg-white shadow-lg transition-all duration-200 ease-in-out',
+        collapsed ? 'w-16' : 'w-64',
         'md:static md:z-auto md:shadow-none md:translate-x-0',
-        isOpen ? 'translate-x-0' : '-translate-x-full'
+        isOpen ? 'translate-x-0' : 'translate-x-full'
       )}
       aria-hidden={isHiddenFromA11yTree}
     >
-      <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4">
-        <span className="text-base font-bold text-brand">ٹاسک مینجمنٹ سسٹم</span>
+      {/* Prompt 5D — the full app name now lives once, prominently, in AppLayout's own navbar
+          header — repeating it here too would just be noise, so this header keeps only the logo
+          mark (which doubles as a visual anchor for the collapse toggle right below it). */}
+      <div className={clsx('flex h-16 items-center border-b-2 border-brand/20 bg-brand-light/50 px-3', collapsed ? 'justify-center' : 'justify-between')}>
+        <LogoMark className="h-8 w-8 shrink-0" decorative={false} />
         <button
           type="button"
           onClick={onClose}
-          aria-label="Sidebar band karein"
-          className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 md:hidden"
+          aria-label="سائیڈبار بند کریں"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 md:hidden"
         >
           <X className="h-5 w-5" aria-hidden="true" />
         </button>
@@ -79,21 +87,43 @@ function Sidebar({ isOpen, onClose, isAdmin, onLogout }) {
 
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-3" aria-label="Main navigation">
         {links.map((link) => (
-          <NavLink key={link.to} to={link.to} end={link.end} className={navLinkClass} onClick={onClose}>
+          <NavLink
+            key={link.to}
+            to={link.to}
+            end={link.end}
+            className={navLinkClass}
+            onClick={onClose}
+            title={collapsed ? link.label : undefined}
+          >
             <link.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-            <span>{link.label}</span>
+            {!collapsed && <span className="truncate">{link.label}</span>}
           </NavLink>
         ))}
       </nav>
 
-      <div className="border-t border-gray-200 p-3">
+      <div className="flex flex-col gap-1 border-t border-gray-200 p-3">
+        <button
+          type="button"
+          onClick={onToggleCollapsed}
+          title={collapsed ? 'سائیڈبار پھیلائیں' : 'سائیڈبار سکیڑیں'}
+          aria-label={collapsed ? 'سائیڈبار پھیلائیں' : 'سائیڈبار سکیڑیں'}
+          className="flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium text-gray-600 hover:bg-brand-light hover:text-brand"
+        >
+          {collapsed ? (
+            <ChevronsLeft className="h-4 w-4 shrink-0" aria-hidden="true" />
+          ) : (
+            <ChevronsRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+          )}
+          {!collapsed && <span>سکیڑیں</span>}
+        </button>
         <button
           type="button"
           onClick={onLogout}
+          title={collapsed ? 'لاگ آؤٹ' : undefined}
           className="flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium text-red-600 hover:bg-red-50"
         >
           <LogOut className="h-4 w-4 shrink-0" aria-hidden="true" />
-          <span>لاگ آؤٹ</span>
+          {!collapsed && <span>لاگ آؤٹ</span>}
         </button>
       </div>
     </aside>

@@ -178,7 +178,7 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
     await screen.findByText('260801');
 
     fireEvent.click(screen.getByText('کام بند کریں'));
-    fireEvent.click(screen.getByText('Haan, Close Karein'));
+    fireEvent.click(screen.getByText('ہاں، بند کریں'));
 
     await waitFor(() => expect(closeTask).toHaveBeenCalledWith('t1'));
   });
@@ -189,7 +189,7 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
 
     fireEvent.click(screen.getByText('اپڈیٹ کریں'));
 
-    expect(await screen.findByRole('dialog', { name: 'Kaam Update Karein' })).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'کام اپڈیٹ کریں' })).toBeInTheDocument();
   });
 
   it('"Purani Updates" opens the Previous Updates Modal for that task, lazily fetching only once opened', async () => {
@@ -200,7 +200,7 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
 
     fireEvent.click(screen.getByText('پرانی اپڈیٹس'));
 
-    expect(await screen.findByRole('dialog', { name: 'پرانی اپڈیٹس' })).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'کام کی تفصیل' })).toBeInTheDocument();
     await waitFor(() => expect(getTaskUpdates).toHaveBeenCalled());
   });
 

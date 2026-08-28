@@ -39,6 +39,6 @@ describe('PrintView', () => {
 
   it('shows an EmptyState when there are no tasks', () => {
     render(<PrintView tasks={[]} isVisible={allVisible} />);
-    expect(screen.getByText('Koi kaam is filter se mutabiq nahi mila.')).toBeInTheDocument();
+    expect(screen.getByText('اس فلٹر سے مطابقت رکھنے والا کوئی کام نہیں ملا۔')).toBeInTheDocument();
   });
 });

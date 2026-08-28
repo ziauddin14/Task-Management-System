@@ -53,7 +53,7 @@ function LookupListPanel() {
       }
       return;
     }
-    toast.success('Value shamil kar di gayi');
+    toast.success('ویلیو شامل کر دی گئی');
     reset({ value: '' });
   }
 
@@ -71,7 +71,7 @@ function LookupListPanel() {
     } catch {
       return; // global mutations.onError (App.jsx) already toasted it (e.g. a rename collision).
     }
-    toast.success('Value update ho gayi');
+    toast.success('ویلیو اپڈیٹ ہو گئی');
     setEditingId(null);
   }
 
@@ -80,7 +80,7 @@ function LookupListPanel() {
     setDeactivatingEntry(null);
     try {
       await updateValue.mutateAsync({ id: entry.id, payload: { isActive: false } });
-      toast.success('Value band kar di gayi');
+      toast.success('ویلیو بند کر دی گئی');
     } catch {
       // global mutations.onError already toasted it.
     }
@@ -88,12 +88,12 @@ function LookupListPanel() {
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-3">
-      <h2 className="mb-2 text-base font-bold">Zimmedari List</h2>
+      <h2 className="mb-2 text-base font-bold">ذمہ داری لسٹ</h2>
 
       {isLoading ? (
-        <Spinner label="Load ho raha hai..." />
+        <Spinner label="لوڈ ہو رہا ہے…" />
       ) : (entries || []).length === 0 ? (
-        <EmptyState message="Abhi koi Zimmedari value maujood nahi." />
+        <EmptyState message="ابھی کوئی ذمہ داری ویلیو موجود نہیں۔" />
       ) : (
         <ul className="mb-3 flex flex-col gap-1">
           {entries.map((entry) => (
@@ -155,8 +155,8 @@ function LookupListPanel() {
       <form onSubmit={handleSubmit(onAddValue)} className="flex items-start gap-2">
         <div className="flex-1">
           <input
-            aria-label="Nayi Zimmedari"
-            placeholder="Nayi value…"
+            aria-label="نئی ذمہ داری"
+            placeholder="نئی ویلیو…"
             {...register('value')}
             className="h-10 w-full rounded-lg border border-gray-300 px-2"
           />
@@ -177,9 +177,9 @@ function LookupListPanel() {
 
       <ConfirmDialog
         isOpen={Boolean(deactivatingEntry)}
-        title="Value Band Karein"
-        message="Is value ko band karne ke baad ise dobara active karna filhal is screen se mumkin nahi (sirf active values yahan dikhti hain). Wakai band karna chahte hain?"
-        confirmLabel="Haan, Band Karein"
+        title="ویلیو بند کریں"
+        message="اس ویلیو کو بند کرنے کے بعد اسے دوبارہ ایکٹیو کرنا فی الحال اس اسکرین سے ممکن نہیں (صرف ایکٹیو ویلیوز یہاں دکھائی دیتی ہیں)۔ واقعی بند کرنا چاہتے ہیں؟"
+        confirmLabel="ہاں، بند کریں"
         cancelLabel="منسوخ کریں"
         isLoading={updateValue.isPending}
         onConfirm={handleConfirmDeactivate}

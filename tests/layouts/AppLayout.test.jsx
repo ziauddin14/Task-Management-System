@@ -19,7 +19,7 @@ function resetStore() {
 function renderLayout() {
   const queryClient = new QueryClient();
   const clearSpy = vi.spyOn(queryClient, 'clear');
-  render(
+  const utils = render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter>
         <Routes>
@@ -31,7 +31,7 @@ function renderLayout() {
       </MemoryRouter>
     </QueryClientProvider>
   );
-  return { clearSpy };
+  return { ...utils, clearSpy };
 }
 
 // docs/08-ui-ux.md §3 item 1 — persistent left sidebar (Sidebar.jsx) + header showing the user's
@@ -41,6 +41,7 @@ describe('AppLayout (docs/08-ui-ux.md §3, docs/11-auth.md §5)', () => {
   beforeEach(() => {
     resetStore();
     mockNavigate.mockReset();
+    window.localStorage.removeItem('sidebar.collapsed.v1');
   });
 
   afterEach(() => {
@@ -144,9 +145,9 @@ describe('AppLayout (docs/08-ui-ux.md §3, docs/11-auth.md §5)', () => {
     renderLayout();
 
     expect(screen.getByRole('complementary', { hidden: true })).toHaveAttribute('aria-hidden', 'true');
-    expect(screen.queryByLabelText('Band karein')).not.toBeInTheDocument(); // no backdrop yet
+    expect(screen.queryByLabelText('بند کریں')).not.toBeInTheDocument(); // no backdrop yet
 
-    fireEvent.click(screen.getByLabelText('Menu kholein'));
+    fireEvent.click(screen.getByLabelText('مینیو کھولیں'));
 
     expect(screen.getByRole('complementary', { hidden: true })).toHaveAttribute('aria-hidden', 'false');
   });
@@ -155,10 +156,10 @@ describe('AppLayout (docs/08-ui-ux.md §3, docs/11-auth.md §5)', () => {
     useAuthStore.getState().login({ id: '1', name: 'Om', role: 'user' }, 'jwt-abc');
     renderLayout();
 
-    fireEvent.click(screen.getByLabelText('Menu kholein'));
+    fireEvent.click(screen.getByLabelText('مینیو کھولیں'));
     expect(screen.getByRole('complementary', { hidden: true })).toHaveAttribute('aria-hidden', 'false');
 
-    fireEvent.click(screen.getByLabelText('Band karein'));
+    fireEvent.click(screen.getByLabelText('بند کریں'));
     expect(screen.getByRole('complementary', { hidden: true })).toHaveAttribute('aria-hidden', 'true');
   });
 
@@ -166,10 +167,62 @@ describe('AppLayout (docs/08-ui-ux.md §3, docs/11-auth.md §5)', () => {
     useAuthStore.getState().login({ id: '2', name: 'Admin', role: 'admin' }, 'jwt-admin');
     renderLayout();
 
-    fireEvent.click(screen.getByLabelText('Menu kholein'));
+    fireEvent.click(screen.getByLabelText('مینیو کھولیں'));
     expect(screen.getByRole('complementary', { hidden: true })).toHaveAttribute('aria-hidden', 'false');
 
     fireEvent.click(screen.getByRole('link', { name: /تمام یوزرز/i, hidden: true }));
     expect(screen.getByRole('complementary', { hidden: true })).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  // Prompt 5C — moved from the left: in this RTL app a plain flex row's FIRST child lands at the
+  // visual/physical right edge, so the sidebar must now be first in DOM order among the row's
+  // element children (the header/main content column is the other one).
+  it('the sidebar is the first element child of the outer row (right-side placement in RTL)', () => {
+    useAuthStore.getState().login({ id: '1', name: 'Om', role: 'user' }, 'jwt-abc');
+    const { container } = renderLayout();
+
+    const outerRow = container.firstChild;
+    const sidebar = screen.getByRole('complementary', { hidden: true });
+    expect(outerRow.children[0]).toBe(sidebar);
+  });
+
+  it('renders the app brand text and a logo mark, centered in the header', () => {
+    useAuthStore.getState().login({ id: '1', name: 'Om', role: 'user' }, 'jwt-abc');
+    renderLayout();
+
+    expect(screen.getByText('ٹاسک مینجمنٹ سسٹم')).toBeInTheDocument();
+    expect(screen.getByRole('banner')).toContainElement(screen.getByText('ٹاسک مینجمنٹ سسٹم'));
+  });
+
+  // Prompt 5C.2 — collapsible on both desktop and mobile; the toggle lives in the sidebar itself.
+  describe('sidebar collapse', () => {
+    it('starts expanded by default and collapses/expands via the toggle button, persisting to localStorage', () => {
+      useAuthStore.getState().login({ id: '1', name: 'Om', role: 'user' }, 'jwt-abc');
+      renderLayout();
+
+      // Expanded: the nav link labels and the sidebar's own brand text are visible.
+      expect(screen.getByText('ڈیش بورڈ')).toBeInTheDocument();
+      expect(screen.getByLabelText('سائیڈبار سکیڑیں')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByLabelText('سائیڈبار سکیڑیں'));
+
+      expect(screen.queryByText('ڈیش بورڈ')).not.toBeInTheDocument();
+      expect(screen.getByLabelText('سائیڈبار پھیلائیں')).toBeInTheDocument();
+      expect(window.localStorage.getItem('sidebar.collapsed.v1')).toBe('true');
+
+      fireEvent.click(screen.getByLabelText('سائیڈبار پھیلائیں'));
+
+      expect(screen.getByText('ڈیش بورڈ')).toBeInTheDocument();
+      expect(window.localStorage.getItem('sidebar.collapsed.v1')).toBe('false');
+    });
+
+    it('restores a collapsed state that was already saved to localStorage', () => {
+      window.localStorage.setItem('sidebar.collapsed.v1', 'true');
+      useAuthStore.getState().login({ id: '1', name: 'Om', role: 'user' }, 'jwt-abc');
+      renderLayout();
+
+      expect(screen.queryByText('ڈیش بورڈ')).not.toBeInTheDocument();
+      expect(screen.getByLabelText('سائیڈبار پھیلائیں')).toBeInTheDocument();
+    });
   });
 });

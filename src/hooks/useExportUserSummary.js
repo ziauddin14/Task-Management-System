@@ -21,7 +21,7 @@ export function useExportUserSummary() {
       setExportedFile(file);
       return file;
     } catch (err) {
-      toast.error(err.message || 'Export mumkin nahi hua.');
+      toast.error(err.message || 'ایکسپورٹ ممکن نہیں ہوا۔');
       setExportedFile(null);
       throw err;
     } finally {

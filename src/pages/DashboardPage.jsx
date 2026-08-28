@@ -1,4 +1,5 @@
-import React, { useRef, useState } from 'react'; // explicit import — see src/App.jsx's comment for why
+import React, { useState } from 'react'; // explicit import — see src/App.jsx's comment for why
+import clsx from 'clsx';
 import { Plus, Printer, BellRing } from 'lucide-react';
 import { useAuthStore } from '../store/authStore.js';
 import { useDashboardFilters } from '../hooks/useDashboardFilters.js';
@@ -46,8 +47,6 @@ function DashboardPage() {
   const tasksQuery = useTasks(apiFilters);
   const summaryQuery = useDashboardSummary();
 
-  const tableRef = useRef(null);
-
   const [formModal, setFormModal] = useState(null); // { mode: 'create' } | { mode: 'edit', task }
   const [closingTask, setClosingTask] = useState(null);
   const [updatingTask, setUpdatingTask] = useState(null);
@@ -64,7 +63,6 @@ function DashboardPage() {
 
   function handleKpiClick(paramKey, value) {
     toggleKpiFilter(paramKey, value);
-    tableRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
   }
 
   function handleCloseConfirm() {
@@ -85,17 +83,21 @@ function DashboardPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="no-print flex items-center justify-between">
-        <h1 className="text-3xl font-bold">ڈیش بورڈ</h1>
+    // Prompt 5E — h-full fills whatever height AppLayout's <main> hands this page (see
+    // AppLayout.jsx); every section here is shrink-0 (fixed to its own content height) EXCEPT the
+    // table region below, which is flex-1 min-h-0 so it — and only it — absorbs the remaining
+    // space and scrolls internally. The header/KPI cards/filter bar never move.
+    <div className="flex h-full flex-col gap-4">
+      <div className="no-print flex shrink-0 items-center justify-between border-b-2 border-brand/10 pb-3">
+        <h1 className="text-3xl font-bold text-gray-900">ڈیش بورڈ</h1>
         <div className="flex items-center gap-2">
           {isAdmin && (
             <button
               type="button"
               onClick={() => triggerRemindersMutation.mutate()}
               disabled={triggerRemindersMutation.isPending}
-              title="Deadline/overdue reminders foran bhejein (daily cron ka manual trigger)"
-              className="flex h-10 items-center gap-1 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              title="یاد دہانیاں فوراً بھیجیں (روزانہ خودکار بھیجے جانے کا دستی ٹرگر)"
+              className="flex h-10 items-center gap-1 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 hover:border-brand/40 hover:bg-brand-light disabled:opacity-50"
             >
               <BellRing className="h-4 w-4" aria-hidden="true" />
               یاد دہانیاں بھیجیں
@@ -114,16 +116,20 @@ function DashboardPage() {
         </div>
       </div>
 
-      {summaryQuery.isLoading && <Spinner label="Khulasa load ho raha hai..." />}
+      {summaryQuery.isLoading && (
+        <div className="shrink-0">
+          <Spinner label="خلاصہ لوڈ ہو رہا ہے۔۔۔" />
+        </div>
+      )}
 
       {summaryQuery.data && (
-        <div className="no-print flex flex-col gap-3">
+        <div className="no-print flex shrink-0 flex-col gap-3">
           {/* Prompt 2B — the two groups sit side-by-side in 2 columns on desktop (removes the
               empty space that used to sit beside the first, full-width group); stacked on narrow
               mobile widths, where each group's own card row still scrolls horizontally. */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <p className="mb-1 text-sm font-medium text-gray-500">کام کی کیفیت</p>
+              <p className="mb-1 border-s-4 border-brand ps-2 text-sm font-semibold text-gray-700">کام کی کیفیت</p>
               <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin] snap-x md:flex-wrap md:overflow-visible">
                 {STATUS_KEYS.map((key) => {
                   const entry = summaryQuery.data.byStatus[key] || { count: 0, percent: 0 };
@@ -152,7 +158,7 @@ function DashboardPage() {
             </div>
 
             <div>
-              <p className="mb-1 text-sm font-medium text-gray-500">کارکردگی</p>
+              <p className="mb-1 border-s-4 border-brand ps-2 text-sm font-semibold text-gray-700">کارکردگی</p>
               <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin] snap-x md:flex-wrap md:overflow-visible">
                 {PERFORMANCE_SUMMARY_KEYS.map((key) => {
                   const entry = summaryQuery.data.byPerformance[key] || { count: 0, percent: 0 };
@@ -191,18 +197,21 @@ function DashboardPage() {
         </div>
       )}
 
-      <div className="no-print">
+      <div className="no-print shrink-0">
         <FilterBar filtersHook={filtersHook} isAdmin={isAdmin} />
       </div>
 
       {/* docs/08-ui-ux.md §3 item 6 — Print View toggle + Export sit together, same side as the
           filter bar's own action buttons. */}
-      <div className="no-print flex items-center gap-2">
+      <div className="no-print flex shrink-0 items-center gap-2">
         <button
           type="button"
           onClick={() => setPrintMode((prev) => !prev)}
           aria-pressed={printMode}
-          className="flex h-10 items-center gap-1 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 hover:bg-gray-50"
+          className={clsx(
+            'flex h-10 items-center gap-1 rounded-lg border px-3 text-sm transition-colors',
+            printMode ? 'border-brand bg-brand-light text-brand' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+          )}
         >
           <Printer className="h-4 w-4" aria-hidden="true" />
           پرنٹ ویو
@@ -211,15 +220,15 @@ function DashboardPage() {
           <button
             type="button"
             onClick={() => window.print()}
-            className="flex h-10 items-center gap-1 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 hover:bg-gray-50"
+            className="flex h-10 items-center gap-1 rounded-lg bg-brand px-3 text-sm text-white hover:bg-brand/90"
           >
-            Print Karein
+            پرنٹ کریں
           </button>
         )}
         <ExportMenu mode="dashboard" onExport={handleDashboardExport} isLoading={exportReportHook.isLoading} />
       </div>
 
-      <div ref={tableRef}>
+      <div className="min-h-0 flex-1 overflow-hidden">
         {printMode ? (
           <PrintView tasks={tasksQuery.data?.items || []} isVisible={columnVisibility.isVisible} />
         ) : (
@@ -257,9 +266,9 @@ function DashboardPage() {
       {isAdmin && (
         <ConfirmDialog
           isOpen={Boolean(closingTask)}
-          title="Kaam Close Karein"
+          title="کام بند کریں"
           message="اس کام کو بند کرنے کے بعد کوئی نئی اپڈیٹ درج نہیں کی جا سکے گی۔ کیا واقعی بند کرنا چاہتے ہیں؟"
-          confirmLabel="Haan, Close Karein"
+          confirmLabel="ہاں، بند کریں"
           cancelLabel="منسوخ کریں"
           onConfirm={handleCloseConfirm}
           onCancel={() => setClosingTask(null)}

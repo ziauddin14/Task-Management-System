@@ -1,3 +1,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  /* Prompt 4C, docs/08-ui-ux.md §7's own note: "Urdu Nastaleeq needs more vertical breathing
+     room than Latin text" — the app read too small at the browser default (16px). Raising the
+     root size (rather than editing every text-* class individually) scales every rem-based
+     Tailwind utility — headings, body text, spacing, icon sizes — together in one place, so the
+     whole existing size scale stays proportional instead of drifting. */
+  html {
+    font-size: 18px;
+  }
+}

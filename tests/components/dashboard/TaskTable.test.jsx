@@ -76,7 +76,7 @@ describe('TaskTable (docs/08-ui-ux.md §6)', () => {
 
   it('shows an EmptyState when there are no tasks (not a blank table)', () => {
     renderTable({ tasks: [] });
-    expect(screen.getByText('Koi kaam is filter se mutabiq nahi mila.')).toBeInTheDocument();
+    expect(screen.getByText('اس فلٹر سے مطابقت رکھنے والا کوئی کام نہیں ملا۔')).toBeInTheDocument();
   });
 
   it('shows a Spinner while loading', () => {
@@ -155,10 +155,10 @@ describe('TaskTable (docs/08-ui-ux.md §6)', () => {
 
   it('pagination forwards page/page-size changes', () => {
     const { onPageChange, onPageSizeChange } = renderTable({ page: 2, meta: { totalPages: 5 } });
-    fireEvent.click(screen.getByText('Agay'));
+    fireEvent.click(screen.getByText('آگے'));
     expect(onPageChange).toHaveBeenCalledWith(3);
 
-    fireEvent.change(screen.getByLabelText('Har safhe par'), { target: { value: '50' } });
+    fireEvent.change(screen.getByLabelText('ہر صفحے پر'), { target: { value: '50' } });
     expect(onPageSizeChange).toHaveBeenCalledWith(50);
   });
 
