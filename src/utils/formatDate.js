@@ -18,18 +18,21 @@ export function formatDateTime(value) {
 
 // docs/08-ui-ux.md §6 — Time Status column example wording: "3 din baaqi" / "2 din taxeer se".
 // timeStatus: { type: 'remaining'|'overdue'|'early'|'late', days: number } (backend/src/models/Task.js).
+// Prompt 2G fix — every branch (including the days===0 edge cases) is now proper Urdu script;
+// "early"/"late" previously fell back to Roman Urdu/English, inconsistent with "remaining"/
+// "overdue" already being in script.
 export function formatTimeStatusLabel(timeStatus) {
   if (!timeStatus) return '-';
   const { type, days } = timeStatus;
   switch (type) {
     case 'remaining':
-      return days === 0 ? 'Aaj deadline hai' : `${days} دن باقی`;
+      return days === 0 ? 'آج آخری تاریخ ہے' : `${days} دن باقی`;
     case 'overdue':
       return `${days} دن تاخیر سے`;
     case 'early':
-      return days === 0 ? 'Waqt par mukammal hua' : `${days} din pehle mukammal hua`;
+      return days === 0 ? 'وقت پر مکمل ہوا' : `${days} دن پہلے مکمل ہوا`;
     case 'late':
-      return `${days} din taxeer se mukammal hua`;
+      return `${days} دن تاخیر سے مکمل ہوا`;
     default:
       return '-';
   }

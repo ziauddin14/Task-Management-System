@@ -1,5 +1,6 @@
 import React from 'react'; // explicit import — see src/App.jsx's comment for why
 import clsx from 'clsx';
+import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import Spinner from '../common/Spinner.jsx';
 import EmptyState from '../common/EmptyState.jsx';
 import Pagination from '../common/Pagination.jsx';
@@ -28,6 +29,47 @@ function AssigneeChips({ assignees }) {
   );
 }
 
+// Prompt 2H — only columns the backend's listTasksQuerySchema actually accepts a sortBy value for
+// (backend/src/validators/task.validator.js) are wired as sortable; everything else (assignees,
+// responsibility, lastUpdate, timeStatus) has no backend sort field and stays a plain header.
+const SORTABLE_COLUMNS = {
+  codeNumber: 'codeNumber',
+  title: 'title',
+  deadline: 'deadline',
+  completionPercent: 'completionPercent',
+  status: 'status',
+  performance: 'performanceRating',
+};
+
+function ColumnHeader({ column, sortBy, sortOrder, onSort, className }) {
+  const sortField = SORTABLE_COLUMNS[column.key];
+  if (!sortField) {
+    return <th className={className}>{column.label}</th>;
+  }
+
+  const isActive = sortBy === sortField;
+  return (
+    <th className={className}>
+      <button
+        type="button"
+        onClick={() => onSort(sortField)}
+        className="flex h-10 items-center gap-1 font-medium hover:text-gray-900"
+      >
+        <span>{column.label}</span>
+        {isActive ? (
+          sortOrder === 'asc' ? (
+            <ChevronUp className="h-3 w-3" aria-hidden="true" />
+          ) : (
+            <ChevronDown className="h-3 w-3" aria-hidden="true" />
+          )
+        ) : (
+          <ChevronsUpDown className="h-3 w-3 text-gray-300" aria-hidden="true" />
+        )}
+      </button>
+    </th>
+  );
+}
+
 function TaskTable({
   tasks,
   meta,
@@ -43,11 +85,29 @@ function TaskTable({
   onUpdate,
   onViewUpdates,
   columnVisibility,
+  sortBy,
+  sortOrder,
+  onSortChange,
 }) {
   // Lifted to DashboardPage.jsx (Phase 10.6) so the Export flow can read the SAME visible-columns
   // state (docs/09-frontend-features.md §8: "the current visible-columns list") without a second,
   // out-of-sync source of truth.
   const { isVisible, toggleColumn } = columnVisibility;
+
+  // Prompt 2H — click toggles asc -> desc on the same column; clicking a different column starts
+  // it fresh at asc (standard single-column-sort behavior, matching sortBy/sortOrder both being
+  // single fields, not arrays). Goes through useDashboardFilters' setSort, which already resets
+  // page to 1 on any change.
+  function handleSort(field) {
+    if (sortBy === field) {
+      onSortChange(field, sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      onSortChange(field, 'asc');
+    }
+  }
+
+  const codeNumberCol = COLUMN_DEFINITIONS.find((c) => c.key === 'codeNumber');
+  const titleCol = COLUMN_DEFINITIONS.find((c) => c.key === 'title');
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white">
@@ -68,17 +128,61 @@ function TaskTable({
           <table className="w-full text-start text-sm">
             <thead className="sticky top-0 z-[1] bg-gray-50 text-gray-600">
               <tr>
-                <th className="whitespace-nowrap px-3 py-2 font-medium">Code Number</th>
-                <th className="whitespace-nowrap px-3 py-2 font-medium">Kaam</th>
-                {isVisible('assignees') && <th className="whitespace-nowrap px-3 py-2 font-medium">Zimmedar(an)</th>}
-                {isVisible('responsibility') && <th className="whitespace-nowrap px-3 py-2 font-medium">Zimmedari</th>}
-                {isVisible('deadline') && <th className="whitespace-nowrap px-3 py-2 font-medium">Deadline</th>}
-                {isVisible('lastUpdate') && <th className="whitespace-nowrap px-3 py-2 font-medium">Last Update</th>}
-                {isVisible('status') && <th className="whitespace-nowrap px-3 py-2 font-medium">Status</th>}
-                {isVisible('timeStatus') && <th className="whitespace-nowrap px-3 py-2 font-medium">Time Status</th>}
-                {isVisible('completionPercent') && <th className="whitespace-nowrap px-3 py-2 font-medium">Completion %</th>}
-                {isVisible('performance') && <th className="whitespace-nowrap px-3 py-2 font-medium">Performance</th>}
-                <th className="no-print whitespace-nowrap px-3 py-2 font-medium">Actions</th>
+                <ColumnHeader
+                  column={codeNumberCol}
+                  sortBy={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                  className="whitespace-nowrap px-3 py-2 font-medium"
+                />
+                <ColumnHeader
+                  column={titleCol}
+                  sortBy={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                  className="whitespace-nowrap px-3 py-2 font-medium"
+                />
+                {isVisible('assignees') && <th className="whitespace-nowrap px-3 py-2 font-medium">ذمہ دار</th>}
+                {isVisible('responsibility') && <th className="whitespace-nowrap px-3 py-2 font-medium">ذمہ داری</th>}
+                {isVisible('deadline') && (
+                  <ColumnHeader
+                    column={{ key: 'deadline', label: 'آخری تاریخ' }}
+                    sortBy={sortBy}
+                    sortOrder={sortOrder}
+                    onSort={handleSort}
+                    className="whitespace-nowrap px-3 py-2 font-medium"
+                  />
+                )}
+                {isVisible('lastUpdate') && <th className="whitespace-nowrap px-3 py-2 font-medium">آخری اپڈیٹ</th>}
+                {isVisible('status') && (
+                  <ColumnHeader
+                    column={{ key: 'status', label: 'کیفیت' }}
+                    sortBy={sortBy}
+                    sortOrder={sortOrder}
+                    onSort={handleSort}
+                    className="whitespace-nowrap px-3 py-2 font-medium"
+                  />
+                )}
+                {isVisible('timeStatus') && <th className="whitespace-nowrap px-3 py-2 font-medium">وقتی صورتحال</th>}
+                {isVisible('completionPercent') && (
+                  <ColumnHeader
+                    column={{ key: 'completionPercent', label: 'تکمیل فیصد' }}
+                    sortBy={sortBy}
+                    sortOrder={sortOrder}
+                    onSort={handleSort}
+                    className="whitespace-nowrap px-3 py-2 font-medium"
+                  />
+                )}
+                {isVisible('performance') && (
+                  <ColumnHeader
+                    column={{ key: 'performance', label: 'کارکردگی' }}
+                    sortBy={sortBy}
+                    sortOrder={sortOrder}
+                    onSort={handleSort}
+                    className="whitespace-nowrap px-3 py-2 font-medium"
+                  />
+                )}
+                <th className="no-print whitespace-nowrap px-3 py-2 font-medium">اقدامات</th>
               </tr>
             </thead>
             <tbody>

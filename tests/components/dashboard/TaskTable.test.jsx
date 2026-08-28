@@ -39,6 +39,7 @@ function renderTable(overrides = {}) {
   const onClose = vi.fn();
   const onUpdate = vi.fn();
   const onViewUpdates = vi.fn();
+  const onSortChange = vi.fn();
   const utils = render(
     <Harness
       tasks={[baseTask]}
@@ -54,10 +55,13 @@ function renderTable(overrides = {}) {
       onClose={onClose}
       onUpdate={onUpdate}
       onViewUpdates={onViewUpdates}
+      sortBy="deadline"
+      sortOrder="asc"
+      onSortChange={onSortChange}
       {...overrides}
     />
   );
-  return { ...utils, onPageChange, onPageSizeChange, onEdit, onClose, onUpdate, onViewUpdates };
+  return { ...utils, onPageChange, onPageSizeChange, onEdit, onClose, onUpdate, onViewUpdates, onSortChange };
 }
 
 describe('TaskTable (docs/08-ui-ux.md §6)', () => {
@@ -126,7 +130,7 @@ describe('TaskTable (docs/08-ui-ux.md §6)', () => {
     renderTable();
     fireEvent.click(screen.getByLabelText('Columns'));
     const responsibilityCheckbox = screen.getByLabelText('ذمہ داری');
-    const codeNumberCheckbox = screen.getByLabelText('Code Number');
+    const codeNumberCheckbox = screen.getByLabelText('کوڈ نمبر');
 
     expect(codeNumberCheckbox).toBeDisabled();
     expect(responsibilityCheckbox).toBeChecked();
@@ -156,5 +160,33 @@ describe('TaskTable (docs/08-ui-ux.md §6)', () => {
 
     fireEvent.change(screen.getByLabelText('Har safhe par'), { target: { value: '50' } });
     expect(onPageSizeChange).toHaveBeenCalledWith(50);
+  });
+
+  // Prompt 2H — column sorting, confirmed on Deadline and Code Number as requested.
+  describe('column sorting', () => {
+    it('Deadline: clicking the header while already sorted by it (asc) switches to desc', () => {
+      const { onSortChange } = renderTable({ sortBy: 'deadline', sortOrder: 'asc' });
+      fireEvent.click(screen.getByText('آخری تاریخ'));
+      expect(onSortChange).toHaveBeenCalledWith('deadline', 'desc');
+    });
+
+    it('Deadline: clicking again while sorted desc switches back to asc', () => {
+      const { onSortChange } = renderTable({ sortBy: 'deadline', sortOrder: 'desc' });
+      fireEvent.click(screen.getByText('آخری تاریخ'));
+      expect(onSortChange).toHaveBeenCalledWith('deadline', 'asc');
+    });
+
+    it('Code Number: clicking a DIFFERENT column than the current sort starts it fresh at asc', () => {
+      const { onSortChange } = renderTable({ sortBy: 'deadline', sortOrder: 'desc' });
+      fireEvent.click(screen.getByText('کوڈ نمبر'));
+      expect(onSortChange).toHaveBeenCalledWith('codeNumber', 'asc');
+    });
+
+    it('a non-sortable column (Zimmedar/assignees) has no sort button and does not call onSortChange', () => {
+      const { onSortChange } = renderTable();
+      // "ذمہ دار" is a plain header, not a button — no click handler exists to fire.
+      expect(screen.getByText('ذمہ دار').closest('button')).toBeNull();
+      expect(onSortChange).not.toHaveBeenCalled();
+    });
   });
 });

@@ -3,6 +3,13 @@ import clsx from 'clsx';
 import EmptyState from '../common/EmptyState.jsx';
 import { formatDate, formatTimeStatusLabel } from '../../utils/formatDate.js';
 import { getStatusMeta, getPerformanceMeta } from '../../utils/taskDisplay.js';
+import { COLUMN_DEFINITIONS } from '../../utils/dashboardColumns.js';
+
+// Prompt 2F — headers here now come from the same COLUMN_DEFINITIONS TaskTable.jsx uses, instead
+// of a second, separately hardcoded (and previously English/Roman-Urdu) set of strings.
+function columnLabel(key) {
+  return COLUMN_DEFINITIONS.find((col) => col.key === key)?.label ?? key;
+}
 
 // docs/07-frontend-foundation.md §9 — the Print View toggle's denser, read-only TaskTable variant:
 // no action buttons/columns, no column-visibility control, no pagination controls — just the
@@ -18,15 +25,23 @@ function PrintView({ tasks, isVisible }) {
       <table className="w-full text-start text-xs">
         <thead className="bg-gray-50 text-gray-600">
           <tr>
-            <th className="whitespace-nowrap px-2 py-1 font-medium">Code Number</th>
-            <th className="whitespace-nowrap px-2 py-1 font-medium">Kaam</th>
-            {isVisible('assignees') && <th className="whitespace-nowrap px-2 py-1 font-medium">Zimmedar(an)</th>}
-            {isVisible('responsibility') && <th className="whitespace-nowrap px-2 py-1 font-medium">Zimmedari</th>}
-            {isVisible('deadline') && <th className="whitespace-nowrap px-2 py-1 font-medium">Deadline</th>}
-            {isVisible('status') && <th className="whitespace-nowrap px-2 py-1 font-medium">Status</th>}
-            {isVisible('timeStatus') && <th className="whitespace-nowrap px-2 py-1 font-medium">Time Status</th>}
-            {isVisible('completionPercent') && <th className="whitespace-nowrap px-2 py-1 font-medium">Completion %</th>}
-            {isVisible('performance') && <th className="whitespace-nowrap px-2 py-1 font-medium">Performance</th>}
+            <th className="whitespace-nowrap px-2 py-1 font-medium">{columnLabel('codeNumber')}</th>
+            <th className="whitespace-nowrap px-2 py-1 font-medium">{columnLabel('title')}</th>
+            {isVisible('assignees') && <th className="whitespace-nowrap px-2 py-1 font-medium">{columnLabel('assignees')}</th>}
+            {isVisible('responsibility') && (
+              <th className="whitespace-nowrap px-2 py-1 font-medium">{columnLabel('responsibility')}</th>
+            )}
+            {isVisible('deadline') && <th className="whitespace-nowrap px-2 py-1 font-medium">{columnLabel('deadline')}</th>}
+            {isVisible('status') && <th className="whitespace-nowrap px-2 py-1 font-medium">{columnLabel('status')}</th>}
+            {isVisible('timeStatus') && (
+              <th className="whitespace-nowrap px-2 py-1 font-medium">{columnLabel('timeStatus')}</th>
+            )}
+            {isVisible('completionPercent') && (
+              <th className="whitespace-nowrap px-2 py-1 font-medium">{columnLabel('completionPercent')}</th>
+            )}
+            {isVisible('performance') && (
+              <th className="whitespace-nowrap px-2 py-1 font-medium">{columnLabel('performance')}</th>
+            )}
           </tr>
         </thead>
         <tbody>

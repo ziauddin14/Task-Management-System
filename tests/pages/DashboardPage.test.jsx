@@ -254,4 +254,44 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
     await screen.findByText('260801');
     expect(screen.queryByText('یاد دہانیاں بھیجیں')).not.toBeInTheDocument();
   });
+
+  // Prompt 2A/2C/2D
+  it('the heading is rendered at the larger size', async () => {
+    renderDashboard('admin');
+    await screen.findByText('260801');
+    expect(screen.getByRole('heading', { name: 'ڈیش بورڈ' })).toHaveClass('text-3xl');
+  });
+
+  it('a 5th "مجموعی" (Total) status card shows the summary\'s overall total, and clicking it clears both KPI filters', async () => {
+    renderDashboard('admin');
+    await screen.findByText('260801');
+
+    fireEvent.click(findKpiCardButton('جاری'));
+    fireEvent.click(findKpiCardButton('ممتاز'));
+
+    const totalCard = findKpiCardButton('مجموعی');
+    expect(totalCard).toHaveTextContent('25'); // summary.total
+
+    fireEvent.click(totalCard);
+
+    expect(findKpiCardButton('جاری')).toHaveAttribute('aria-pressed', 'false');
+    expect(findKpiCardButton('ممتاز')).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('the notApplicable performance card is labelled "مجموعی کیفیت", not a bare dash', async () => {
+    renderDashboard('admin');
+    await screen.findByText('260801');
+
+    const card = findKpiCardButton('مجموعی کیفیت');
+    expect(card).toHaveTextContent('11'); // summary.byPerformance.notApplicable.count
+  });
+
+  it('the status and performance KPI groups sit in a 2-column grid on desktop', async () => {
+    renderDashboard('admin');
+    await screen.findByText('260801');
+
+    const statusHeading = screen.getByText('کام کی کیفیت');
+    const gridContainer = statusHeading.parentElement.parentElement;
+    expect(gridContainer).toHaveClass('md:grid-cols-2');
+  });
 });

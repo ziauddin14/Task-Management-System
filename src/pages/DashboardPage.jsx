@@ -19,7 +19,13 @@ import PreviousUpdatesModal from '../components/task/PreviousUpdatesModal.jsx';
 import ExportMenu from '../components/reports/ExportMenu.jsx';
 import ConfirmDialog from '../components/common/ConfirmDialog.jsx';
 import Spinner from '../components/common/Spinner.jsx';
-import { STATUS_META, getStatusMeta, getPerformanceMeta, PERFORMANCE_SUMMARY_KEY_TO_VALUE } from '../utils/taskDisplay.js';
+import {
+  STATUS_META,
+  getStatusMeta,
+  getPerformanceMeta,
+  PERFORMANCE_SUMMARY_KEY_TO_VALUE,
+  PERFORMANCE_CARD_NOT_APPLICABLE_LABEL,
+} from '../utils/taskDisplay.js';
 import { COLUMN_DEFINITIONS } from '../utils/dashboardColumns.js';
 
 const STATUS_KEYS = Object.keys(STATUS_META);
@@ -35,7 +41,7 @@ function DashboardPage() {
 
   const [pageSize, setPageSize] = usePageSize();
   const filtersHook = useDashboardFilters(pageSize);
-  const { apiFilters, page, params, toggleKpiFilter, setFilters, setPage } = filtersHook;
+  const { apiFilters, page, params, sortBy, sortOrder, toggleKpiFilter, setFilters, setSort, setPage } = filtersHook;
 
   const tasksQuery = useTasks(apiFilters);
   const summaryQuery = useDashboardSummary();
@@ -81,7 +87,7 @@ function DashboardPage() {
   return (
     <div className="flex flex-col gap-4">
       <div className="no-print flex items-center justify-between">
-        <h1 className="text-xl font-bold">ڈیش بورڈ</h1>
+        <h1 className="text-3xl font-bold">ڈیش بورڈ</h1>
         <div className="flex items-center gap-2">
           {isAdmin && (
             <button
@@ -112,42 +118,61 @@ function DashboardPage() {
 
       {summaryQuery.data && (
         <div className="no-print flex flex-col gap-3">
-          <div>
-            <p className="mb-1 text-sm font-medium text-gray-500">کام کی کیفیت</p>
-            <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin] snap-x md:flex-wrap md:overflow-visible">
-              {STATUS_KEYS.map((key) => {
-                const entry = summaryQuery.data.byStatus[key] || { count: 0, percent: 0 };
-                return (
-                  <KpiCard
-                    key={key}
-                    label={getStatusMeta(key).label}
-                    count={entry.count}
-                    percent={entry.percent}
-                    active={params.status === key}
-                    onClick={() => handleKpiClick('status', key)}
-                  />
-                );
-              })}
+          {/* Prompt 2B — the two groups sit side-by-side in 2 columns on desktop (removes the
+              empty space that used to sit beside the first, full-width group); stacked on narrow
+              mobile widths, where each group's own card row still scrolls horizontally. */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
+              <p className="mb-1 text-sm font-medium text-gray-500">کام کی کیفیت</p>
+              <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin] snap-x md:flex-wrap md:overflow-visible">
+                {STATUS_KEYS.map((key) => {
+                  const entry = summaryQuery.data.byStatus[key] || { count: 0, percent: 0 };
+                  return (
+                    <KpiCard
+                      key={key}
+                      label={getStatusMeta(key).label}
+                      count={entry.count}
+                      percent={entry.percent}
+                      active={params.status === key}
+                      onClick={() => handleKpiClick('status', key)}
+                    />
+                  );
+                })}
+                {/* Prompt 2C item 5 — a 5th "Total" card: every task regardless of status, from
+                    the summary's own top-level total (not a byStatus bucket, so there's no single
+                    status value to toggle active/inactive on) — clicking it clears both KPI
+                    filters, the same "see everything" action as the Clear filter link below. */}
+                <KpiCard
+                  label="مجموعی"
+                  count={summaryQuery.data.total}
+                  active={false}
+                  onClick={() => setFilters({ status: undefined, performanceRating: undefined })}
+                />
+              </div>
             </div>
-          </div>
 
-          <div>
-            <p className="mb-1 text-sm font-medium text-gray-500">کارکردگی</p>
-            <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin] snap-x md:flex-wrap md:overflow-visible">
-              {PERFORMANCE_SUMMARY_KEYS.map((key) => {
-                const entry = summaryQuery.data.byPerformance[key] || { count: 0, percent: 0 };
-                const ratingValue = PERFORMANCE_SUMMARY_KEY_TO_VALUE[key];
-                return (
-                  <KpiCard
-                    key={key}
-                    label={getPerformanceMeta(ratingValue).label}
-                    count={entry.count}
-                    percent={entry.percent}
-                    active={params.performanceRating === ratingValue}
-                    onClick={() => handleKpiClick('performanceRating', ratingValue)}
-                  />
-                );
-              })}
+            <div>
+              <p className="mb-1 text-sm font-medium text-gray-500">کارکردگی</p>
+              <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin] snap-x md:flex-wrap md:overflow-visible">
+                {PERFORMANCE_SUMMARY_KEYS.map((key) => {
+                  const entry = summaryQuery.data.byPerformance[key] || { count: 0, percent: 0 };
+                  const ratingValue = PERFORMANCE_SUMMARY_KEY_TO_VALUE[key];
+                  // Prompt 2D item 5 — the "notApplicable" card gets the clearer card-only label
+                  // instead of getPerformanceMeta's bare "-" (which stays correct for a single
+                  // task's own badge elsewhere — see taskDisplay.js's comment on why these differ).
+                  const label = key === 'notApplicable' ? PERFORMANCE_CARD_NOT_APPLICABLE_LABEL : getPerformanceMeta(ratingValue).label;
+                  return (
+                    <KpiCard
+                      key={key}
+                      label={label}
+                      count={entry.count}
+                      percent={entry.percent}
+                      active={params.performanceRating === ratingValue}
+                      onClick={() => handleKpiClick('performanceRating', ratingValue)}
+                    />
+                  );
+                })}
+              </div>
             </div>
           </div>
 
@@ -213,6 +238,9 @@ function DashboardPage() {
             onUpdate={(task) => setUpdatingTask(task)}
             onViewUpdates={(task) => setViewingUpdatesTask(task)}
             columnVisibility={columnVisibility}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSortChange={setSort}
           />
         )}
       </div>
