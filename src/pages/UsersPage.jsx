@@ -4,11 +4,13 @@ import { useUsers } from '../hooks/useUsers.js';
 import { useDebouncedSearch } from '../hooks/useDebouncedSearch.js';
 import UserTable from '../components/users/UserTable.jsx';
 import UserFormModal from '../components/users/UserFormModal.jsx';
-import LookupListPanel from '../components/users/LookupListPanel.jsx';
 
 // docs/08-ui-ux.md §8, docs/09-frontend-features.md §9 — Admin-only Users page: table, search
-// (name/email), "+ New User", per-row Edit. The Lookup Lists panel is embedded below the table
-// per the Phase 10.5 placement decision (see components/users/LookupListPanel.jsx's comment).
+// (name/email), "+ New User", per-row Edit.
+// Prompt 3D — the Lookup Lists panel (components/users/LookupListPanel.jsx) is deliberately not
+// rendered here anymore: the Task form's Responsibility dropdown no longer reads from LookupList
+// (Prompt 3C), so this panel had no remaining purpose in the UI. The component, its hooks, and the
+// underlying LookupList model/API are untouched — only this page stopped mounting it.
 function UsersPage() {
   const [searchInput, setSearchInput, debouncedSearch] = useDebouncedSearch('');
   const usersQuery = useUsers({ search: debouncedSearch || undefined });
@@ -43,8 +45,6 @@ function UsersPage() {
         isError={usersQuery.isError}
         onEdit={(user) => setFormModal({ mode: 'edit', user })}
       />
-
-      <LookupListPanel />
 
       <UserFormModal
         isOpen={Boolean(formModal)}

@@ -30,13 +30,13 @@ function Modal({ isOpen, onClose, title, children }) {
         aria-label={title}
         className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg bg-white p-4 shadow-xl"
       >
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <h2 className="text-lg font-bold">{title}</h2>
+        <div className="relative mb-3 flex items-center justify-center">
+          <h2 className="px-10 text-center text-xl font-bold">{title}</h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Band karein"
-            className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100"
+            className="absolute end-0 flex h-10 w-10 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100"
           >
             &times;
           </button>

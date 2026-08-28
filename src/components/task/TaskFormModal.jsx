@@ -5,7 +5,6 @@ import { z } from 'zod';
 import toast from 'react-hot-toast';
 import Modal from '../common/Modal.jsx';
 import { useAssignableUsers } from '../../hooks/useAssignableUsers.js';
-import { useLookupList } from '../../hooks/useLookupList.js';
 import { useCreateTask } from '../../hooks/useCreateTask.js';
 import { useUpdateTask } from '../../hooks/useUpdateTask.js';
 
@@ -45,8 +44,21 @@ function buildSchema(mode) {
 function TaskFormModal({ isOpen, onClose, mode, task }) {
   const isEdit = mode === 'edit';
   const schema = useMemo(() => buildSchema(mode), [mode]);
-  const { data: users } = useAssignableUsers();
-  const { data: responsibilities } = useLookupList('responsibility');
+  const { data: users, isLoading: usersLoading, isError: usersError } = useAssignableUsers();
+  // Prompt 3C — Responsibility is no longer sourced from the separate LookupList collection.
+  // Derived client-side from the same active-Users data already fetched for the assignee picker
+  // above (useAssignableUsers), rather than a dedicated endpoint: at this data scale (a handful of
+  // users) a client-side [...new Set(...)] is simpler than adding backend work, avoids a second
+  // network round-trip, and automatically stays in sync with whatever responsibility values are
+  // actually in use — new values just need to exist on at least one active User.
+  const responsibilityOptions = useMemo(() => {
+    const values = (users?.items || []).map((person) => person.responsibility).filter(Boolean);
+    // Editing a task whose stored responsibility text no longer matches any active user (it's
+    // free text now, so nothing keeps it in sync) must still show that value selected, not silently
+    // swap it to blank — so it's included even though no current user carries it.
+    if (isEdit && task?.responsibility) values.push(task.responsibility);
+    return [...new Set(values)].sort((a, b) => a.localeCompare(b));
+  }, [users, isEdit, task]);
   const createTask = useCreateTask();
   const updateTask = useUpdateTask(task?.id);
   const mutation = isEdit ? updateTask : createTask;
@@ -115,121 +127,156 @@ function TaskFormModal({ isOpen, onClose, mode, task }) {
           )}
         </div>
 
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="assignee-search">
-            ذمہ دار
-          </label>
-          <Controller
-            control={control}
-            name="assignees"
-            render={({ field }) => (
-              <div>
-                <div className="mb-1 flex flex-wrap gap-1">
-                  {field.value.map((id) => {
-                    const person = (users?.items || []).find((u) => u.id === id);
-                    if (!person) return null;
-                    return (
-                      <span
-                        key={id}
-                        className="flex items-center gap-1 rounded-full bg-brand-light px-2 py-0.5 text-xs text-brand"
-                      >
-                        {person.name}
-                        <button
-                          type="button"
-                          onClick={() => field.onChange(field.value.filter((v) => v !== id))}
-                          aria-label={`${person.name} hataayein`}
+        {/* Prompt 3A — Zimmedar/Zimmedari/Akhri Tareekh share one row instead of stacking three
+            separate blocks, which is most of the vertical space this change reclaims (the row's
+            height is only as tall as its tallest column, the assignee picker, rather than the sum
+            of all three). */}
+        <div className="grid grid-cols-3 gap-2">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="assignee-search">
+              ذمہ دار
+            </label>
+            <Controller
+              control={control}
+              name="assignees"
+              render={({ field }) => (
+                <div>
+                  <div className="mb-1 flex flex-wrap gap-1">
+                    {field.value.map((id) => {
+                      const person = (users?.items || []).find((u) => u.id === id);
+                      if (!person) return null;
+                      return (
+                        <span
+                          key={id}
+                          className="flex items-center gap-1 rounded-full bg-brand-light px-1.5 py-0.5 text-xs text-brand"
                         >
-                          &times;
-                        </button>
-                      </span>
-                    );
-                  })}
+                          {person.name}
+                          <button
+                            type="button"
+                            onClick={() => field.onChange(field.value.filter((v) => v !== id))}
+                            aria-label={`${person.name} hataayein`}
+                          >
+                            &times;
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                  <input
+                    id="assignee-search"
+                    type="text"
+                    value={assigneeSearch}
+                    onChange={(event) => setAssigneeSearch(event.target.value)}
+                    placeholder="Talaash…"
+                    className="mb-1 h-10 w-full rounded-lg border border-gray-300 px-2 text-sm"
+                  />
+                  {/* Prompt 3B — previously this list rendered silently empty whether the query was
+                      still loading, had failed, or genuinely had zero active users, so a real
+                      failure was indistinguishable from "no data yet". Now every one of those
+                      three states shows its own message instead of a blank box. */}
+                  {usersLoading ? (
+                    <p className="rounded-lg border border-gray-200 px-2 py-3 text-center text-xs text-gray-500">
+                      لوڈ ہو رہا ہے…
+                    </p>
+                  ) : usersError ? (
+                    <p className="rounded-lg border border-red-200 bg-red-50 px-2 py-3 text-center text-xs text-red-600">
+                      یوزرز لوڈ نہیں ہو سکے
+                    </p>
+                  ) : filteredUsers.length === 0 ? (
+                    <p className="rounded-lg border border-gray-200 px-2 py-3 text-center text-xs text-gray-500">
+                      کوئی یوزر نہیں ملا
+                    </p>
+                  ) : (
+                    <div className="max-h-32 overflow-y-auto rounded-lg border border-gray-200">
+                      {filteredUsers.map((person) => {
+                        const checked = field.value.includes(person.id);
+                        return (
+                          <label key={person.id} className="flex h-10 items-center gap-2 px-2 text-sm hover:bg-gray-50">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() =>
+                                field.onChange(
+                                  checked ? field.value.filter((v) => v !== person.id) : [...field.value, person.id]
+                                )
+                              }
+                            />
+                            <span className="truncate">{person.name}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-                <input
-                  id="assignee-search"
-                  type="text"
-                  value={assigneeSearch}
-                  onChange={(event) => setAssigneeSearch(event.target.value)}
-                  placeholder="Naam talaash karein…"
-                  className="mb-1 h-10 w-full rounded-lg border border-gray-300 px-2"
-                />
-                <div className="max-h-32 overflow-y-auto rounded-lg border border-gray-200">
-                  {filteredUsers.map((person) => {
-                    const checked = field.value.includes(person.id);
-                    return (
-                      <label key={person.id} className="flex h-10 items-center gap-2 px-2 text-sm hover:bg-gray-50">
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() =>
-                            field.onChange(
-                              checked ? field.value.filter((v) => v !== person.id) : [...field.value, person.id]
-                            )
-                          }
-                        />
-                        {person.name}
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
+              )}
+            />
+            {errors.assignees && (
+              <p role="alert" className="mt-1 text-sm text-red-600">
+                {errors.assignees.message}
+              </p>
             )}
-          />
-          {errors.assignees && (
-            <p role="alert" className="mt-1 text-sm text-red-600">
-              {errors.assignees.message}
-            </p>
-          )}
+          </div>
+
+          <div>
+            <label htmlFor="task-responsibility" className="mb-1 block text-sm font-medium text-gray-700">
+              ذمہ داری
+            </label>
+            {/* Prompt 3C — options are the distinct responsibility values already present among
+                active Users (the same useAssignableUsers() data as the assignee picker above),
+                not the retired LookupList collection. */}
+            <select
+              id="task-responsibility"
+              {...register('responsibility')}
+              disabled={usersLoading}
+              className="h-10 w-full rounded-lg border border-gray-300 px-1 text-sm disabled:bg-gray-100"
+            >
+              <option value="">Intekhab karein</option>
+              {responsibilityOptions.map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </select>
+            {!usersLoading && !usersError && responsibilityOptions.length === 0 && (
+              <p className="mt-1 text-xs text-gray-500">کوئی ذمہ داری نہیں ملی</p>
+            )}
+            {errors.responsibility && (
+              <p role="alert" className="mt-1 text-sm text-red-600">
+                {errors.responsibility.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="task-deadline" className="mb-1 block text-sm font-medium text-gray-700">
+              آخری تاریخ
+            </label>
+            <input
+              id="task-deadline"
+              type="date"
+              {...register('deadline')}
+              className="h-10 w-full rounded-lg border border-gray-300 px-1 text-sm"
+            />
+            {errors.deadline && (
+              <p role="alert" className="mt-1 text-sm text-red-600">
+                {errors.deadline.message}
+              </p>
+            )}
+          </div>
         </div>
 
-        <div>
-          <label htmlFor="task-responsibility" className="mb-1 block text-sm font-medium text-gray-700">
-            ذمہ داری
-          </label>
-          <select
-            id="task-responsibility"
-            {...register('responsibility')}
-            className="h-10 w-full rounded-lg border border-gray-300 px-2"
+        <div className="mt-2 grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-12 rounded-lg text-base font-semibold text-gray-700 hover:bg-gray-100"
           >
-            <option value="">Intekhab karein</option>
-            {(responsibilities || []).map((entry) => (
-              <option key={entry.id} value={entry.value}>
-                {entry.value}
-              </option>
-            ))}
-          </select>
-          {errors.responsibility && (
-            <p role="alert" className="mt-1 text-sm text-red-600">
-              {errors.responsibility.message}
-            </p>
-          )}
-        </div>
-
-        <div>
-          <label htmlFor="task-deadline" className="mb-1 block text-sm font-medium text-gray-700">
-            آخری تاریخ
-          </label>
-          <input
-            id="task-deadline"
-            type="date"
-            {...register('deadline')}
-            className="h-10 w-full rounded-lg border border-gray-300 px-2"
-          />
-          {errors.deadline && (
-            <p role="alert" className="mt-1 text-sm text-red-600">
-              {errors.deadline.message}
-            </p>
-          )}
-        </div>
-
-        <div className="mt-2 flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="h-10 min-w-[40px] rounded-lg px-4 text-gray-700 hover:bg-gray-100">
             منسوخ کریں
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="h-10 min-w-[40px] rounded-lg bg-brand px-4 text-white hover:bg-brand/90 disabled:opacity-50"
+            className="h-12 rounded-lg bg-brand text-base font-semibold text-white hover:bg-brand/90 disabled:opacity-50"
           >
             محفوظ کریں
           </button>

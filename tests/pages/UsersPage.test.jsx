@@ -17,11 +17,6 @@ vi.mock('../../src/services/users.api.js', () => ({
   updateUser: vi.fn(),
   getUser: vi.fn(),
 }));
-vi.mock('../../src/services/lookupLists.api.js', () => ({
-  getLookupList: vi.fn().mockResolvedValue([{ id: 'r1', value: 'IT', isActive: true }]),
-  createLookupValue: vi.fn(),
-  updateLookupValue: vi.fn(),
-}));
 
 import { getUsers } from '../../src/services/users.api.js';
 
@@ -42,6 +37,22 @@ describe('UsersPage (docs/08-ui-ux.md §8)', () => {
     expect(await screen.findByText('Ali')).toBeInTheDocument();
     expect(screen.getByText('ali@example.com')).toBeInTheDocument();
     expect(screen.getByText('غیر فعال')).toBeInTheDocument();
+  });
+
+  // Prompt 3E — نام, ذمہ داری, ای میل, کردار, کیفیت, اقدامات in this exact right-to-left order.
+  it('renders the table headers in the exact required Urdu order', async () => {
+    renderPage();
+    await screen.findByText('Ali');
+    const headers = screen.getAllByRole('columnheader').map((th) => th.textContent);
+    expect(headers).toEqual(['نام', 'ذمہ داری', 'ای میل', 'کردار', 'کیفیت', 'اقدامات']);
+  });
+
+  // Prompt 3D — the Lookup List panel no longer renders on this page (its data/model/API are
+  // untouched, see components/users/LookupListPanel.jsx, just not mounted here anymore).
+  it('does not render the Lookup List panel', async () => {
+    renderPage();
+    await screen.findByText('Ali');
+    expect(screen.queryByText('Zimmedari List')).not.toBeInTheDocument();
   });
 
   describe('with fake timers', () => {

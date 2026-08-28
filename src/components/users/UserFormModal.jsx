@@ -5,7 +5,6 @@ import { z } from 'zod';
 import toast from 'react-hot-toast';
 import Modal from '../common/Modal.jsx';
 import ConfirmDialog from '../common/ConfirmDialog.jsx';
-import { useLookupList } from '../../hooks/useLookupList.js';
 import { useCreateUser } from '../../hooks/useCreateUser.js';
 import { useUpdateUser } from '../../hooks/useUpdateUser.js';
 
@@ -30,7 +29,6 @@ function buildSchema(mode) {
 function UserFormModal({ isOpen, onClose, mode, user }) {
   const isEdit = mode === 'edit';
   const schema = buildSchema(mode);
-  const { data: responsibilities } = useLookupList('responsibility');
   const createUser = useCreateUser();
   const updateUser = useUpdateUser(user?.id);
   const mutation = isEdit ? updateUser : createUser;
@@ -124,18 +122,17 @@ function UserFormModal({ isOpen, onClose, mode, user }) {
             <label htmlFor="user-responsibility" className="mb-1 block text-sm font-medium text-gray-700">
               ذمہ داری
             </label>
-            <select
+            {/* Prompt 3C's consequence: this was a LookupList-backed <select>, but with the
+                Lookup List panel removed (Prompt 3D) there would be no way left to ever enter a
+                responsibility value that doesn't already exist — the Task form's dropdown now
+                derives its options FROM this field, so this field is the actual entry point for
+                new values and must accept free text. */}
+            <input
               id="user-responsibility"
+              type="text"
               {...register('responsibility')}
               className="h-10 w-full rounded-lg border border-gray-300 px-2"
-            >
-              <option value="">Intekhab karein</option>
-              {(responsibilities || []).map((entry) => (
-                <option key={entry.id} value={entry.value}>
-                  {entry.value}
-                </option>
-              ))}
-            </select>
+            />
             {errors.responsibility && (
               <p role="alert" className="mt-1 text-sm text-red-600">
                 {errors.responsibility.message}

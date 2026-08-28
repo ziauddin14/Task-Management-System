@@ -4,9 +4,6 @@ import { render, screen, fireEvent, waitFor, within } from '@testing-library/rea
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import UserFormModal from '../../../src/components/users/UserFormModal.jsx';
 
-vi.mock('../../../src/services/lookupLists.api.js', () => ({
-  getLookupList: vi.fn().mockResolvedValue([{ id: 'r1', value: 'IT', isActive: true }]),
-}));
 vi.mock('../../../src/services/users.api.js', () => ({
   createUser: vi.fn(),
   updateUser: vi.fn(),
@@ -54,7 +51,6 @@ describe('UserFormModal (docs/08-ui-ux.md §8, docs/09-frontend-features.md §9)
 
     fireEvent.change(screen.getByLabelText('نام'), { target: { value: 'Bilal' } });
     fireEvent.change(screen.getByLabelText('ای میل'), { target: { value: 'bilal@example.com' } });
-    await waitFor(() => expect(screen.getByText('IT')).toBeInTheDocument());
     fireEvent.change(screen.getByLabelText('ذمہ داری'), { target: { value: 'IT' } });
 
     fireEvent.click(screen.getByText('محفوظ کریں'));
@@ -72,7 +68,6 @@ describe('UserFormModal (docs/08-ui-ux.md §8, docs/09-frontend-features.md §9)
 
     fireEvent.change(screen.getByLabelText('نام'), { target: { value: 'Bilal' } });
     fireEvent.change(screen.getByLabelText('ای میل'), { target: { value: 'bilal@example.com' } });
-    await waitFor(() => expect(screen.getByText('IT')).toBeInTheDocument());
     fireEvent.change(screen.getByLabelText('ذمہ داری'), { target: { value: 'IT' } });
 
     fireEvent.click(screen.getByText('محفوظ کریں'));

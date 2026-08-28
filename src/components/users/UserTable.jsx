@@ -3,8 +3,8 @@ import clsx from 'clsx';
 import Spinner from '../common/Spinner.jsx';
 import EmptyState from '../common/EmptyState.jsx';
 
-// docs/08-ui-ux.md §8 — Name, Email, Responsibility, Role, Status (Active/Inactive), per-row Edit
-// action. No delete action anywhere on this page.
+// Prompt 3E — Name, Zimmedari (Responsibility), Email, Role, Status (Active/Inactive), per-row
+// Edit action, in this exact right-to-left order. No delete action anywhere on this page.
 function UserTable({ users, isLoading, isError, onEdit }) {
   if (isLoading) return <Spinner label="Users load ho rahe hain..." />;
   if (isError) return <EmptyState message="Users load nahi ho sake. Dobara koshish karein." />;
@@ -16,8 +16,8 @@ function UserTable({ users, isLoading, isError, onEdit }) {
         <thead className="bg-gray-50 text-gray-600">
           <tr>
             <th className="whitespace-nowrap px-3 py-2 font-medium">نام</th>
-            <th className="whitespace-nowrap px-3 py-2 font-medium">ای میل</th>
             <th className="whitespace-nowrap px-3 py-2 font-medium">ذمہ داری</th>
+            <th className="whitespace-nowrap px-3 py-2 font-medium">ای میل</th>
             <th className="whitespace-nowrap px-3 py-2 font-medium">کردار</th>
             <th className="whitespace-nowrap px-3 py-2 font-medium">کیفیت</th>
             <th className="whitespace-nowrap px-3 py-2 font-medium">اقدامات</th>
@@ -27,8 +27,8 @@ function UserTable({ users, isLoading, isError, onEdit }) {
           {users.map((user) => (
             <tr key={user.id} className="border-t border-gray-100">
               <td className="whitespace-nowrap px-3 py-2">{user.name}</td>
-              <td className="whitespace-nowrap px-3 py-2">{user.email}</td>
               <td className="whitespace-nowrap px-3 py-2">{user.responsibility}</td>
+              <td className="whitespace-nowrap px-3 py-2">{user.email}</td>
               <td className="whitespace-nowrap px-3 py-2 capitalize">{user.role}</td>
               <td className="whitespace-nowrap px-3 py-2">
                 <span
