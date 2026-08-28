@@ -25,6 +25,7 @@ function renderLayout() {
         <Routes>
           <Route element={<AppLayout />}>
             <Route path="/" element={<div>Page Content</div>} />
+            <Route path="/users" element={<div>Users Content</div>} />
           </Route>
         </Routes>
       </MemoryRouter>
@@ -33,7 +34,10 @@ function renderLayout() {
   return { clearSpy };
 }
 
-describe('AppLayout (docs/07-frontend-foundation.md §2, docs/11-auth.md §5)', () => {
+// docs/08-ui-ux.md §3 item 1 — persistent left sidebar (Sidebar.jsx) + header showing the user's
+// name + responsibility directly (not hidden in a dropdown); Logout lives at the bottom of the
+// sidebar now.
+describe('AppLayout (docs/08-ui-ux.md §3, docs/11-auth.md §5)', () => {
   beforeEach(() => {
     resetStore();
     mockNavigate.mockReset();
@@ -43,15 +47,27 @@ describe('AppLayout (docs/07-frontend-foundation.md §2, docs/11-auth.md §5)', 
     delete window.google;
   });
 
-  it("renders the authenticated user's name and role from authStore", () => {
+  it("renders the authenticated user's name directly in the header, not inside a button/dropdown", () => {
     useAuthStore.getState().login({ id: '1', name: 'Om Prakash', role: 'user' }, 'jwt-abc');
     renderLayout();
 
-    expect(screen.getByRole('button', { name: /Om Prakash/i })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Om Prakash/i }));
-    
-    // Once open, the dropdown shows 'User' (capitalized)
-    expect(screen.getByText('User')).toBeInTheDocument();
+    expect(screen.getByText('Om Prakash')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Om Prakash/i })).not.toBeInTheDocument();
+  });
+
+  it('shows the responsibility in brackets right next to the name when present', () => {
+    useAuthStore.getState().login({ id: '1', name: 'Zia Uddin', role: 'user', responsibility: 'AI Automation Engineer' }, 'jwt-abc');
+    renderLayout();
+
+    expect(screen.getByText('Zia Uddin (AI Automation Engineer)')).toBeInTheDocument();
+  });
+
+  it('omits the brackets entirely when the user has no responsibility set', () => {
+    useAuthStore.getState().login({ id: '1', name: 'Om Prakash', role: 'user' }, 'jwt-abc');
+    renderLayout();
+
+    expect(screen.getByText('Om Prakash')).toBeInTheDocument();
+    expect(screen.queryByText(/\(/)).not.toBeInTheDocument();
   });
 
   it('renders the page content passed through the Outlet', () => {
@@ -61,15 +77,13 @@ describe('AppLayout (docs/07-frontend-foundation.md §2, docs/11-auth.md §5)', 
     expect(screen.getByText('Page Content')).toBeInTheDocument();
   });
 
-  it('logout runs all four documented steps, in the documented order', () => {
+  it('logout (in the sidebar) runs all four documented steps, in the documented order', () => {
     useAuthStore.getState().login({ id: '1', name: 'Om', role: 'user' }, 'jwt-abc');
     const logoutSpy = vi.spyOn(useAuthStore.getState(), 'logout');
     const disableAutoSelect = vi.fn();
     window.google = { accounts: { id: { disableAutoSelect } } };
     const { clearSpy } = renderLayout();
 
-    // Open dropdown
-    fireEvent.click(screen.getByRole('button', { name: /Om/i }));
     fireEvent.click(screen.getByText('لاگ آؤٹ'));
 
     // Step 1: authStore (and its persisted localStorage entry) cleared.
@@ -98,35 +112,64 @@ describe('AppLayout (docs/07-frontend-foundation.md §2, docs/11-auth.md §5)', 
     useAuthStore.getState().login({ id: '1', name: 'Om', role: 'user' }, 'jwt-abc');
     renderLayout();
 
-    fireEvent.click(screen.getByRole('button', { name: /Om/i }));
     expect(() => fireEvent.click(screen.getByText('لاگ آؤٹ'))).not.toThrow();
     expect(mockNavigate).toHaveBeenCalledWith('/login');
   });
 
-  it("renders the user's responsibility alongside name and role when present", () => {
-    useAuthStore.getState().login(
-      { id: '1', name: 'Om Prakash', role: 'user', responsibility: 'IT' },
-      'jwt-abc'
-    );
-    renderLayout();
-
-    fireEvent.click(screen.getByRole('button', { name: /Om Prakash/i }));
-    expect(screen.getByText('IT (User)')).toBeInTheDocument();
-  });
-
-  it('admin role: both nav links are rendered in the header', () => {
-    useAuthStore.getState().login({ id: '2', name: 'Admin', role: 'admin' }, 'jwt-admin');
-    renderLayout();
-
-    expect(screen.getAllByRole('link', { name: /تمام یوزرز/i }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole('link', { name: /یوزر سمری رپورٹ/i }).length).toBeGreaterThan(0);
-  });
-
-  it('user role: admin nav links are NOT rendered', () => {
+  it('the sidebar always shows the Dashboard link, for every role', () => {
     useAuthStore.getState().login({ id: '1', name: 'Om', role: 'user' }, 'jwt-abc');
     renderLayout();
 
-    expect(screen.queryByRole('link', { name: /تمام یوزرز/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /یوزر سمری رپورٹ/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /ڈیش بورڈ/i, hidden: true })).toHaveAttribute('href', '/');
+  });
+
+  it('admin role: both Admin-only sidebar links are rendered', () => {
+    useAuthStore.getState().login({ id: '2', name: 'Admin', role: 'admin' }, 'jwt-admin');
+    renderLayout();
+
+    expect(screen.getByRole('link', { name: /تمام یوزرز/i, hidden: true })).toHaveAttribute('href', '/users');
+    expect(screen.getByRole('link', { name: /یوزر سمری رپورٹ/i, hidden: true })).toHaveAttribute('href', '/reports/user-summary');
+  });
+
+  it('user role: Admin-only sidebar links are NOT rendered', () => {
+    useAuthStore.getState().login({ id: '1', name: 'Om', role: 'user' }, 'jwt-abc');
+    renderLayout();
+
+    expect(screen.queryByRole('link', { name: /تمام یوزرز/i, hidden: true })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /یوزر سمری رپورٹ/i, hidden: true })).not.toBeInTheDocument();
+  });
+
+  it('mobile: the sidebar starts closed (aria-hidden) and the hamburger button opens it (shows the backdrop)', () => {
+    useAuthStore.getState().login({ id: '1', name: 'Om', role: 'user' }, 'jwt-abc');
+    renderLayout();
+
+    expect(screen.getByRole('complementary', { hidden: true })).toHaveAttribute('aria-hidden', 'true');
+    expect(screen.queryByLabelText('Band karein')).not.toBeInTheDocument(); // no backdrop yet
+
+    fireEvent.click(screen.getByLabelText('Menu kholein'));
+
+    expect(screen.getByRole('complementary', { hidden: true })).toHaveAttribute('aria-hidden', 'false');
+  });
+
+  it('mobile: clicking the backdrop closes the sidebar again', () => {
+    useAuthStore.getState().login({ id: '1', name: 'Om', role: 'user' }, 'jwt-abc');
+    renderLayout();
+
+    fireEvent.click(screen.getByLabelText('Menu kholein'));
+    expect(screen.getByRole('complementary', { hidden: true })).toHaveAttribute('aria-hidden', 'false');
+
+    fireEvent.click(screen.getByLabelText('Band karein'));
+    expect(screen.getByRole('complementary', { hidden: true })).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('clicking a sidebar link closes the mobile drawer', () => {
+    useAuthStore.getState().login({ id: '2', name: 'Admin', role: 'admin' }, 'jwt-admin');
+    renderLayout();
+
+    fireEvent.click(screen.getByLabelText('Menu kholein'));
+    expect(screen.getByRole('complementary', { hidden: true })).toHaveAttribute('aria-hidden', 'false');
+
+    fireEvent.click(screen.getByRole('link', { name: /تمام یوزرز/i, hidden: true }));
+    expect(screen.getByRole('complementary', { hidden: true })).toHaveAttribute('aria-hidden', 'true');
   });
 });
