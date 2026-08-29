@@ -17,7 +17,7 @@ function UsersPage() {
   const [formModal, setFormModal] = useState(null); // { mode: 'create' } | { mode: 'edit', user }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-w-0 flex-col gap-4">
       <div className="flex items-center justify-between border-b-2 border-brand/10 pb-3">
         <h1 className="text-3xl font-bold text-gray-900">صارفین</h1>
         <button

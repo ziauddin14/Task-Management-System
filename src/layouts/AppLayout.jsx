@@ -57,7 +57,11 @@ function AppLayout() {
         onToggleCollapsed={toggleCollapsed}
       />
 
-      <div className="flex flex-1 flex-col">
+      {/* min-w-0: without it, a flex item defaults to min-width:auto — meaning it refuses to
+          shrink below the width of its widest descendant (a wide table). That width then
+          propagates all the way up to this row, pushing the whole page wider than the viewport
+          instead of letting the table's own overflow-x-auto container do the scrolling. */}
+      <div className="flex min-w-0 flex-1 flex-col">
         {/* sticky, not fixed: it stays pinned to the top of the viewport as the page scrolls
             without needing to be pulled out of flow and hand-measured against the sidebar's
             width — flow layout already handles that for free. */}
@@ -98,7 +102,7 @@ function AppLayout() {
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-6">
+        <main className="min-w-0 flex-1 p-4 md:p-6">
           <Outlet />
         </main>
       </div>

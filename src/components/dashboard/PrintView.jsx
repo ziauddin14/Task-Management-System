@@ -21,7 +21,10 @@ function PrintView({ tasks, isVisible }) {
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white">
+    // overflow-x-auto was missing here — the one real containment gap found (TaskTable.jsx and
+    // UserTable.jsx both already had it). Without it, a wide print table had nothing of its own
+    // to scroll within, so its width propagated straight up into the page-level overflow.
+    <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
       <table className="w-full text-start text-xs">
         <thead className="bg-gray-50 text-gray-600">
           <tr>

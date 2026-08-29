@@ -11,4 +11,17 @@
   html {
     font-size: 18px;
   }
+
+  /* Page-wide horizontal-scroll bug fix — the root is the right place for this, not a per-page
+     wrapper: it's a hard guarantee that no descendant (a too-wide table, or a fixed off-canvas
+     Sidebar drawer translated past the right edge on mobile — both real contributors found here)
+     can ever create a page-level horizontal scrollbar, regardless of what gets added later. This
+     is a backstop, not the actual fix for the table — see TaskTable.jsx/UserTable.jsx/
+     PrintView.jsx's own overflow-x-auto wrappers and the min-w-0 additions along the flex chain
+     (AppLayout.jsx, DashboardPage.jsx, UsersPage.jsx) for that; without those, this would just
+     clip overflowing content invisibly instead of making it scrollable within its own container. */
+  html,
+  body {
+    overflow-x: hidden;
+  }
 }
