@@ -21,9 +21,7 @@ function PrintView({ tasks, isVisible }) {
   }
 
   return (
-    // Prompt 5E — same contained-scroll treatment as TaskTable.jsx, so switching Print View on
-    // doesn't reintroduce the whole-page scroll the table's own h-full/overflow-auto avoids.
-    <div className="h-full overflow-auto rounded-lg border border-gray-200 bg-white">
+    <div className="rounded-lg border border-gray-200 bg-white">
       <table className="w-full text-start text-xs">
         <thead className="bg-gray-50 text-gray-600">
           <tr>

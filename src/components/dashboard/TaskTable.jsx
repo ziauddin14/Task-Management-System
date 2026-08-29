@@ -110,35 +110,21 @@ function TaskTable({
   const titleCol = COLUMN_DEFINITIONS.find((c) => c.key === 'title');
 
   return (
-    // Prompt 5E — h-full + flex-col so this component fills whatever height DashboardPage's
-    // flex-1 table slot hands it, with ONLY the middle (table) region scrolling — the column
-    // toggle bar and pagination row stay put (shrink-0) above/below it, matching the "only the
-    // table itself should scroll" requirement.
-    <div className="flex h-full flex-col rounded-lg border border-gray-200 bg-white">
-      <div className="no-print flex shrink-0 items-center justify-end border-b border-gray-200 p-2">
+    <div className="rounded-lg border border-gray-200 bg-white">
+      <div className="no-print flex items-center justify-end border-b border-gray-200 p-2">
         <ColumnToggle columns={COLUMN_DEFINITIONS} isVisible={isVisible} onToggle={toggleColumn} />
       </div>
 
-      {isLoading && (
-        <div className="min-h-0 flex-1">
-          <Spinner label="کام لوڈ ہو رہے ہیں…" />
-        </div>
-      )}
+      {isLoading && <Spinner label="کام لوڈ ہو رہے ہیں…" />}
 
-      {!isLoading && isError && (
-        <div className="min-h-0 flex-1">
-          <EmptyState message="کام لوڈ نہیں ہو سکے۔ دوبارہ کوشش کریں۔" />
-        </div>
-      )}
+      {!isLoading && isError && <EmptyState message="کام لوڈ نہیں ہو سکے۔ دوبارہ کوشش کریں۔" />}
 
       {!isLoading && !isError && tasks.length === 0 && (
-        <div className="min-h-0 flex-1">
-          <EmptyState message="اس فلٹر سے مطابقت رکھنے والا کوئی کام نہیں ملا۔" />
-        </div>
+        <EmptyState message="اس فلٹر سے مطابقت رکھنے والا کوئی کام نہیں ملا۔" />
       )}
 
       {!isLoading && !isError && tasks.length > 0 && (
-        <div className="min-h-0 flex-1 overflow-auto">
+        <div className="max-h-[70vh] overflow-auto">
           <table className="w-full text-start text-sm">
             <thead className="sticky top-0 z-[1] bg-gray-50 text-gray-600">
               <tr>
@@ -294,7 +280,7 @@ function TaskTable({
         </div>
       )}
 
-      <div className="no-print shrink-0 px-3">
+      <div className="no-print px-3">
         <Pagination
           page={page}
           totalPages={meta?.totalPages || 1}

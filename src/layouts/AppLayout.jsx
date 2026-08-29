@@ -39,11 +39,12 @@ function AppLayout() {
   }
 
   return (
-    // Prompt 5E — h-screen + overflow-hidden on the outer shell (rather than the old min-h-screen,
-    // which let the whole page grow past the viewport and scroll) is what makes "only the table
-    // scrolls" possible: every descendant below now has a definite, bounded height to fill instead
-    // of an unbounded one, down to DashboardPage's own flex-1 table region.
-    <div className="flex h-screen overflow-hidden bg-gray-50/50">
+    // Bug fix (regression from the earlier "only the table scrolls" change) — that change made
+    // the outer shell h-screen/overflow-hidden with every page forced to fit exactly one viewport
+    // height, which broke ordinary scrolling on content-heavy pages. Reverted to a normal
+    // min-h-screen page: the page itself scrolls like any ordinary webpage, while the sidebar and
+    // header stay put via `sticky` (below) instead of by constraining everything else's height.
+    <div className="flex min-h-screen bg-gray-50/50">
       {/* Prompt 5C — Sidebar is the FIRST child of this row: in this RTL app a plain flex row's
           first child lands at the visual/physical RIGHT edge, which is the sidebar's new home
           (it was the LAST child before, which is what put it on the left). */}
@@ -56,8 +57,11 @@ function AppLayout() {
         onToggleCollapsed={toggleCollapsed}
       />
 
-      <div className="flex h-full flex-1 flex-col overflow-hidden">
-        <header className="no-print grid h-16 shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 border-b-2 border-brand/10 bg-white px-4 shadow-sm">
+      <div className="flex flex-1 flex-col">
+        {/* sticky, not fixed: it stays pinned to the top of the viewport as the page scrolls
+            without needing to be pulled out of flow and hand-measured against the sidebar's
+            width — flow layout already handles that for free. */}
+        <header className="no-print sticky top-0 z-30 grid h-16 shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 border-b-2 border-brand/10 bg-white px-4 shadow-sm">
           <div className="flex items-center justify-start">
             <button
               type="button"
@@ -69,9 +73,8 @@ function AppLayout() {
             </button>
           </div>
 
-          {/* Prompt 5D — the app's own brand text, centered and large/bold, reads as the
-              navbar's primary content (previously this line only lived, much smaller, in the
-              sidebar's own header) + a simple placeholder logo mark next to it. */}
+          {/* The app's own brand text, centered and large/bold, reads as the navbar's primary
+              content, next to the real Dawat-e-Islami logo (LogoMark.jsx). */}
           <div className="flex min-w-0 items-center justify-center gap-2">
             <LogoMark className="h-8 w-8 shrink-0 md:h-9 md:w-9" />
             <span className="truncate text-lg font-extrabold text-brand md:text-2xl">ٹاسک مینجمنٹ سسٹم</span>
@@ -95,7 +98,7 @@ function AppLayout() {
           </div>
         </header>
 
-        <main className="flex flex-1 flex-col overflow-y-auto p-4 md:p-6">
+        <main className="flex-1 p-4 md:p-6">
           <Outlet />
         </main>
       </div>

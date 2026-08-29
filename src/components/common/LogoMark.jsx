@@ -1,29 +1,21 @@
 import React from 'react'; // explicit import — see src/App.jsx's comment for why
+import logoUrl from '../../assets/logo/images.png';
 
-// Prompt 5D — placeholder brand mark (docs/01-architecture.md's client-responsibility item: no
-// official Dawat-e-Islami asset exists yet). Deliberately simple and geometric — a rounded-square
-// badge in the brand green (#1F6F3F) with a checkmark, reading as "a task, done" rather than
-// anything elaborate. Swap this file's contents for the real asset when it arrives; every caller
-// (Sidebar.jsx, AppLayout.jsx) just renders <LogoMark />, so nothing else needs to change.
+// Real Dawat-e-Islami brand mark (assets/logo/images.png) — replaces the earlier geometric
+// placeholder now that the client has actually provided the asset (docs/01-architecture.md's
+// client-responsibility item, previously unmet — see assets/logo/README.md). Every caller
+// (AppLayout.jsx's navbar, Sidebar.jsx's header) already just renders <LogoMark />, so swapping
+// the placeholder for the real file needed no changes anywhere else. object-contain + an explicit
+// className-driven box size keeps the (square, 300x300) source crisp and unstretched at every
+// size it's used at, from the collapsed sidebar rail up to the login page's larger mark.
 function LogoMark({ className = 'h-8 w-8', decorative = true }) {
   return (
-    <svg
-      viewBox="0 0 40 40"
-      className={className}
-      role={decorative ? undefined : 'img'}
+    <img
+      src={logoUrl}
+      alt={decorative ? '' : 'ٹاسک مینجمنٹ سسٹم'}
       aria-hidden={decorative || undefined}
-      aria-label={decorative ? undefined : 'ٹاسک مینجمنٹ سسٹم'}
-    >
-      <rect x="2" y="2" width="36" height="36" rx="11" fill="#1F6F3F" />
-      <path
-        d="M12 20.5L17.5 26L28 14"
-        fill="none"
-        stroke="#FFFFFF"
-        strokeWidth="3.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+      className={`${className} shrink-0 object-contain`}
+    />
   );
 }
 

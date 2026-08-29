@@ -65,7 +65,11 @@ function Sidebar({ isOpen, onClose, isAdmin, onLogout, collapsed, onToggleCollap
       className={clsx(
         'no-print fixed inset-y-0 start-0 z-50 flex shrink-0 flex-col border-e border-gray-200 bg-white shadow-lg transition-all duration-200 ease-in-out',
         collapsed ? 'w-16' : 'w-64',
-        'md:static md:z-auto md:shadow-none md:translate-x-0',
+        // Desktop: sticky (not static) — stays pinned to the viewport as the page scrolls, per
+        // the "sidebar/navbar never scroll away" bug fix, while still an ordinary flex sibling
+        // for width purposes (unlike `fixed`, which would need the content column to hand-offset
+        // itself to avoid overlapping it).
+        'md:sticky md:top-0 md:h-screen md:z-auto md:shadow-none md:translate-x-0',
         isOpen ? 'translate-x-0' : 'translate-x-full'
       )}
       aria-hidden={isHiddenFromA11yTree}

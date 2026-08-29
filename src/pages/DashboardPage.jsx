@@ -83,12 +83,8 @@ function DashboardPage() {
   }
 
   return (
-    // Prompt 5E — h-full fills whatever height AppLayout's <main> hands this page (see
-    // AppLayout.jsx); every section here is shrink-0 (fixed to its own content height) EXCEPT the
-    // table region below, which is flex-1 min-h-0 so it — and only it — absorbs the remaining
-    // space and scrolls internally. The header/KPI cards/filter bar never move.
-    <div className="flex h-full flex-col gap-4">
-      <div className="no-print flex shrink-0 items-center justify-between border-b-2 border-brand/10 pb-3">
+    <div className="flex flex-col gap-4">
+      <div className="no-print flex items-center justify-between border-b-2 border-brand/10 pb-3">
         <h1 className="text-3xl font-bold text-gray-900">ڈیش بورڈ</h1>
         <div className="flex items-center gap-2">
           {isAdmin && (
@@ -116,14 +112,10 @@ function DashboardPage() {
         </div>
       </div>
 
-      {summaryQuery.isLoading && (
-        <div className="shrink-0">
-          <Spinner label="خلاصہ لوڈ ہو رہا ہے۔۔۔" />
-        </div>
-      )}
+      {summaryQuery.isLoading && <Spinner label="خلاصہ لوڈ ہو رہا ہے۔۔۔" />}
 
       {summaryQuery.data && (
-        <div className="no-print flex shrink-0 flex-col gap-3">
+        <div className="no-print flex flex-col gap-3">
           {/* Prompt 2B — the two groups sit side-by-side in 2 columns on desktop (removes the
               empty space that used to sit beside the first, full-width group); stacked on narrow
               mobile widths, where each group's own card row still scrolls horizontally. */}
@@ -197,13 +189,13 @@ function DashboardPage() {
         </div>
       )}
 
-      <div className="no-print shrink-0">
+      <div className="no-print">
         <FilterBar filtersHook={filtersHook} isAdmin={isAdmin} />
       </div>
 
       {/* docs/08-ui-ux.md §3 item 6 — Print View toggle + Export sit together, same side as the
           filter bar's own action buttons. */}
-      <div className="no-print flex shrink-0 items-center gap-2">
+      <div className="no-print flex items-center gap-2">
         <button
           type="button"
           onClick={() => setPrintMode((prev) => !prev)}
@@ -228,7 +220,7 @@ function DashboardPage() {
         <ExportMenu mode="dashboard" onExport={handleDashboardExport} isLoading={exportReportHook.isLoading} />
       </div>
 
-      <div className="min-h-0 flex-1 overflow-hidden">
+      <div>
         {printMode ? (
           <PrintView tasks={tasksQuery.data?.items || []} isVisible={columnVisibility.isVisible} />
         ) : (
