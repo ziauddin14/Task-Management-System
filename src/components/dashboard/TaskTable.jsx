@@ -6,7 +6,7 @@ import EmptyState from '../common/EmptyState.jsx';
 import Pagination from '../common/Pagination.jsx';
 import ColumnToggle from './ColumnToggle.jsx';
 import { COLUMN_DEFINITIONS } from '../../utils/dashboardColumns.js';
-import { formatDate, formatTimeStatusLabel, getTimeStatusColorClass } from '../../utils/formatDate.js';
+import { formatDateDDMMYY, formatTimeStatusLabel, getTimeStatusColorClass } from '../../utils/formatDate.js';
 import { getStatusMeta, getPerformanceMeta } from '../../utils/taskDisplay.js';
 
 // docs/08-ui-ux.md §6 — column set, RTL reading order, frozen header, column show/hide, mobile
@@ -202,8 +202,8 @@ function TaskTable({
                       </td>
                     )}
                     {isVisible('responsibility') && <td className="whitespace-nowrap px-3 py-2">{task.responsibility}</td>}
-                    {isVisible('deadline') && <td className="whitespace-nowrap px-3 py-2">{formatDate(task.deadline)}</td>}
-                    {isVisible('lastUpdate') && <td className="whitespace-nowrap px-3 py-2">{formatDate(task.lastUpdateAt)}</td>}
+                    {isVisible('deadline') && <td className="whitespace-nowrap px-3 py-2">{formatDateDDMMYY(task.deadline)}</td>}
+                    {isVisible('lastUpdate') && <td className="whitespace-nowrap px-3 py-2">{formatDateDDMMYY(task.lastUpdateAt)}</td>}
                     {isVisible('status') && (
                       <td className="whitespace-nowrap px-3 py-2">
                         <span className={clsx('rounded-full px-2 py-0.5 text-xs font-medium', statusMeta.badgeClass)}>

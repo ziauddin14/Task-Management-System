@@ -8,6 +8,18 @@ export function formatDate(value) {
   return isValid(date) ? format(date, 'dd MMM yyyy') : '-';
 }
 
+// Dedicated to the Dashboard task table's Deadline/Last Update columns (TaskTable.jsx) only —
+// deliberately NOT a change to formatDate() above, which several other places (PrintView.jsx's
+// own Deadline column, PreviousUpdatesContent.jsx's summary-table Deadline and updates-table
+// Date) still rely on for the "dd MMM yyyy" format and were not asked to change. Display-only:
+// nothing reads this formatted string back for storage, API payloads, or Time Status comparisons
+// — those all still work off the raw ISO value.
+export function formatDateDDMMYY(value) {
+  if (!value) return '-';
+  const date = value instanceof Date ? value : new Date(value);
+  return isValid(date) ? format(date, 'dd-MM-yy') : '-';
+}
+
 // docs/08-ui-ux.md §7 — Previous Updates history entries show a date (with time, since a
 // conversation-style thread of same-day updates reads better disambiguated).
 export function formatDateTime(value) {

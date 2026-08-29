@@ -74,6 +74,15 @@ describe('TaskTable (docs/08-ui-ux.md §6)', () => {
     expect(screen.getByText('IT')).toBeInTheDocument();
   });
 
+  // Deadline/Last Update columns use a dedicated DD-MM-YY formatter (formatDateDDMMYY), not the
+  // shared formatDate() used by PrintView/PreviousUpdatesContent — confirms it's actually wired
+  // in and produces the exact requested format.
+  it('renders Deadline and Last Update in DD-MM-YY format', () => {
+    renderTable();
+    expect(screen.getByText('01-09-26')).toBeInTheDocument(); // deadline: 2026-09-01
+    expect(screen.getByText('20-08-26')).toBeInTheDocument(); // lastUpdateAt: 2026-08-20
+  });
+
   it('shows an EmptyState when there are no tasks (not a blank table)', () => {
     renderTable({ tasks: [] });
     expect(screen.getByText('اس فلٹر سے مطابقت رکھنے والا کوئی کام نہیں ملا۔')).toBeInTheDocument();
