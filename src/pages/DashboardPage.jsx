@@ -14,6 +14,7 @@ import KpiCard from '../components/dashboard/KpiCard.jsx';
 import FilterBar from '../components/dashboard/FilterBar.jsx';
 import TaskTable from '../components/dashboard/TaskTable.jsx';
 import PrintView from '../components/dashboard/PrintView.jsx';
+import ColumnToggle from '../components/dashboard/ColumnToggle.jsx';
 import TaskFormModal from '../components/task/TaskFormModal.jsx';
 import UpdateModal from '../components/task/UpdateModal.jsx';
 import PreviousUpdatesModal from '../components/task/PreviousUpdatesModal.jsx';
@@ -227,6 +228,14 @@ function DashboardPage() {
           </button>
         )}
         <ExportMenu mode="dashboard" onExport={handleDashboardExport} isLoading={exportReportHook.isLoading} />
+        {/* Prompt — TaskTable's own column-toggle header row (and the empty space it left above
+            the column headings) was removed; the control itself still exists here, next to Print
+            View/Export, so the Export flow's "current visible-columns state" behavior keeps working. */}
+        <ColumnToggle
+          columns={COLUMN_DEFINITIONS}
+          isVisible={columnVisibility.isVisible}
+          onToggle={columnVisibility.toggleColumn}
+        />
       </PageActions>
 
       <div>

@@ -74,13 +74,20 @@ describe('TaskTable (docs/08-ui-ux.md §6)', () => {
     expect(screen.getByText('IT')).toBeInTheDocument();
   });
 
-  // Deadline/Last Update columns use a dedicated DD-MM-YY formatter (formatDateDDMMYY), not the
-  // shared formatDate() used by PrintView/PreviousUpdatesContent — confirms it's actually wired
-  // in and produces the exact requested format.
-  it('renders Deadline and Last Update in DD-MM-YY format', () => {
+  // Deadline/Last Update columns use a dedicated formatter (formatDateShortYear), not the shared
+  // formatDate() used by PrintView/PreviousUpdatesContent — confirms it's actually wired in and
+  // produces the exact requested "d MMM yy" format.
+  it('renders Deadline and Last Update as "d MMM yy"', () => {
     renderTable();
-    expect(screen.getByText('01-09-26')).toBeInTheDocument(); // deadline: 2026-09-01
-    expect(screen.getByText('20-08-26')).toBeInTheDocument(); // lastUpdateAt: 2026-08-20
+    expect(screen.getByText('1 Sep 26')).toBeInTheDocument(); // deadline: 2026-09-01
+    expect(screen.getByText('20 Aug 26')).toBeInTheDocument(); // lastUpdateAt: 2026-08-20
+  });
+
+  // Prompt — the column-visibility toggle bar (and the empty header-row space above the actual
+  // column headings that it left behind) is removed entirely.
+  it('does not render a column-visibility toggle control', () => {
+    renderTable();
+    expect(screen.queryByLabelText('Columns')).not.toBeInTheDocument();
   });
 
   it('shows an EmptyState when there are no tasks (not a blank table)', () => {
@@ -101,65 +108,47 @@ describe('TaskTable (docs/08-ui-ux.md §6)', () => {
     expect(screen.getByText('+1 more')).toBeInTheDocument();
   });
 
+  // Prompt — Update/Previous Updates/Edit/Close are now icon-only buttons; the Urdu label that
+  // used to be the button's visible text is now its title + aria-label instead (still queryable
+  // by accessible name, and still shown on hover as a native tooltip via `title`).
   it('Update/Previous Updates call their handlers with the task (available to both roles)', () => {
     const { onUpdate, onViewUpdates } = renderTable();
-    fireEvent.click(screen.getByText('اپڈیٹ کریں'));
+    fireEvent.click(screen.getByLabelText('اپڈیٹ کریں'));
     expect(onUpdate).toHaveBeenCalledWith(baseTask);
-    fireEvent.click(screen.getByText('پرانی اپڈیٹس'));
+    fireEvent.click(screen.getByLabelText('پرانی اپڈیٹس'));
     expect(onViewUpdates).toHaveBeenCalledWith(baseTask);
+  });
+
+  it('icon action buttons carry a title tooltip matching their aria-label', () => {
+    renderTable();
+    const updateButton = screen.getByLabelText('اپڈیٹ کریں');
+    expect(updateButton).toHaveAttribute('title', 'اپڈیٹ کریں');
   });
 
   it('Update is disabled on an already-closed task; Previous Updates stays enabled', () => {
     renderTable({ tasks: [{ ...baseTask, status: 'closed' }] });
-    expect(screen.getByText('اپڈیٹ کریں')).toBeDisabled();
-    expect(screen.getByText('پرانی اپڈیٹس')).not.toBeDisabled();
+    expect(screen.getByLabelText('اپڈیٹ کریں')).toBeDisabled();
+    expect(screen.getByLabelText('پرانی اپڈیٹس')).not.toBeDisabled();
   });
 
   it('User role: no Edit/Close row actions', () => {
     renderTable({ isAdmin: false });
-    expect(screen.queryByText('ترمیم کریں')).not.toBeInTheDocument();
-    expect(screen.queryByText('کام بند کریں')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('ترمیم کریں')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('کام بند کریں')).not.toBeInTheDocument();
   });
 
   it('Admin role: Edit/Close row actions appear and call their handlers', () => {
     const { onEdit, onClose } = renderTable({ isAdmin: true });
-    fireEvent.click(screen.getByText('ترمیم کریں'));
+    fireEvent.click(screen.getByLabelText('ترمیم کریں'));
     expect(onEdit).toHaveBeenCalledWith(baseTask);
-    fireEvent.click(screen.getByText('کام بند کریں'));
+    fireEvent.click(screen.getByLabelText('کام بند کریں'));
     expect(onClose).toHaveBeenCalledWith(baseTask);
   });
 
-  it('Admin role: Edit/Close are disabled for an already-closed task', () => {
+  it('Admin role: Edit is disabled, and Close is hidden entirely (not just disabled), for an already-closed task', () => {
     renderTable({ isAdmin: true, tasks: [{ ...baseTask, status: 'closed' }] });
-    expect(screen.getByText('ترمیم کریں')).toBeDisabled();
-    expect(screen.getByText('کام بند کریں')).toBeDisabled();
-  });
-
-  it('column toggle hides a toggleable column, and locked columns have no checkbox to hide them', () => {
-    renderTable();
-    fireEvent.click(screen.getByLabelText('Columns'));
-    const responsibilityCheckbox = screen.getByLabelText('ذمہ داری');
-    const codeNumberCheckbox = screen.getByLabelText('کوڈ نمبر');
-
-    expect(codeNumberCheckbox).toBeDisabled();
-    expect(responsibilityCheckbox).toBeChecked();
-
-    fireEvent.click(responsibilityCheckbox);
-    expect(screen.queryByText('IT')).not.toBeInTheDocument();
-  });
-
-  it('column visibility persists to localStorage across remounts (versioned key)', () => {
-    const { unmount } = renderTable();
-    fireEvent.click(screen.getByLabelText('Columns'));
-    fireEvent.click(screen.getByLabelText('ذمہ داری'));
-    unmount();
-
-    expect(JSON.parse(window.localStorage.getItem('dashboard.visibleColumns.v1'))).toMatchObject({
-      responsibility: false,
-    });
-
-    renderTable();
-    expect(screen.queryByText('IT')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('ترمیم کریں')).toBeDisabled();
+    expect(screen.queryByLabelText('کام بند کریں')).not.toBeInTheDocument();
   });
 
   it('pagination forwards page/page-size changes', () => {

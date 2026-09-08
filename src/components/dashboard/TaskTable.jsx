@@ -1,13 +1,33 @@
 import React from 'react'; // explicit import — see src/App.jsx's comment for why
 import clsx from 'clsx';
-import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { ChevronUp, ChevronDown, ChevronsUpDown, Upload, History, Pencil, Lock } from 'lucide-react';
 import Spinner from '../common/Spinner.jsx';
 import EmptyState from '../common/EmptyState.jsx';
 import Pagination from '../common/Pagination.jsx';
-import ColumnToggle from './ColumnToggle.jsx';
 import { COLUMN_DEFINITIONS } from '../../utils/dashboardColumns.js';
-import { formatDateDDMMYY, formatTimeStatusLabel, getTimeStatusColorClass } from '../../utils/formatDate.js';
+import { formatDateShortYear, formatTimeStatusLabel, getTimeStatusColorClass } from '../../utils/formatDate.js';
 import { getStatusMeta, getPerformanceMeta } from '../../utils/taskDisplay.js';
+
+// Prompt — compact icon-only action buttons (was text-labeled), matching the row height already
+// established by the old h-10 text buttons. title + aria-label carry the same Urdu label the text
+// button used to show, so the action is still named on hover and for screen readers.
+function IconActionButton({ icon: Icon, label, onClick, disabled, danger }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      title={label}
+      aria-label={label}
+      className={clsx(
+        'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border text-gray-600 transition-colors disabled:opacity-40',
+        danger ? 'border-gray-300 hover:border-red-300 hover:bg-red-50 hover:text-red-600' : 'border-gray-300 hover:bg-gray-50 hover:text-brand'
+      )}
+    >
+      <Icon className="h-4 w-4" aria-hidden="true" />
+    </button>
+  );
+}
 
 // docs/08-ui-ux.md §6 — column set, RTL reading order, frozen header, column show/hide, mobile
 // horizontal scroll. docs/09-frontend-features.md §2 — Edit is Admin-only. Update/Previous
@@ -91,8 +111,9 @@ function TaskTable({
 }) {
   // Lifted to DashboardPage.jsx (Phase 10.6) so the Export flow can read the SAME visible-columns
   // state (docs/09-frontend-features.md §8: "the current visible-columns list") without a second,
-  // out-of-sync source of truth.
-  const { isVisible, toggleColumn } = columnVisibility;
+  // out-of-sync source of truth. This component only ever reads it now (toggleColumn's only
+  // consumer, the column-toggle button, was removed).
+  const { isVisible } = columnVisibility;
 
   // Prompt 2H — click toggles asc -> desc on the same column; clicking a different column starts
   // it fresh at asc (standard single-column-sort behavior, matching sortBy/sortOrder both being
@@ -110,11 +131,13 @@ function TaskTable({
   const titleCol = COLUMN_DEFINITIONS.find((c) => c.key === 'title');
 
   return (
+    // Prompt — the column-visibility toggle bar (and the empty gap it left above the actual
+    // column headers) is removed from here; the table's own root no longer has that extra header
+    // row, so there's nothing left to collapse — this IS the fix, not a follow-up width/flex
+    // adjustment. The control itself moved to the Navbar's PageActions bar (DashboardPage.jsx),
+    // next to Print View/Export — columnVisibility.isVisible below still gates which columns
+    // render here exactly as before.
     <div className="rounded-lg border border-gray-200 bg-white">
-      <div className="no-print flex items-center justify-end border-b border-gray-200 p-2">
-        <ColumnToggle columns={COLUMN_DEFINITIONS} isVisible={isVisible} onToggle={toggleColumn} />
-      </div>
-
       {isLoading && <Spinner label="کام لوڈ ہو رہے ہیں…" />}
 
       {!isLoading && isError && <EmptyState message="کام لوڈ نہیں ہو سکے۔ دوبارہ کوشش کریں۔" />}
@@ -202,8 +225,8 @@ function TaskTable({
                       </td>
                     )}
                     {isVisible('responsibility') && <td className="whitespace-nowrap px-3 py-2">{task.responsibility}</td>}
-                    {isVisible('deadline') && <td className="whitespace-nowrap px-3 py-2">{formatDateDDMMYY(task.deadline)}</td>}
-                    {isVisible('lastUpdate') && <td className="whitespace-nowrap px-3 py-2">{formatDateDDMMYY(task.lastUpdateAt)}</td>}
+                    {isVisible('deadline') && <td className="whitespace-nowrap px-3 py-2">{formatDateShortYear(task.deadline)}</td>}
+                    {isVisible('lastUpdate') && <td className="whitespace-nowrap px-3 py-2">{formatDateShortYear(task.lastUpdateAt)}</td>}
                     {isVisible('status') && (
                       <td className="whitespace-nowrap px-3 py-2">
                         <span className={clsx('rounded-full px-2 py-0.5 text-xs font-medium', statusMeta.badgeClass)}>
@@ -235,39 +258,17 @@ function TaskTable({
                     )}
                     <td className="no-print whitespace-nowrap px-3 py-2">
                       <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => onUpdate(task)}
-                          disabled={isClosed}
-                          className="h-10 min-w-[40px] rounded-lg border border-gray-300 px-2 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-40"
-                        >
-                          اپڈیٹ کریں
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onViewUpdates(task)}
-                          className="h-10 min-w-[40px] rounded-lg border border-gray-300 px-2 text-xs text-gray-700 hover:bg-gray-50"
-                        >
-                          پرانی اپڈیٹس
-                        </button>
+                        <IconActionButton icon={Upload} label="اپڈیٹ کریں" onClick={() => onUpdate(task)} disabled={isClosed} />
+                        <IconActionButton icon={History} label="پرانی اپڈیٹس" onClick={() => onViewUpdates(task)} />
                         {isAdmin && (
                           <>
-                            <button
-                              type="button"
-                              onClick={() => onEdit(task)}
-                              disabled={isClosed}
-                              className="h-10 min-w-[40px] rounded-lg border border-gray-300 px-2 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-40"
-                            >
-                              ترمیم کریں
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => onClose(task)}
-                              disabled={isClosed}
-                              className="h-10 min-w-[40px] rounded-lg border border-gray-300 px-2 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-40"
-                            >
-                              کام بند کریں
-                            </button>
+                            <IconActionButton icon={Pencil} label="ترمیم کریں" onClick={() => onEdit(task)} disabled={isClosed} />
+                            {/* Prompt — unlike Update/Edit (visible-but-disabled once closed), Close
+                                is hidden entirely once the task already is closed — there's nothing
+                                left to close. */}
+                            {!isClosed && (
+                              <IconActionButton icon={Lock} label="کام بند کریں" onClick={() => onClose(task)} danger />
+                            )}
                           </>
                         )}
                       </div>

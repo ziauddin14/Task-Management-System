@@ -168,15 +168,15 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
     await screen.findByText('260801');
     expect(screen.queryByText('نیا کام')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Assignee filter')).not.toBeInTheDocument();
-    expect(screen.queryByText('ترمیم کریں')).not.toBeInTheDocument();
-    expect(screen.queryByText('کام بند کریں')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('ترمیم کریں')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('کام بند کریں')).not.toBeInTheDocument();
   });
 
   it('close action: opens a confirmation with the documented wording; Cancel does not call closeTask', async () => {
     renderDashboard('admin');
     await screen.findByText('260801');
 
-    fireEvent.click(screen.getByText('کام بند کریں'));
+    fireEvent.click(screen.getByLabelText('کام بند کریں'));
     expect(
       screen.getByText('اس کام کو بند کرنے کے بعد کوئی نئی اپڈیٹ درج نہیں کی جا سکے گی۔ کیا واقعی بند کرنا چاہتے ہیں؟')
     ).toBeInTheDocument();
@@ -192,7 +192,7 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
     renderDashboard('admin');
     await screen.findByText('260801');
 
-    fireEvent.click(screen.getByText('کام بند کریں'));
+    fireEvent.click(screen.getByLabelText('کام بند کریں'));
     fireEvent.click(screen.getByText('ہاں، بند کریں'));
 
     await waitFor(() => expect(closeTask).toHaveBeenCalledWith('t1'));
@@ -202,7 +202,7 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
     renderDashboard('user');
     await screen.findByText('260801');
 
-    fireEvent.click(screen.getByText('اپڈیٹ کریں'));
+    fireEvent.click(screen.getByLabelText('اپڈیٹ کریں'));
 
     expect(await screen.findByRole('dialog', { name: 'کام اپڈیٹ کریں' })).toBeInTheDocument();
   });
@@ -213,7 +213,7 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
 
     expect(getTaskUpdates).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByText('پرانی اپڈیٹس'));
+    fireEvent.click(screen.getByLabelText('پرانی اپڈیٹس'));
 
     expect(await screen.findByRole('dialog', { name: 'کام کی تفصیل' })).toBeInTheDocument();
     await waitFor(() => expect(getTaskUpdates).toHaveBeenCalled());
@@ -222,12 +222,12 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
   it('Print View toggle switches the table into the denser read-only variant', async () => {
     renderDashboard('admin');
     await screen.findByText('260801');
-    expect(screen.getByText('ترمیم کریں')).toBeInTheDocument(); // regular TaskTable's Admin action
+    expect(screen.getByLabelText('ترمیم کریں')).toBeInTheDocument(); // regular TaskTable's Admin action
 
     fireEvent.click(screen.getByText('پرنٹ ویو'));
 
-    expect(screen.queryByText('ترمیم کریں')).not.toBeInTheDocument();
-    expect(screen.queryByText('اپڈیٹ کریں')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('ترمیم کریں')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('اپڈیٹ کریں')).not.toBeInTheDocument();
     expect(screen.getByText('260801')).toBeInTheDocument(); // task data itself still shows
   });
 
