@@ -15,6 +15,7 @@ vi.mock('../../../src/services/tasks.api.js', () => ({
     completionPercent: 40,
     timeStatus: { type: 'remaining', days: 5 },
   }),
+  updateTask: vi.fn().mockResolvedValue({ id: 't1', status: 'ongoing' }),
 }));
 vi.mock('../../../src/services/taskUpdates.api.js', () => ({
   createTaskUpdate: vi.fn().mockResolvedValue({
@@ -24,11 +25,21 @@ vi.mock('../../../src/services/taskUpdates.api.js', () => ({
   getTaskUpdates: vi.fn().mockResolvedValue({ items: [], meta: { page: 1, totalPages: 1 } }),
 }));
 vi.mock('../../../src/services/uploads.api.js', () => ({ uploadAttachment: vi.fn() }));
+vi.mock('../../../src/services/users.api.js', () => ({
+  getUsers: vi.fn().mockResolvedValue({
+    items: [
+      { id: 'u1', name: 'Ali', responsibility: 'IT', isActive: true },
+      { id: 'u2', name: 'Bilal', responsibility: 'Media', isActive: true },
+    ],
+    meta: {},
+  }),
+}));
 vi.mock('react-hot-toast', () => ({ default: { success: vi.fn(), error: vi.fn() } }));
 
 import { createTaskUpdate } from '../../../src/services/taskUpdates.api.js';
 import { getTaskUpdates } from '../../../src/services/taskUpdates.api.js';
-import { getTask } from '../../../src/services/tasks.api.js';
+import { getTask, updateTask } from '../../../src/services/tasks.api.js';
+import { getUsers } from '../../../src/services/users.api.js';
 import toast from 'react-hot-toast';
 
 function renderModal(props) {
@@ -44,6 +55,8 @@ describe('UpdateModal (docs/08-ui-ux.md §7, docs/09-frontend-features.md §3)',
   beforeEach(() => {
     createTaskUpdate.mockClear();
     getTaskUpdates.mockClear();
+    updateTask.mockClear();
+    getUsers.mockClear();
     toast.success.mockClear();
   });
 
@@ -134,6 +147,98 @@ describe('UpdateModal (docs/08-ui-ux.md §7, docs/09-frontend-features.md §3)',
       await screen.findByText('Sample task');
 
       expect(screen.queryByText('کام بند کریں')).not.toBeInTheDocument();
+    });
+  });
+
+  // Prompt — reassign mid-task without losing update history; same Admin-only/not-closed
+  // visibility rule as Close Task, and "نہیں" reuses onCloseTask directly (no duplicated flow).
+  describe('Change Assignee footer button', () => {
+    it('is not shown for a non-Admin user', async () => {
+      renderModal({ isAdmin: false });
+      await screen.findByText('Sample task');
+      expect(screen.queryByText('ذمہ دار تبدیل کریں')).not.toBeInTheDocument();
+    });
+
+    it('Admin + already-closed task: the button is hidden entirely', async () => {
+      getTask.mockResolvedValueOnce({
+        id: 't1',
+        codeNumber: '260801',
+        title: 'Sample task',
+        deadline: '2026-09-01T00:00:00.000Z',
+        status: 'closed',
+        performanceRating: '-',
+        completionPercent: 100,
+        timeStatus: { type: 'early', days: 1 },
+      });
+      renderModal({ isAdmin: true });
+      await screen.findByText('Sample task');
+
+      expect(screen.queryByText('ذمہ دار تبدیل کریں')).not.toBeInTheDocument();
+    });
+
+    it('opens the inline confirmation question first, before any dropdown is shown', async () => {
+      renderModal({ isAdmin: true });
+      await screen.findByText('Sample task');
+
+      fireEvent.click(screen.getByText('ذمہ دار تبدیل کریں'));
+
+      expect(screen.getByText('کیا آپ یہ کام کسی دوسرے ذمہ دار کو دینا چاہتے ہیں؟')).toBeInTheDocument();
+      expect(screen.queryByLabelText('نیا ذمہ دار منتخب کریں')).not.toBeInTheDocument();
+      expect(getUsers).not.toHaveBeenCalled();
+    });
+
+    it('"نہیں" calls onCloseTask directly — the exact same trigger as the standalone Close Task button', async () => {
+      const onCloseTask = vi.fn();
+      renderModal({ isAdmin: true, onCloseTask });
+      await screen.findByText('Sample task');
+
+      fireEvent.click(screen.getByText('ذمہ دار تبدیل کریں'));
+      fireEvent.click(screen.getByText('نہیں'));
+
+      expect(onCloseTask).toHaveBeenCalled();
+      expect(updateTask).not.toHaveBeenCalled();
+    });
+
+    it('"ہاں" reveals a dropdown sourced from the same assignable-users data as the Naya Kaam form', async () => {
+      renderModal({ isAdmin: true });
+      await screen.findByText('Sample task');
+
+      fireEvent.click(screen.getByText('ذمہ دار تبدیل کریں'));
+      fireEvent.click(screen.getByText('ہاں'));
+
+      const select = await screen.findByLabelText('نیا ذمہ دار منتخب کریں');
+      expect(getUsers).toHaveBeenCalledWith({ role: 'user', isActive: true });
+      expect(screen.getByText('Ali')).toBeInTheDocument();
+      expect(screen.getByText('Bilal')).toBeInTheDocument();
+      expect(select).toBeInTheDocument();
+    });
+
+    it('selecting a person and saving replaces assignees, leaves status untouched, toasts, and closes — without posting a TaskUpdate', async () => {
+      const onClose = vi.fn();
+      renderModal({ isAdmin: true, onClose });
+      await screen.findByText('Sample task');
+
+      fireEvent.click(screen.getByText('ذمہ دار تبدیل کریں'));
+      fireEvent.click(screen.getByText('ہاں'));
+      const select = await screen.findByLabelText('نیا ذمہ دار منتخب کریں');
+      fireEvent.change(select, { target: { value: 'u2' } });
+      fireEvent.click(screen.getByText('محفوظ کریں'));
+
+      await waitFor(() => expect(updateTask).toHaveBeenCalledWith('t1', { assignees: ['u2'] }));
+      expect(createTaskUpdate).not.toHaveBeenCalled();
+      expect(toast.success).toHaveBeenCalledWith('ذمہ دار تبدیل کر دیا گیا');
+      expect(onClose).toHaveBeenCalled();
+    });
+
+    it('Save stays disabled until a person is actually selected', async () => {
+      renderModal({ isAdmin: true });
+      await screen.findByText('Sample task');
+
+      fireEvent.click(screen.getByText('ذمہ دار تبدیل کریں'));
+      fireEvent.click(screen.getByText('ہاں'));
+      await screen.findByLabelText('نیا ذمہ دار منتخب کریں');
+
+      expect(screen.getByText('محفوظ کریں')).toBeDisabled();
     });
   });
 });
