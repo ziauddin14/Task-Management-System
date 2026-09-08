@@ -6,6 +6,7 @@ import { useAuthStore } from '../store/authStore.js';
 import { useSidebarCollapsed } from '../hooks/useSidebarCollapsed.js';
 import Sidebar from '../components/common/Sidebar.jsx';
 import LogoMark from '../components/common/LogoMark.jsx';
+import { PageActionsPortalProvider } from '../contexts/PageActionsPortal.jsx';
 
 // docs/08-ui-ux.md §3 item 1 — right-side navigation (Sidebar.jsx, Prompt 5C — RTL's natural
 // position, moved from the left) + a top header bar showing the app's own branding centered
@@ -21,6 +22,13 @@ function AppLayout() {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { collapsed, toggleCollapsed } = useSidebarCollapsed();
+  // Prompt — Print View/Export move out of the Dashboard page's own body and into the Navbar
+  // instead, "near the existing navbar controls." AppLayout has no idea what page is mounted (and
+  // shouldn't need to), so it just exposes this DOM node as a portal target; whichever page wants
+  // to render controls into the Navbar (currently only DashboardPage) does so via <PageActions>.
+  // A callback ref (not useRef) is used deliberately, so state — and therefore the context value
+  // consumers see — only updates once the node is genuinely mounted, not left permanently null.
+  const [actionsSlot, setActionsSlot] = useState(null);
 
   // Close the mobile drawer on every route change (also triggered by Sidebar's own NavLink
   // onClick, but this covers back/forward navigation and any other route change too).
@@ -84,7 +92,10 @@ function AppLayout() {
             <span className="truncate text-lg font-extrabold text-brand md:text-2xl">ٹاسک مینجمنٹ سسٹم</span>
           </div>
 
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex items-center justify-end gap-1">
+            {/* Print View toggle + Export (Prompt) portal in here, page-permitting — empty div,
+                zero footprint, when no page has anything to put in it. */}
+            <div ref={setActionsSlot} className="flex items-center gap-1" />
             <div className="hidden text-end leading-tight sm:block">
               <span className="text-sm font-medium text-gray-900">
                 {user?.name}
@@ -103,7 +114,9 @@ function AppLayout() {
         </header>
 
         <main className="min-w-0 flex-1 p-4 md:p-6">
-          <Outlet />
+          <PageActionsPortalProvider target={actionsSlot}>
+            <Outlet />
+          </PageActionsPortalProvider>
         </main>
       </div>
 

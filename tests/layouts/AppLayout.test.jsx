@@ -5,6 +5,18 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AppLayout from '../../src/layouts/AppLayout.jsx';
 import { useAuthStore } from '../../src/store/authStore.js';
+import { PageActions } from '../../src/contexts/PageActionsPortal.jsx';
+
+function PageWithNavbarAction() {
+  return (
+    <div>
+      Page With Action
+      <PageActions>
+        <button type="button">Portaled Page Action</button>
+      </PageActions>
+    </div>
+  );
+}
 
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async (importOriginal) => {
@@ -16,16 +28,17 @@ function resetStore() {
   useAuthStore.setState({ user: null, token: null, isAuthenticated: false });
 }
 
-function renderLayout() {
+function renderLayout(initialEntries = ['/']) {
   const queryClient = new QueryClient();
   const clearSpy = vi.spyOn(queryClient, 'clear');
   const utils = render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={initialEntries}>
         <Routes>
           <Route element={<AppLayout />}>
             <Route path="/" element={<div>Page Content</div>} />
             <Route path="/users" element={<div>Users Content</div>} />
+            <Route path="/portal-test" element={<PageWithNavbarAction />} />
           </Route>
         </Routes>
       </MemoryRouter>
@@ -192,6 +205,18 @@ describe('AppLayout (docs/08-ui-ux.md §3, docs/11-auth.md §5)', () => {
 
     expect(screen.getByText('ٹاسک مینجمنٹ سسٹم')).toBeInTheDocument();
     expect(screen.getByRole('banner')).toContainElement(screen.getByText('ٹاسک مینجمنٹ سسٹم'));
+  });
+
+  // Prompt — Print View/Export (DashboardPage) now portal into the Navbar via PageActionsPortal;
+  // this proves the mechanism end-to-end through the REAL AppLayout, not just DashboardPage's own
+  // test harness stand-in.
+  it('renders a page-provided <PageActions> control inside the real Navbar', () => {
+    useAuthStore.getState().login({ id: '1', name: 'Om', role: 'user' }, 'jwt-abc');
+    renderLayout(['/portal-test']);
+
+    expect(screen.getByText('Page With Action')).toBeInTheDocument();
+    const action = screen.getByText('Portaled Page Action');
+    expect(screen.getByRole('banner')).toContainElement(action);
   });
 
   // Prompt 5C.2 — collapsible on both desktop and mobile; the toggle lives in the sidebar itself.

@@ -3,13 +3,13 @@ import SearchBar from './SearchBar.jsx';
 import { useAssignableUsers } from '../../hooks/useAssignableUsers.js';
 import { useLookupList } from '../../hooks/useLookupList.js';
 import { useDebouncedSearch } from '../../hooks/useDebouncedSearch.js';
-import { STATUS_META } from '../../utils/taskDisplay.js';
 
-const STATUS_OPTIONS = Object.keys(STATUS_META);
-
-// docs/08-ui-ux.md §5, docs/09-frontend-features.md §5 — search + status + responsibility +
-// (Admin-only) assignee + date-type-toggle-with-range, all reading/writing through the
-// useDashboardFilters instance passed down from DashboardPage, so every change lands in the URL.
+// docs/08-ui-ux.md §5, docs/09-frontend-features.md §5 — search + responsibility + (Admin-only)
+// assignee + date-type-toggle-with-range, all reading/writing through the useDashboardFilters
+// instance passed down from DashboardPage, so every change lands in the URL. Prompt — the status
+// dropdown was removed deliberately: the KPI cards already cover status filtering by click, so it
+// was a redundant second control for the same `status` URL param (still fully wired — just no
+// longer has its own dropdown UI).
 function FilterBar({ filtersHook, isAdmin }) {
   const { params, setFilter, clearAllFilters, hasActiveFilters } = filtersHook;
   const [searchInput, setSearchInput, debouncedSearch] = useDebouncedSearch(params.search || '');
@@ -35,20 +35,6 @@ function FilterBar({ filtersHook, isAdmin }) {
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-white p-3">
       <SearchBar value={searchInput} onChange={setSearchInput} />
-
-      <select
-        value={params.status || ''}
-        onChange={(event) => setFilter('status', event.target.value || undefined)}
-        aria-label="Status filter"
-        className="h-10 rounded-lg border border-gray-300 px-2 focus:border-brand focus:outline-none"
-      >
-        <option value="">ہر کیفیت</option>
-        {STATUS_OPTIONS.map((status) => (
-          <option key={status} value={status}>
-            {STATUS_META[status].label}
-          </option>
-        ))}
-      </select>
 
       <select
         value={params.responsibility || ''}

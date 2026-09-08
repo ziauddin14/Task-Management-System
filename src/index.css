@@ -19,9 +19,18 @@
      is a backstop, not the actual fix for the table — see TaskTable.jsx/UserTable.jsx/
      PrintView.jsx's own overflow-x-auto wrappers and the min-w-0 additions along the flex chain
      (AppLayout.jsx, DashboardPage.jsx, UsersPage.jsx) for that; without those, this would just
-     clip overflowing content invisibly instead of making it scrollable within its own container. */
-  html,
-  body {
+     clip overflowing content invisibly instead of making it scrollable within its own container.
+
+     html ONLY, not body — regression found and fixed here: setting overflow-x on BOTH html and
+     body triggers a CSS spec rule (when overflow-x and overflow-y disagree, the 'visible' one's
+     USED value becomes 'auto') on each of them independently, turning body into a second,
+     never-actually-scrolling "scroll container." Since every position:sticky element in this app
+     (the Navbar, Sidebar, and now DashboardPage's own sticky header block) lives inside body, that
+     silently broke ALL of them — they stopped sticking because their nearest scrolling ancestor
+     was no longer the real (html-level) one. html alone still fully blocks any page-level
+     horizontal scrollbar (it's the outermost element — nothing escapes its overflow-x), without
+     making body itself an unwanted scroll container. */
+  html {
     overflow-x: hidden;
   }
 }

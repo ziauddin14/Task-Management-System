@@ -7,7 +7,9 @@ import FilterBar from '../../../src/components/dashboard/FilterBar.jsx';
 import { useDashboardFilters } from '../../../src/hooks/useDashboardFilters.js';
 
 vi.mock('../../../src/services/users.api.js', () => ({ getUsers: vi.fn().mockResolvedValue({ items: [], meta: {} }) }));
-vi.mock('../../../src/services/lookupLists.api.js', () => ({ getLookupList: vi.fn().mockResolvedValue([]) }));
+vi.mock('../../../src/services/lookupLists.api.js', () => ({
+  getLookupList: vi.fn().mockResolvedValue([{ id: 'r1', value: 'IT', isActive: true }]),
+}));
 
 function Harness({ isAdmin }) {
   const filtersHook = useDashboardFilters(25);
@@ -60,11 +62,12 @@ describe('FilterBar (docs/08-ui-ux.md §5, docs/09-frontend-features.md §5)', (
     expect(screen.getByLabelText('Assignee filter')).toBeInTheDocument();
   });
 
-  it('shows "Clear all filters" only once a filter is active', () => {
+  it('shows "Clear all filters" only once a filter is active', async () => {
     renderFilterBar();
     expect(screen.queryByText('تمام فلٹرز صاف کریں')).not.toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText('Status filter'), { target: { value: 'ongoing' } });
+    await screen.findByText('IT'); // the Responsibility <option> lands once its fetch resolves
+    fireEvent.change(screen.getByLabelText('Responsibility filter'), { target: { value: 'IT' } });
     expect(screen.getByText('تمام فلٹرز صاف کریں')).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('تمام فلٹرز صاف کریں'));

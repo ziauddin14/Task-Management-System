@@ -1,10 +1,24 @@
-import React from 'react'; // explicit import — see src/App.jsx's comment for why
+import React, { useState } from 'react'; // explicit import — see src/App.jsx's comment for why
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import DashboardPage from '../../src/pages/DashboardPage.jsx';
 import { useAuthStore } from '../../src/store/authStore.js';
+import { PageActionsPortalProvider } from '../../src/contexts/PageActionsPortal.jsx';
+
+// Print View toggle + Export now portal into AppLayout's Navbar (see PageActionsPortal.jsx) —
+// DashboardPage is rendered standalone here (no real AppLayout), so this stands in for the real
+// target DOM node AppLayout would otherwise provide, exactly like production.
+function TestLayoutShell({ children }) {
+  const [slot, setSlot] = useState(null);
+  return (
+    <>
+      <div ref={setSlot} />
+      <PageActionsPortalProvider target={slot}>{children}</PageActionsPortalProvider>
+    </>
+  );
+}
 
 // vi.mock() factories are hoisted above top-level const declarations, so any fixture a factory
 // needs must be created via vi.hoisted() (runs before the hoisted mocks) rather than a plain
@@ -80,7 +94,9 @@ function renderDashboard(role = 'user') {
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={['/']}>
-        <DashboardPage />
+        <TestLayoutShell>
+          <DashboardPage />
+        </TestLayoutShell>
       </MemoryRouter>
     </QueryClientProvider>
   );
@@ -118,12 +134,11 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
 
     fireEvent.click(jariCard);
     expect(jariCard).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByLabelText('Status filter')).toHaveValue('ongoing');
     expect(screen.getByText('× Clear filter')).toBeInTheDocument();
 
     fireEvent.click(jariCard);
     expect(jariCard).toHaveAttribute('aria-pressed', 'false');
-    expect(screen.getByLabelText('Status filter')).toHaveValue('');
+    expect(screen.queryByText('× Clear filter')).not.toBeInTheDocument();
   });
 
   it('"× Clear filter" clears BOTH an active status and an active performance filter at once', async () => {
@@ -132,11 +147,11 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
 
     fireEvent.click(findKpiCardButton('جاری'));
     fireEvent.click(findKpiCardButton('ممتاز'));
-    expect(screen.getByLabelText('Status filter')).toHaveValue('ongoing');
+    expect(findKpiCardButton('جاری')).toHaveAttribute('aria-pressed', 'true');
 
     fireEvent.click(screen.getByText('× Clear filter'));
 
-    expect(screen.getByLabelText('Status filter')).toHaveValue('');
+    expect(screen.queryByText('× Clear filter')).not.toBeInTheDocument();
     expect(findKpiCardButton('جاری')).toHaveAttribute('aria-pressed', 'false');
     expect(findKpiCardButton('ممتاز')).toHaveAttribute('aria-pressed', 'false');
   });

@@ -30,10 +30,11 @@ function ExportMenu({ mode, onExport, isLoading }) {
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
-        className="flex h-10 items-center gap-2 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 hover:bg-gray-50"
+        title="ایکسپورٹ کریں"
+        className="flex h-10 items-center gap-1.5 rounded-lg border border-gray-300 px-2.5 text-sm text-gray-700 hover:bg-gray-50"
       >
         <Download className="h-4 w-4" aria-hidden="true" />
-        ایکسپورٹ کریں
+        <span className="hidden lg:inline">ایکسپورٹ کریں</span>
       </button>
 
       {open && (
