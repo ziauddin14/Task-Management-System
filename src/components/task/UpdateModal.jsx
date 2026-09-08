@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'; // explicit import — see src/App.jsx's comment for why
+import clsx from 'clsx';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -53,6 +54,7 @@ function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
   const { data: assignableUsers, isLoading: assignableLoading } = useAssignableUsers({
     enabled: reassignStep === 'select',
   });
+  const newSelectedAssignee = (assignableUsers?.items || []).find((person) => person.id === newAssigneeId);
 
   const {
     register,
@@ -184,6 +186,24 @@ function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
                   </select>
                 )}
               </div>
+
+              {/* Prompt — read-only, auto-filled from the selected person's own User.responsibility
+                  (the same field already stored per-user, e.g. TaskFormModal's own responsibility
+                  options) — never a separate input, nothing new to select here. */}
+              {!assignableLoading && (
+                <div>
+                  {/* A plain span, not <label> — this isn't a form control, just read-only display
+                      text, so it shouldn't claim form-labeling semantics it doesn't have. */}
+                  <span className="mb-1 block text-sm font-medium text-gray-700">ذمہ داری</span>
+                  <p
+                    aria-label="ذمہ داری"
+                    className="flex h-10 items-center rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm text-gray-600"
+                  >
+                    {newSelectedAssignee?.responsibility || '—'}
+                  </p>
+                </div>
+              )}
+
               <div className="flex justify-end gap-2">
                 <button
                   type="button"
@@ -276,40 +296,47 @@ function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
 
             {showHistory && <PreviousUpdatesContent taskId={taskId} />}
 
-            <div className="mt-2 flex flex-col gap-2">
-              <div className="flex justify-end gap-2">
-                <button type="button" onClick={onClose} className="h-10 min-w-[40px] rounded-lg px-4 text-gray-700 hover:bg-gray-100">
-                  منسوخ کریں
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting || attachmentStatus === 'uploading'}
-                  className="h-10 min-w-[40px] rounded-lg bg-brand px-4 text-white hover:bg-brand/90 disabled:opacity-50"
-                >
-                  محفوظ کریں
-                </button>
-              </div>
-
-              {/* Secondary, visually lighter row — two more consequential/less-frequent admin
-                  actions, kept reachable in one click but deliberately not styled like the
-                  primary Save/Cancel pair above. */}
+            {/* Prompt — all (up to) 4 actions in a single non-wrapping row, at every viewport
+                width. CSS Grid, not flexbox: Tailwind's grid-cols-N utilities emit
+                `minmax(0, 1fr)` tracks, which have a genuine zero min-width floor — a plain flex
+                `flex-1` item's automatic minimum width is its own min-content size (roughly the
+                longest unbreakable run of text), which can silently force the row (and the modal
+                around it) wider than the viewport despite `min-w-0` on the item itself. Grid
+                sidesteps that whole class of overflow bug outright. The label itself is still
+                free to wrap to a second line on the narrowest phones; color alone carries the
+                primary/secondary/warning/danger hierarchy. */}
+            <div className={clsx('mt-2 grid gap-1.5', canManageTask ? 'grid-cols-4' : 'grid-cols-2')}>
+              <button
+                type="button"
+                onClick={onClose}
+                className="h-11 min-w-0 rounded-lg px-1 text-center text-xs font-semibold leading-tight text-gray-700 hover:bg-gray-100 sm:text-sm"
+              >
+                منسوخ کریں
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting || attachmentStatus === 'uploading'}
+                className="h-11 min-w-0 rounded-lg bg-brand px-1 text-center text-xs font-semibold leading-tight text-white hover:bg-brand/90 disabled:opacity-50 sm:text-sm"
+              >
+                محفوظ کریں
+              </button>
               {canManageTask && (
-                <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-2">
+                <>
                   <button
                     type="button"
                     onClick={() => setReassignStep('confirm')}
-                    className="h-9 rounded-lg border border-amber-300 px-3 text-xs font-medium text-amber-700 hover:bg-amber-50"
+                    className="h-11 min-w-0 rounded-lg border border-amber-300 px-1 text-center text-[11px] font-medium leading-tight text-amber-700 hover:bg-amber-50 sm:text-xs"
                   >
                     ذمہ دار تبدیل کریں
                   </button>
                   <button
                     type="button"
                     onClick={onCloseTask}
-                    className="h-9 rounded-lg border border-red-300 px-3 text-xs font-medium text-red-600 hover:bg-red-50"
+                    className="h-11 min-w-0 rounded-lg border border-red-300 px-1 text-center text-[11px] font-medium leading-tight text-red-600 hover:bg-red-50 sm:text-xs"
                   >
                     کام بند کریں
                   </button>
-                </div>
+                </>
               )}
             </div>
           </form>

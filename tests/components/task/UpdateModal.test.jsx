@@ -213,6 +213,26 @@ describe('UpdateModal (docs/08-ui-ux.md §7, docs/09-frontend-features.md §3)',
       expect(select).toBeInTheDocument();
     });
 
+    // Prompt — a read-only field next to the dropdown auto-fills from the SELECTED person's own
+    // User.responsibility (no separate input/selection of its own).
+    it('shows a read-only Zimmedari field that auto-fills from the selected person, not before', async () => {
+      renderModal({ isAdmin: true });
+      await screen.findByText('Sample task');
+
+      fireEvent.click(screen.getByText('ذمہ دار تبدیل کریں'));
+      fireEvent.click(screen.getByText('ہاں'));
+      const select = await screen.findByLabelText('نیا ذمہ دار منتخب کریں');
+
+      const responsibilityField = screen.getByLabelText('ذمہ داری');
+      expect(responsibilityField).toHaveTextContent('—');
+
+      fireEvent.change(select, { target: { value: 'u2' } });
+      expect(responsibilityField).toHaveTextContent('Media');
+
+      fireEvent.change(select, { target: { value: 'u1' } });
+      expect(responsibilityField).toHaveTextContent('IT');
+    });
+
     it('selecting a person and saving replaces assignees, leaves status untouched, toasts, and closes — without posting a TaskUpdate', async () => {
       const onClose = vi.fn();
       renderModal({ isAdmin: true, onClose });
