@@ -15,12 +15,12 @@ export function formatDate(value) {
 // nothing reads this formatted string back for storage, API payloads, or Time Status comparisons
 // — those all still work off the raw ISO value.
 //
-// Prompt — changed from "dd-MM-yy" (e.g. "31-08-26") to "d MMM yy" (e.g. "30 Aug 26") per explicit
-// request. Name kept accurate to what it now does (was formatDateDDMMYY).
+// Prompt — Day(zero-padded)-Month(abbr)-Year(2-digit), e.g. "01 Sep 26", "25 Aug 26". Name kept
+// accurate to what it now does (was formatDateDDMMYY).
 export function formatDateShortYear(value) {
   if (!value) return '-';
   const date = value instanceof Date ? value : new Date(value);
-  return isValid(date) ? format(date, 'd MMM yy') : '-';
+  return isValid(date) ? format(date, 'dd MMM yy') : '-';
 }
 
 // docs/08-ui-ux.md §7 — Previous Updates history entries show a date (with time, since a

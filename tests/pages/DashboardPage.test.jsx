@@ -163,22 +163,28 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
     expect(screen.getByLabelText('Assignee filter')).toBeInTheDocument();
   });
 
-  it('User role: no "Naya Kaam" button, no assignee filter, no Edit/Close row actions', async () => {
+  it('User role: no "Naya Kaam" button, no assignee filter, no Edit row action', async () => {
     renderDashboard('user');
     await screen.findByText('260801');
     expect(screen.queryByText('نیا کام')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Assignee filter')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('ترمیم کریں')).not.toBeInTheDocument();
-    expect(screen.queryByLabelText('کام بند کریں')).not.toBeInTheDocument();
   });
 
-  it('close action: opens a confirmation with the documented wording; Cancel does not call closeTask', async () => {
+  // Prompt — Close Task moved out of the row and into the Update Task modal's own footer
+  // (UpdateModal.test.jsx covers the button's own Admin-only/not-closed visibility rule); these
+  // integration tests just confirm DashboardPage still wires the SAME confirmation dialog +
+  // closeTask mutation to it, now reached by opening Update first.
+  it('close action (from inside the Update modal): opens a confirmation with the documented wording; Cancel does not call closeTask', async () => {
     renderDashboard('admin');
     await screen.findByText('260801');
 
-    fireEvent.click(screen.getByLabelText('کام بند کریں'));
+    fireEvent.click(screen.getByLabelText('اپڈیٹ کریں'));
+    await screen.findByRole('dialog', { name: 'کام اپڈیٹ کریں' });
+    fireEvent.click(await screen.findByText('کام بند کریں'));
+
     expect(
-      screen.getByText('اس کام کو بند کرنے کے بعد کوئی نئی اپڈیٹ درج نہیں کی جا سکے گی۔ کیا واقعی بند کرنا چاہتے ہیں؟')
+      await screen.findByText('اس کام کو بند کرنے کے بعد کوئی نئی اپڈیٹ درج نہیں کی جا سکے گی۔ کیا واقعی بند کرنا چاہتے ہیں؟')
     ).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('منسوخ کریں'));
@@ -188,12 +194,14 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
     ).not.toBeInTheDocument();
   });
 
-  it('close action: confirming calls closeTask with the task id', async () => {
+  it('close action (from inside the Update modal): confirming calls closeTask with the task id', async () => {
     renderDashboard('admin');
     await screen.findByText('260801');
 
-    fireEvent.click(screen.getByLabelText('کام بند کریں'));
-    fireEvent.click(screen.getByText('ہاں، بند کریں'));
+    fireEvent.click(screen.getByLabelText('اپڈیٹ کریں'));
+    await screen.findByRole('dialog', { name: 'کام اپڈیٹ کریں' });
+    fireEvent.click(await screen.findByText('کام بند کریں'));
+    fireEvent.click(await screen.findByText('ہاں، بند کریں'));
 
     await waitFor(() => expect(closeTask).toHaveBeenCalledWith('t1'));
   });

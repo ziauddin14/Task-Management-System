@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'; // explicit import — see src/App.jsx's comment for why
+import clsx from 'clsx';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -20,7 +21,12 @@ const updateSchema = z.object({
 // docs/08-ui-ux.md §7 — opened by the row's "Update" button. Read-only task summary header,
 // description, completion % (number + slider kept in sync), optional attachment, Save/Cancel,
 // and a "Purani Updates dekhein" link that expands the shared PreviousUpdatesContent inline.
-function UpdateModal({ isOpen, onClose, taskId }) {
+//
+// Prompt — Close Task moved here (out of the table row) as a third footer button, next to
+// Save/Cancel; still Admin-only and hidden once the task is already closed. onCloseTask is a
+// thin trigger — DashboardPage.jsx owns the actual confirmation dialog + close mutation, same as
+// before, so nothing about the underlying close flow itself changed.
+function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
   const { data: task, isLoading: isTaskLoading } = useTask(taskId);
   const createUpdate = useCreateTaskUpdate(taskId);
   const [attachmentStatus, setAttachmentStatus] = useState('idle');
@@ -66,6 +72,7 @@ function UpdateModal({ isOpen, onClose, taskId }) {
   }, [isOpen, task, reset]);
 
   const completionPercent = watch('completionPercent');
+  const canCloseTask = isAdmin && task && task.status !== 'closed';
 
   async function onSubmit(values) {
     const payload = { description: values.description, completionPercent: values.completionPercent };
@@ -155,17 +162,28 @@ function UpdateModal({ isOpen, onClose, taskId }) {
 
             {showHistory && <PreviousUpdatesContent taskId={taskId} />}
 
-            <div className="mt-2 flex justify-end gap-2">
-              <button type="button" onClick={onClose} className="h-10 min-w-[40px] rounded-lg px-4 text-gray-700 hover:bg-gray-100">
-                منسوخ کریں
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting || attachmentStatus === 'uploading'}
-                className="h-10 min-w-[40px] rounded-lg bg-brand px-4 text-white hover:bg-brand/90 disabled:opacity-50"
-              >
-                محفوظ کریں
-              </button>
+            <div className={clsx('mt-2 flex flex-wrap items-center gap-2', canCloseTask ? 'justify-between' : 'justify-end')}>
+              {canCloseTask && (
+                <button
+                  type="button"
+                  onClick={onCloseTask}
+                  className="h-10 min-w-[40px] rounded-lg border border-red-300 px-4 text-red-600 hover:bg-red-50"
+                >
+                  کام بند کریں
+                </button>
+              )}
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={onClose} className="h-10 min-w-[40px] rounded-lg px-4 text-gray-700 hover:bg-gray-100">
+                  منسوخ کریں
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || attachmentStatus === 'uploading'}
+                  className="h-10 min-w-[40px] rounded-lg bg-brand px-4 text-white hover:bg-brand/90 disabled:opacity-50"
+                >
+                  محفوظ کریں
+                </button>
+              </div>
             </div>
           </form>
         </>

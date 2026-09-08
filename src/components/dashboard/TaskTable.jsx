@@ -1,6 +1,6 @@
 import React from 'react'; // explicit import — see src/App.jsx's comment for why
 import clsx from 'clsx';
-import { ChevronUp, ChevronDown, ChevronsUpDown, Upload, History, Pencil, Lock } from 'lucide-react';
+import { ChevronUp, ChevronDown, ChevronsUpDown, Upload, History, Pencil } from 'lucide-react';
 import Spinner from '../common/Spinner.jsx';
 import EmptyState from '../common/EmptyState.jsx';
 import Pagination from '../common/Pagination.jsx';
@@ -11,7 +11,7 @@ import { getStatusMeta, getPerformanceMeta } from '../../utils/taskDisplay.js';
 // Prompt — compact icon-only action buttons (was text-labeled), matching the row height already
 // established by the old h-10 text buttons. title + aria-label carry the same Urdu label the text
 // button used to show, so the action is still named on hover and for screen readers.
-function IconActionButton({ icon: Icon, label, onClick, disabled, danger }) {
+function IconActionButton({ icon: Icon, label, onClick, disabled }) {
   return (
     <button
       type="button"
@@ -19,10 +19,7 @@ function IconActionButton({ icon: Icon, label, onClick, disabled, danger }) {
       disabled={disabled}
       title={label}
       aria-label={label}
-      className={clsx(
-        'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border text-gray-600 transition-colors disabled:opacity-40',
-        danger ? 'border-gray-300 hover:border-red-300 hover:bg-red-50 hover:text-red-600' : 'border-gray-300 hover:bg-gray-50 hover:text-brand'
-      )}
+      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-gray-300 text-gray-600 transition-colors hover:bg-gray-50 hover:text-brand disabled:opacity-40"
     >
       <Icon className="h-4 w-4" aria-hidden="true" />
     </button>
@@ -101,7 +98,6 @@ function TaskTable({
   onPageChange,
   onPageSizeChange,
   onEdit,
-  onClose,
   onUpdate,
   onViewUpdates,
   columnVisibility,
@@ -261,15 +257,7 @@ function TaskTable({
                         <IconActionButton icon={Upload} label="اپڈیٹ کریں" onClick={() => onUpdate(task)} disabled={isClosed} />
                         <IconActionButton icon={History} label="پرانی اپڈیٹس" onClick={() => onViewUpdates(task)} />
                         {isAdmin && (
-                          <>
-                            <IconActionButton icon={Pencil} label="ترمیم کریں" onClick={() => onEdit(task)} disabled={isClosed} />
-                            {/* Prompt — unlike Update/Edit (visible-but-disabled once closed), Close
-                                is hidden entirely once the task already is closed — there's nothing
-                                left to close. */}
-                            {!isClosed && (
-                              <IconActionButton icon={Lock} label="کام بند کریں" onClick={() => onClose(task)} danger />
-                            )}
-                          </>
+                          <IconActionButton icon={Pencil} label="ترمیم کریں" onClick={() => onEdit(task)} disabled={isClosed} />
                         )}
                       </div>
                     </td>

@@ -36,7 +36,6 @@ function renderTable(overrides = {}) {
   const onPageChange = vi.fn();
   const onPageSizeChange = vi.fn();
   const onEdit = vi.fn();
-  const onClose = vi.fn();
   const onUpdate = vi.fn();
   const onViewUpdates = vi.fn();
   const onSortChange = vi.fn();
@@ -52,7 +51,6 @@ function renderTable(overrides = {}) {
       onPageChange={onPageChange}
       onPageSizeChange={onPageSizeChange}
       onEdit={onEdit}
-      onClose={onClose}
       onUpdate={onUpdate}
       onViewUpdates={onViewUpdates}
       sortBy="deadline"
@@ -61,7 +59,7 @@ function renderTable(overrides = {}) {
       {...overrides}
     />
   );
-  return { ...utils, onPageChange, onPageSizeChange, onEdit, onClose, onUpdate, onViewUpdates, onSortChange };
+  return { ...utils, onPageChange, onPageSizeChange, onEdit, onUpdate, onViewUpdates, onSortChange };
 }
 
 describe('TaskTable (docs/08-ui-ux.md §6)', () => {
@@ -76,10 +74,10 @@ describe('TaskTable (docs/08-ui-ux.md §6)', () => {
 
   // Deadline/Last Update columns use a dedicated formatter (formatDateShortYear), not the shared
   // formatDate() used by PrintView/PreviousUpdatesContent — confirms it's actually wired in and
-  // produces the exact requested "d MMM yy" format.
-  it('renders Deadline and Last Update as "d MMM yy"', () => {
+  // produces the exact requested "dd MMM yy" format.
+  it('renders Deadline and Last Update as "dd MMM yy"', () => {
     renderTable();
-    expect(screen.getByText('1 Sep 26')).toBeInTheDocument(); // deadline: 2026-09-01
+    expect(screen.getByText('01 Sep 26')).toBeInTheDocument(); // deadline: 2026-09-01
     expect(screen.getByText('20 Aug 26')).toBeInTheDocument(); // lastUpdateAt: 2026-08-20
   });
 
@@ -108,9 +106,10 @@ describe('TaskTable (docs/08-ui-ux.md §6)', () => {
     expect(screen.getByText('+1 more')).toBeInTheDocument();
   });
 
-  // Prompt — Update/Previous Updates/Edit/Close are now icon-only buttons; the Urdu label that
-  // used to be the button's visible text is now its title + aria-label instead (still queryable
-  // by accessible name, and still shown on hover as a native tooltip via `title`).
+  // Prompt — Update/Previous Updates/Edit are icon-only buttons; the Urdu label that used to be
+  // the button's visible text is now its title + aria-label instead (still queryable by
+  // accessible name, and still shown on hover as a native tooltip via `title`). Close moved out
+  // of this table entirely — into UpdateModal's own footer (UpdateModal.test.jsx covers it now).
   it('Update/Previous Updates call their handlers with the task (available to both roles)', () => {
     const { onUpdate, onViewUpdates } = renderTable();
     fireEvent.click(screen.getByLabelText('اپڈیٹ کریں'));
@@ -131,24 +130,20 @@ describe('TaskTable (docs/08-ui-ux.md §6)', () => {
     expect(screen.getByLabelText('پرانی اپڈیٹس')).not.toBeDisabled();
   });
 
-  it('User role: no Edit/Close row actions', () => {
+  it('User role: no Edit row action', () => {
     renderTable({ isAdmin: false });
     expect(screen.queryByLabelText('ترمیم کریں')).not.toBeInTheDocument();
-    expect(screen.queryByLabelText('کام بند کریں')).not.toBeInTheDocument();
   });
 
-  it('Admin role: Edit/Close row actions appear and call their handlers', () => {
-    const { onEdit, onClose } = renderTable({ isAdmin: true });
+  it('Admin role: Edit row action appears and calls its handler', () => {
+    const { onEdit } = renderTable({ isAdmin: true });
     fireEvent.click(screen.getByLabelText('ترمیم کریں'));
     expect(onEdit).toHaveBeenCalledWith(baseTask);
-    fireEvent.click(screen.getByLabelText('کام بند کریں'));
-    expect(onClose).toHaveBeenCalledWith(baseTask);
   });
 
-  it('Admin role: Edit is disabled, and Close is hidden entirely (not just disabled), for an already-closed task', () => {
+  it('Admin role: Edit is disabled for an already-closed task', () => {
     renderTable({ isAdmin: true, tasks: [{ ...baseTask, status: 'closed' }] });
     expect(screen.getByLabelText('ترمیم کریں')).toBeDisabled();
-    expect(screen.queryByLabelText('کام بند کریں')).not.toBeInTheDocument();
   });
 
   it('pagination forwards page/page-size changes', () => {

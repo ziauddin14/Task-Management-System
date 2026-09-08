@@ -28,6 +28,7 @@ vi.mock('react-hot-toast', () => ({ default: { success: vi.fn(), error: vi.fn() 
 
 import { createTaskUpdate } from '../../../src/services/taskUpdates.api.js';
 import { getTaskUpdates } from '../../../src/services/taskUpdates.api.js';
+import { getTask } from '../../../src/services/tasks.api.js';
 import toast from 'react-hot-toast';
 
 function renderModal(props) {
@@ -96,5 +97,43 @@ describe('UpdateModal (docs/08-ui-ux.md §7, docs/09-frontend-features.md §3)',
 
     await waitFor(() => expect(getTaskUpdates).toHaveBeenCalled());
     expect(screen.getByText('پرانی اپڈیٹس چھپائیں')).toBeInTheDocument();
+  });
+
+  // Prompt — Close Task moved here from the table row, as a third footer button next to
+  // Save/Cancel; same Admin-only / not-already-closed visibility rule as before.
+  describe('Close Task footer button', () => {
+    it('is not shown for a non-Admin user', async () => {
+      renderModal({ isAdmin: false });
+      await screen.findByText('Sample task');
+      expect(screen.queryByText('کام بند کریں')).not.toBeInTheDocument();
+    });
+
+    it('Admin + not-already-closed task: shows the button and calls onCloseTask on click', async () => {
+      const onCloseTask = vi.fn();
+      renderModal({ isAdmin: true, onCloseTask });
+      await screen.findByText('Sample task');
+
+      const closeButton = screen.getByText('کام بند کریں');
+      expect(closeButton).toBeInTheDocument();
+      fireEvent.click(closeButton);
+      expect(onCloseTask).toHaveBeenCalled();
+    });
+
+    it('Admin + already-closed task: the button is hidden entirely (not just disabled)', async () => {
+      getTask.mockResolvedValueOnce({
+        id: 't1',
+        codeNumber: '260801',
+        title: 'Sample task',
+        deadline: '2026-09-01T00:00:00.000Z',
+        status: 'closed',
+        performanceRating: '-',
+        completionPercent: 100,
+        timeStatus: { type: 'early', days: 1 },
+      });
+      renderModal({ isAdmin: true });
+      await screen.findByText('Sample task');
+
+      expect(screen.queryByText('کام بند کریں')).not.toBeInTheDocument();
+    });
   });
 });

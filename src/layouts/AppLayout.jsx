@@ -74,7 +74,7 @@ function AppLayout() {
             without needing to be pulled out of flow and hand-measured against the sidebar's
             width — flow layout already handles that for free. */}
         <header className="no-print sticky top-0 z-30 grid h-16 shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 border-b-2 border-brand/10 bg-white px-4 shadow-sm">
-          <div className="flex items-center justify-start">
+          <div className="flex items-center justify-start gap-1">
             <button
               type="button"
               onClick={() => setIsSidebarOpen(true)}
@@ -83,6 +83,12 @@ function AppLayout() {
             >
               <Menu className="h-5 w-5" aria-hidden="true" />
             </button>
+            {/* Prompt — Columns/Print View/Export live here now: the empty space between the
+                centered logo and the Sidebar (this column was previously only ever occupied by the
+                mobile menu button above, empty on desktop) — moved out of the opposite side, next
+                to the user info, which had no room to spare. Zero footprint when no page has
+                anything to put in it (DashboardPage.jsx is currently the only one that does). */}
+            <div ref={setActionsSlot} className="flex items-center gap-1" />
           </div>
 
           {/* The app's own brand text, centered and large/bold, reads as the navbar's primary
@@ -93,9 +99,6 @@ function AppLayout() {
           </div>
 
           <div className="flex items-center justify-end gap-1">
-            {/* Print View toggle + Export (Prompt) portal in here, page-permitting — empty div,
-                zero footprint, when no page has anything to put in it. */}
-            <div ref={setActionsSlot} className="flex items-center gap-1" />
             <div className="hidden text-end leading-tight sm:block">
               <span className="text-sm font-medium text-gray-900">
                 {user?.name}

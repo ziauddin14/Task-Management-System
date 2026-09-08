@@ -253,7 +253,6 @@ function DashboardPage() {
             onPageChange={setPage}
             onPageSizeChange={setPageSize}
             onEdit={(task) => setFormModal({ mode: 'edit', task })}
-            onClose={(task) => setClosingTask(task)}
             onUpdate={(task) => setUpdatingTask(task)}
             onViewUpdates={(task) => setViewingUpdatesTask(task)}
             columnVisibility={columnVisibility}
@@ -286,7 +285,16 @@ function DashboardPage() {
         />
       )}
 
-      <UpdateModal isOpen={Boolean(updatingTask)} taskId={updatingTask?.id} onClose={() => setUpdatingTask(null)} />
+      <UpdateModal
+        isOpen={Boolean(updatingTask)}
+        taskId={updatingTask?.id}
+        onClose={() => setUpdatingTask(null)}
+        isAdmin={isAdmin}
+        onCloseTask={() => {
+          setClosingTask(updatingTask);
+          setUpdatingTask(null);
+        }}
+      />
 
       <PreviousUpdatesModal
         isOpen={Boolean(viewingUpdatesTask)}
