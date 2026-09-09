@@ -239,28 +239,27 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
     expect(screen.getByText('260801')).toBeInTheDocument(); // task data itself still shows
   });
 
-  it('Export: the request carries the CURRENT filters and visible-columns state, not re-asked of the user', async () => {
+  // Prompt — the report is now a fixed grouped-by-Zimmedar structure (no user-chosen column
+  // list); the export request carries the CURRENT filters + format + lastUpdateOnly only.
+  it('Export: the request carries the CURRENT filters, format, and lastUpdateOnly — no columns param', async () => {
     renderDashboard('admin');
     await screen.findByText('260801');
 
-    // Apply a status filter via a KPI card, and hide the "Zimmedari" (responsibility) column.
+    // Apply a status filter via a KPI card.
     fireEvent.click(findKpiCardButton('جاری'));
-    fireEvent.click(screen.getByLabelText('Columns'));
-    fireEvent.click(screen.getByLabelText('ذمہ داری'));
 
     fireEvent.click(screen.getByText('ایکسپورٹ کریں'));
+    fireEvent.click(screen.getByText('صرف آخری اپڈیٹ'));
     fireEvent.click(screen.getByText('Confirm'));
 
     await waitFor(() => expect(exportReport).toHaveBeenCalled());
     const params = exportReport.mock.calls[0][0];
     expect(params.status).toBe('ongoing'); // the active KPI filter
     expect(params.format).toBe('excel');
-    expect(params.reportType).toBe('summary');
+    expect(params.lastUpdateOnly).toBe(true);
     expect(params.page).toBeUndefined(); // unpaginated by design (backend omits page/limit)
     expect(params.limit).toBeUndefined();
-    const columns = params.columns.split(',');
-    expect(columns).not.toContain('responsibility'); // hidden column excluded
-    expect(columns).toContain('codeNumber'); // locked column still included
+    expect(params.columns).toBeUndefined(); // no per-column selection for this fixed report structure
   });
 
   it('Admin-only "Reminders Bhejein" button triggers the reminder job and toasts the count', async () => {

@@ -4,7 +4,7 @@ import apiClient from './apiClient.js';
 // binary file, not cacheable JSON). Every export is a fresh request by design.
 
 // GET /reports/export — docs/05-apis.md §9. params: the same filters as GET /tasks (minus
-// page/limit — reports are unpaginated by design) plus { format, reportType, columns }.
+// page/limit — reports are unpaginated by design) plus { format, lastUpdateOnly }.
 export async function exportReport(params) {
   const response = await apiClient.get('/reports/export', { params, responseType: 'blob' });
   return response.data; // Blob, handed to file-saver

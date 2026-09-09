@@ -13,24 +13,31 @@ function clearNavigatorShare() {
 describe('ExportMenu (docs/08-ui-ux.md §10, docs/09-frontend-features.md §8)', () => {
   afterEach(() => clearNavigatorShare());
 
-  it('dashboard mode: confirms with the selected format + reportType', async () => {
+  it('dashboard mode: confirms with the selected format + lastUpdateOnly', async () => {
     const onExport = vi.fn().mockResolvedValue(sampleFile);
     render(<ExportMenu mode="dashboard" onExport={onExport} isLoading={false} />);
 
     fireEvent.click(screen.getByText('ایکسپورٹ کریں'));
     fireEvent.change(screen.getByLabelText('Format', { selector: 'select' }), { target: { value: 'pdf' } });
-    fireEvent.change(screen.getByLabelText('Report Type', { selector: 'select' }), { target: { value: 'detailed' } });
+    fireEvent.click(screen.getByText('صرف آخری اپڈیٹ'));
     fireEvent.click(screen.getByText('Confirm'));
 
-    await waitFor(() => expect(onExport).toHaveBeenCalledWith('pdf', 'detailed'));
+    await waitFor(() => expect(onExport).toHaveBeenCalledWith('pdf', true));
   });
 
-  it('userSummary mode: no report-type picker; confirms with reportType undefined', async () => {
+  it('dashboard mode: offers Word (.docx) as a format option', async () => {
+    render(<ExportMenu mode="dashboard" onExport={vi.fn()} isLoading={false} />);
+    fireEvent.click(screen.getByText('ایکسپورٹ کریں'));
+    expect(screen.getByText('Word')).toBeInTheDocument();
+  });
+
+  it('userSummary mode: no last-update-only checkbox, no Word format option; confirms with lastUpdateOnly undefined', async () => {
     const onExport = vi.fn().mockResolvedValue(sampleFile);
     render(<ExportMenu mode="userSummary" onExport={onExport} isLoading={false} />);
 
     fireEvent.click(screen.getByText('ایکسپورٹ کریں'));
-    expect(screen.queryByText('Report Type')).not.toBeInTheDocument();
+    expect(screen.queryByText('صرف آخری اپڈیٹ')).not.toBeInTheDocument();
+    expect(screen.queryByText('Word')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByText('Confirm'));
 

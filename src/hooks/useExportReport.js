@@ -17,7 +17,7 @@ export function useExportReport() {
     setIsLoading(true);
     try {
       const blob = await exportReport(params);
-      const filename = buildExportFilename(`task-report-${params.reportType}`, params.format);
+      const filename = buildExportFilename('task-report', params.format);
       const file = new File([blob], filename, { type: blob.type || MIME_TYPES[params.format] });
       saveAs(blob, filename);
       setExportedFile(file);

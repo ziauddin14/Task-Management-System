@@ -56,9 +56,10 @@ function DashboardPage() {
   const [printMode, setPrintMode] = useState(false);
   const closeTaskMutation = useCloseTask(closingTask?.id);
 
-  // docs/09-frontend-features.md §8: columnVisibility is lifted here (rather than owned inside
-  // TaskTable, as it was through Phase 10.5) so the Export flow reads the SAME visible-columns
-  // state the table itself is showing — one source of truth, not two that could drift apart.
+  // Lifted here (rather than owned inside TaskTable, as it was through Phase 10.5) so both
+  // TaskTable and the Navbar's ColumnToggle (AppLayout.jsx's PageActions portal) read/write the
+  // SAME visible-columns state. Prompt — no longer feeds the Export flow: the task report is now
+  // one fixed grouped-by-Zimmedar structure, not a user-chosen column set.
   const columnVisibility = useColumnVisibility(COLUMN_STORAGE_KEY, COLUMN_DEFINITIONS);
   const exportReportHook = useExportReport();
   const triggerRemindersMutation = useTriggerReminders();
@@ -74,14 +75,17 @@ function DashboardPage() {
   }
 
   // docs/09-frontend-features.md §8 step 2 — "automatically carries the dashboard's current URL
-  // query params (filters/search/sort) and the current visible-columns list." apiFilters carries
-  // page/limit too (needed for the task LIST), but GET /reports/export is unpaginated by design
-  // (backend/src/validators/report.validator.js omits page/limit entirely) — dropped here.
-  function handleDashboardExport(format, reportType) {
+  // query params (filters/search/sort)." apiFilters carries page/limit too (needed for the task
+  // LIST), but GET /reports/export is unpaginated by design (backend/src/validators/
+  // report.validator.js omits page/limit entirely) — dropped here.
+  //
+  // Prompt — the report is now a fixed grouped-by-Zimmedar structure, not a user-chosen column
+  // set, so columnVisibility no longer feeds the export at all (it still only drives which
+  // columns TaskTable itself renders). lastUpdateOnly replaces the old reportType.
+  function handleDashboardExport(format, lastUpdateOnly) {
     // eslint-disable-next-line no-unused-vars
     const { page: _page, limit: _limit, ...taskFilters } = apiFilters;
-    const columns = COLUMN_DEFINITIONS.filter((col) => columnVisibility.isVisible(col.key)).map((col) => col.key);
-    return exportReportHook.run({ ...taskFilters, format, reportType, columns: columns.join(',') });
+    return exportReportHook.run({ ...taskFilters, format, lastUpdateOnly });
   }
 
   return (
