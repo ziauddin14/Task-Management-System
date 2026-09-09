@@ -66,9 +66,6 @@ vi.mock('../../src/services/tasks.api.js', () => ({
 vi.mock('../../src/services/users.api.js', () => ({
   getUsers: vi.fn().mockResolvedValue({ items: [{ id: 'u1', name: 'Ali' }], meta: {} }),
 }));
-vi.mock('../../src/services/lookupLists.api.js', () => ({
-  getLookupList: vi.fn().mockResolvedValue([{ id: 'r1', value: 'IT', isActive: true }]),
-}));
 vi.mock('../../src/services/taskUpdates.api.js', () => ({
   getTaskUpdates: vi.fn().mockResolvedValue({ items: [], meta: { page: 1, totalPages: 1, total: 0 } }),
   createTaskUpdate: vi.fn(),
@@ -179,6 +176,7 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
     renderDashboard('admin');
     await screen.findByText('260801');
 
+    fireEvent.click(screen.getByLabelText('اقدامات'));
     fireEvent.click(screen.getByLabelText('اپڈیٹ کریں'));
     await screen.findByRole('dialog', { name: 'کام اپڈیٹ کریں' });
     fireEvent.click(await screen.findByText('کام بند کریں'));
@@ -198,6 +196,7 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
     renderDashboard('admin');
     await screen.findByText('260801');
 
+    fireEvent.click(screen.getByLabelText('اقدامات'));
     fireEvent.click(screen.getByLabelText('اپڈیٹ کریں'));
     await screen.findByRole('dialog', { name: 'کام اپڈیٹ کریں' });
     fireEvent.click(await screen.findByText('کام بند کریں'));
@@ -210,6 +209,7 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
     renderDashboard('user');
     await screen.findByText('260801');
 
+    fireEvent.click(screen.getByLabelText('اقدامات'));
     fireEvent.click(screen.getByLabelText('اپڈیٹ کریں'));
 
     expect(await screen.findByRole('dialog', { name: 'کام اپڈیٹ کریں' })).toBeInTheDocument();
@@ -221,22 +221,24 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
 
     expect(getTaskUpdates).not.toHaveBeenCalled();
 
+    fireEvent.click(screen.getByLabelText('اقدامات'));
     fireEvent.click(screen.getByLabelText('پرانی اپڈیٹس'));
 
     expect(await screen.findByRole('dialog', { name: 'کام کی تفصیل' })).toBeInTheDocument();
     await waitFor(() => expect(getTaskUpdates).toHaveBeenCalled());
   });
 
-  it('Print View toggle switches the table into the denser read-only variant', async () => {
+  // Prompt — TMS Dashboard header cleanup: the old Print View toggle is gone; a single "ایکشن"
+  // button now holds Export + WhatsApp Share (row actions moved behind their own "اقدامات"
+  // three-dot menu instead).
+  it('the row three-dot menu shows Admin-only Edit alongside Update/Previous Updates', async () => {
     renderDashboard('admin');
     await screen.findByText('260801');
-    expect(screen.getByLabelText('ترمیم کریں')).toBeInTheDocument(); // regular TaskTable's Admin action
 
-    fireEvent.click(screen.getByText('پرنٹ ویو'));
-
-    expect(screen.queryByLabelText('ترمیم کریں')).not.toBeInTheDocument();
-    expect(screen.queryByLabelText('اپڈیٹ کریں')).not.toBeInTheDocument();
-    expect(screen.getByText('260801')).toBeInTheDocument(); // task data itself still shows
+    fireEvent.click(screen.getByLabelText('اقدامات'));
+    expect(screen.getByLabelText('ترمیم کریں')).toBeInTheDocument();
+    expect(screen.getByLabelText('اپڈیٹ کریں')).toBeInTheDocument();
+    expect(screen.getByLabelText('پرانی اپڈیٹس')).toBeInTheDocument();
   });
 
   // Prompt — the report is now a fixed grouped-by-Zimmedar structure (no user-chosen column
@@ -248,6 +250,7 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
     // Apply a status filter via a KPI card.
     fireEvent.click(findKpiCardButton('جاری'));
 
+    fireEvent.click(screen.getByRole('button', { name: 'ایکشن' }));
     fireEvent.click(screen.getByText('ایکسپورٹ کریں'));
     fireEvent.click(screen.getByText('صرف آخری اپڈیٹ'));
     fireEvent.click(screen.getByText('Confirm'));
@@ -315,5 +318,26 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
     const statusHeading = screen.getByText('کام کی کیفیت');
     const gridContainer = statusHeading.parentElement.parentElement;
     expect(gridContainer).toHaveClass('md:grid-cols-2');
+  });
+
+  // Prompt — TMS Dashboard responsive fix: each group's own 5 cards use a CSS Grid
+  // (grid-cols-5), not flex-wrap, so they can never wrap onto a second line regardless of
+  // viewport width (a flex item's default min-width:auto can force wrapping even when the
+  // parent has room; a grid track's minmax(0,1fr) genuinely has none) — see browser-verified
+  // screenshots at 1366/1440/1920px for the actual rendered proof.
+  it('each KPI group renders its 5 cards in a grid-cols-5 container (never wraps)', async () => {
+    renderDashboard('admin');
+    await screen.findByText('260801');
+
+    const statusHeading = screen.getByText('کام کی کیفیت');
+    const statusCardsContainer = statusHeading.nextElementSibling;
+    expect(statusCardsContainer).toHaveClass('grid', 'grid-cols-5');
+    expect(statusCardsContainer.children).toHaveLength(5);
+
+    // "کارکردگی" also labels the table's Performance column header — scope to the <p> group label.
+    const performanceHeading = screen.getAllByText('کارکردگی').find((el) => el.tagName === 'P');
+    const performanceCardsContainer = performanceHeading.nextElementSibling;
+    expect(performanceCardsContainer).toHaveClass('grid', 'grid-cols-5');
+    expect(performanceCardsContainer.children).toHaveLength(5);
   });
 });

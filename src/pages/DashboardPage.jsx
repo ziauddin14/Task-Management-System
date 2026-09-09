@@ -1,6 +1,5 @@
 import React, { useState } from 'react'; // explicit import — see src/App.jsx's comment for why
-import clsx from 'clsx';
-import { Plus, Printer, BellRing } from 'lucide-react';
+import { Plus, BellRing } from 'lucide-react';
 import { useAuthStore } from '../store/authStore.js';
 import { useDashboardFilters } from '../hooks/useDashboardFilters.js';
 import { usePageSize } from '../hooks/usePageSize.js';
@@ -13,12 +12,10 @@ import { useTriggerReminders } from '../hooks/useTriggerReminders.js';
 import KpiCard from '../components/dashboard/KpiCard.jsx';
 import FilterBar from '../components/dashboard/FilterBar.jsx';
 import TaskTable from '../components/dashboard/TaskTable.jsx';
-import PrintView from '../components/dashboard/PrintView.jsx';
-import ColumnToggle from '../components/dashboard/ColumnToggle.jsx';
+import ActionsMenu from '../components/dashboard/ActionsMenu.jsx';
 import TaskFormModal from '../components/task/TaskFormModal.jsx';
 import UpdateModal from '../components/task/UpdateModal.jsx';
 import PreviousUpdatesModal from '../components/task/PreviousUpdatesModal.jsx';
-import ExportMenu from '../components/reports/ExportMenu.jsx';
 import ConfirmDialog from '../components/common/ConfirmDialog.jsx';
 import Spinner from '../components/common/Spinner.jsx';
 import { PageActions } from '../contexts/PageActionsPortal.jsx';
@@ -35,9 +32,9 @@ const STATUS_KEYS = Object.keys(STATUS_META);
 const PERFORMANCE_SUMMARY_KEYS = Object.keys(PERFORMANCE_SUMMARY_KEY_TO_VALUE);
 const COLUMN_STORAGE_KEY = 'dashboard.visibleColumns.v1';
 
-// docs/08-ui-ux.md §3 — top to bottom: header (AppLayout, already wired), KPI cards, filter bar,
-// Print View toggle + Export (item 6), task table (+ column control, frozen header, pagination),
-// Update Modal, Previous Updates Modal.
+// docs/08-ui-ux.md §3 — top to bottom: header (AppLayout, already wired, ایکشن menu portalled
+// into it), KPI cards, filter bar, task table (frozen header, pagination), Update Modal, Previous
+// Updates Modal.
 function DashboardPage() {
   const user = useAuthStore((state) => state.user);
   const isAdmin = user?.role === 'admin';
@@ -53,13 +50,13 @@ function DashboardPage() {
   const [closingTask, setClosingTask] = useState(null);
   const [updatingTask, setUpdatingTask] = useState(null);
   const [viewingUpdatesTask, setViewingUpdatesTask] = useState(null);
-  const [printMode, setPrintMode] = useState(false);
   const closeTaskMutation = useCloseTask(closingTask?.id);
 
-  // Lifted here (rather than owned inside TaskTable, as it was through Phase 10.5) so both
-  // TaskTable and the Navbar's ColumnToggle (AppLayout.jsx's PageActions portal) read/write the
-  // SAME visible-columns state. Prompt — no longer feeds the Export flow: the task report is now
-  // one fixed grouped-by-Zimmedar structure, not a user-chosen column set.
+  // Lifted here (rather than owned inside TaskTable, as it was through Phase 10.5) — TaskTable
+  // reads it to decide which columns to render. Prompt — no longer feeds the Export flow: the
+  // task report is one fixed grouped-by-Zimmedar structure, not a user-chosen column set; the
+  // header's column-visibility toggle control has since been removed, so this now just supplies
+  // TaskTable's stored/default column set.
   const columnVisibility = useColumnVisibility(COLUMN_STORAGE_KEY, COLUMN_DEFINITIONS);
   const exportReportHook = useExportReport();
   const triggerRemindersMutation = useTriggerReminders();
@@ -134,7 +131,7 @@ function DashboardPage() {
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:divide-x md:divide-brand/25">
               <div className="md:pe-4">
                 <p className="mb-1.5 text-center text-sm font-semibold text-gray-700">کام کی کیفیت</p>
-                <div className="flex flex-wrap justify-center gap-1.5">
+                <div className="grid grid-cols-5 gap-1.5">
                   {STATUS_KEYS.map((key) => {
                     const entry = summaryQuery.data.byStatus[key] || { count: 0, percent: 0 };
                     return (
@@ -163,7 +160,7 @@ function DashboardPage() {
 
               <div className="md:ps-4">
                 <p className="mb-1.5 text-center text-sm font-semibold text-gray-700">کارکردگی</p>
-                <div className="flex flex-wrap justify-center gap-1.5">
+                <div className="grid grid-cols-5 gap-1.5">
                   {PERFORMANCE_SUMMARY_KEYS.map((key) => {
                     const entry = summaryQuery.data.byPerformance[key] || { count: 0, percent: 0 };
                     const ratingValue = PERFORMANCE_SUMMARY_KEY_TO_VALUE[key];
@@ -204,67 +201,32 @@ function DashboardPage() {
         <FilterBar filtersHook={filtersHook} isAdmin={isAdmin} />
       </div>
 
-      {/* Prompt — Print View toggle + Export moved out of here and into the Navbar (see the
-          <PageActions> portal below) — the KPI cards already cover status filtering, and this
-          page's own body no longer needs a dedicated actions row for them. */}
+      {/* Prompt — TMS Dashboard header cleanup: the old Print View/Print/Columns controls are
+          gone; a single "ایکشن" trigger (rendered into the Navbar via the <PageActions> portal
+          below) now holds Export + WhatsApp Share. */}
       <PageActions>
-        <button
-          type="button"
-          onClick={() => setPrintMode((prev) => !prev)}
-          aria-pressed={printMode}
-          title="پرنٹ ویو"
-          className={clsx(
-            'flex h-10 items-center gap-1 rounded-lg border px-2.5 text-sm transition-colors',
-            printMode ? 'border-brand bg-brand-light text-brand' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-          )}
-        >
-          <Printer className="h-4 w-4" aria-hidden="true" />
-          <span className="hidden lg:inline">پرنٹ ویو</span>
-        </button>
-        {printMode && (
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="flex h-10 items-center gap-1 rounded-lg bg-brand px-2.5 text-sm text-white hover:bg-brand/90"
-          >
-            <span className="hidden lg:inline">پرنٹ کریں</span>
-            <span className="lg:hidden">پرنٹ</span>
-          </button>
-        )}
-        <ExportMenu mode="dashboard" onExport={handleDashboardExport} isLoading={exportReportHook.isLoading} />
-        {/* Prompt — TaskTable's own column-toggle header row (and the empty space it left above
-            the column headings) was removed; the control itself still exists here, next to Print
-            View/Export, so the Export flow's "current visible-columns state" behavior keeps working. */}
-        <ColumnToggle
-          columns={COLUMN_DEFINITIONS}
-          isVisible={columnVisibility.isVisible}
-          onToggle={columnVisibility.toggleColumn}
-        />
+        <ActionsMenu onExport={handleDashboardExport} isLoading={exportReportHook.isLoading} />
       </PageActions>
 
       <div>
-        {printMode ? (
-          <PrintView tasks={tasksQuery.data?.items || []} isVisible={columnVisibility.isVisible} />
-        ) : (
-          <TaskTable
-            tasks={tasksQuery.data?.items || []}
-            meta={tasksQuery.data?.meta}
-            isLoading={tasksQuery.isLoading}
-            isError={tasksQuery.isError}
-            isAdmin={isAdmin}
-            page={page}
-            pageSize={pageSize}
-            onPageChange={setPage}
-            onPageSizeChange={setPageSize}
-            onEdit={(task) => setFormModal({ mode: 'edit', task })}
-            onUpdate={(task) => setUpdatingTask(task)}
-            onViewUpdates={(task) => setViewingUpdatesTask(task)}
-            columnVisibility={columnVisibility}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            onSortChange={setSort}
-          />
-        )}
+        <TaskTable
+          tasks={tasksQuery.data?.items || []}
+          meta={tasksQuery.data?.meta}
+          isLoading={tasksQuery.isLoading}
+          isError={tasksQuery.isError}
+          isAdmin={isAdmin}
+          page={page}
+          pageSize={pageSize}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+          onEdit={(task) => setFormModal({ mode: 'edit', task })}
+          onUpdate={(task) => setUpdatingTask(task)}
+          onViewUpdates={(task) => setViewingUpdatesTask(task)}
+          columnVisibility={columnVisibility}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortChange={setSort}
+        />
       </div>
 
       {isAdmin && (

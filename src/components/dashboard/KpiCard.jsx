@@ -10,9 +10,11 @@ import clsx from 'clsx';
 // — the Total card (Prompt 2C) has no meaningful percentage and omits it entirely.
 //
 // Sized up ~50% from the original compact pass (min-h-[52px]/min-w-[82px], text-[11px]/text-base)
-// per explicit client request. NOTE: this reopens the "5 cards per group fit one row at
-// 1366px+" requirement from the compacting pass — at this size they no longer do (verified live,
-// see the chat report) — flagged rather than silently left unmentioned.
+// per explicit client request. Prompt — the "5 cards per group fit one row at 1366px+" bug this
+// reopened is fixed by the parent grid (DashboardPage.jsx's grid-cols-5, not flex-wrap) plus
+// min-w-0/w-full here: CSS Grid's minmax(0,1fr) tracks have a genuine zero-width floor, unlike a
+// flex item's default min-width:auto, so the card now actually shrinks to its grid cell instead of
+// forcing the row to wrap.
 function KpiCard({ label, count, percent, active, onClick, icon: Icon }) {
   return (
     <button
@@ -20,7 +22,7 @@ function KpiCard({ label, count, percent, active, onClick, icon: Icon }) {
       onClick={onClick}
       aria-pressed={active}
       className={clsx(
-        'flex min-h-[78px] min-w-[123px] shrink-0 snap-start flex-col justify-between gap-1.5 rounded-lg border px-2.5 py-2.5 shadow-sm transition-colors',
+        'flex min-h-[78px] w-full min-w-0 shrink-0 snap-start flex-col justify-between gap-1.5 rounded-lg border px-2.5 py-2.5 shadow-sm transition-colors',
         active ? 'border-brand bg-brand-light shadow-brand/20' : 'border-gray-200 bg-white hover:border-brand/40 hover:bg-brand-light/30'
       )}
     >

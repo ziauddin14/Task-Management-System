@@ -88,6 +88,28 @@ describe('TaskTable (docs/08-ui-ux.md §6)', () => {
     expect(screen.queryByLabelText('Columns')).not.toBeInTheDocument();
   });
 
+  // Prompt — TMS Dashboard row actions cleanup: the old "اقدامات" column header/inline-icon-row
+  // pattern is replaced by an "ایکشن" header + one three-dot trigger per row (accessible name
+  // "اقدامات" — this row's actions); the row's actions only enter the DOM once that trigger is
+  // opened.
+  it('renders the "ایکشن" column header, with row actions hidden until the three-dot trigger opens', () => {
+    renderTable();
+    expect(screen.getByText('ایکشن')).toBeInTheDocument();
+    expect(screen.queryByLabelText('اپڈیٹ کریں')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText('اقدامات'));
+    expect(screen.getByLabelText('اپڈیٹ کریں')).toBeInTheDocument();
+  });
+
+  it('the row actions menu closes on outside click', () => {
+    renderTable();
+    fireEvent.click(screen.getByLabelText('اقدامات'));
+    expect(screen.getByLabelText('اپڈیٹ کریں')).toBeInTheDocument();
+
+    fireEvent.mouseDown(document.body);
+    expect(screen.queryByLabelText('اپڈیٹ کریں')).not.toBeInTheDocument();
+  });
+
   it('shows an EmptyState when there are no tasks (not a blank table)', () => {
     renderTable({ tasks: [] });
     expect(screen.getByText('اس فلٹر سے مطابقت رکھنے والا کوئی کام نہیں ملا۔')).toBeInTheDocument();
@@ -112,37 +134,46 @@ describe('TaskTable (docs/08-ui-ux.md §6)', () => {
   // of this table entirely — into UpdateModal's own footer (UpdateModal.test.jsx covers it now).
   it('Update/Previous Updates call their handlers with the task (available to both roles)', () => {
     const { onUpdate, onViewUpdates } = renderTable();
+    fireEvent.click(screen.getByLabelText('اقدامات'));
     fireEvent.click(screen.getByLabelText('اپڈیٹ کریں'));
     expect(onUpdate).toHaveBeenCalledWith(baseTask);
+
+    // The menu closes itself after an action is chosen — reopen it for the second action.
+    fireEvent.click(screen.getByLabelText('اقدامات'));
     fireEvent.click(screen.getByLabelText('پرانی اپڈیٹس'));
     expect(onViewUpdates).toHaveBeenCalledWith(baseTask);
   });
 
   it('icon action buttons carry a title tooltip matching their aria-label', () => {
     renderTable();
+    fireEvent.click(screen.getByLabelText('اقدامات'));
     const updateButton = screen.getByLabelText('اپڈیٹ کریں');
     expect(updateButton).toHaveAttribute('title', 'اپڈیٹ کریں');
   });
 
   it('Update is disabled on an already-closed task; Previous Updates stays enabled', () => {
     renderTable({ tasks: [{ ...baseTask, status: 'closed' }] });
+    fireEvent.click(screen.getByLabelText('اقدامات'));
     expect(screen.getByLabelText('اپڈیٹ کریں')).toBeDisabled();
     expect(screen.getByLabelText('پرانی اپڈیٹس')).not.toBeDisabled();
   });
 
   it('User role: no Edit row action', () => {
     renderTable({ isAdmin: false });
+    fireEvent.click(screen.getByLabelText('اقدامات'));
     expect(screen.queryByLabelText('ترمیم کریں')).not.toBeInTheDocument();
   });
 
   it('Admin role: Edit row action appears and calls its handler', () => {
     const { onEdit } = renderTable({ isAdmin: true });
+    fireEvent.click(screen.getByLabelText('اقدامات'));
     fireEvent.click(screen.getByLabelText('ترمیم کریں'));
     expect(onEdit).toHaveBeenCalledWith(baseTask);
   });
 
   it('Admin role: Edit is disabled for an already-closed task', () => {
     renderTable({ isAdmin: true, tasks: [{ ...baseTask, status: 'closed' }] });
+    fireEvent.click(screen.getByLabelText('اقدامات'));
     expect(screen.getByLabelText('ترمیم کریں')).toBeDisabled();
   });
 

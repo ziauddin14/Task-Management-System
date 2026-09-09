@@ -6,7 +6,9 @@ import { MessageCircle } from 'lucide-react';
 // the just-exported File, or null/undefined before/absent one). Fallback (desktop, or any browser
 // without file-sharing support): a calm one-line hint instead of a button — never framed as an
 // error, since it's a real platform limitation shared by every website, not a missing feature.
-function WhatsAppShareButton({ file, title = 'Task Report' }) {
+// variant="menuItem" (Prompt — TMS Dashboard header ایکشن menu) only swaps the wrapper/button
+// classNames for a full-width menu row — share logic, fallback copy and text are untouched.
+function WhatsAppShareButton({ file, title = 'Task Report', variant = 'standalone' }) {
   if (!file) return null;
 
   const canShareFile =
@@ -16,7 +18,11 @@ function WhatsAppShareButton({ file, title = 'Task Report' }) {
     navigator.canShare({ files: [file] });
 
   if (!canShareFile) {
-    return <p className="mt-2 text-sm text-gray-500">ڈاؤن لوڈ ہونے والی فائل کو واٹس ایپ ڈیسک ٹاپ/ویب میں خود اٹیچ کر لیں۔</p>;
+    return (
+      <p className={variant === 'menuItem' ? 'px-2 py-1 text-sm text-gray-500' : 'mt-2 text-sm text-gray-500'}>
+        ڈاؤن لوڈ ہونے والی فائل کو واٹس ایپ ڈیسک ٹاپ/ویب میں خود اٹیچ کر لیں۔
+      </p>
+    );
   }
 
   async function handleShare() {
@@ -32,7 +38,11 @@ function WhatsAppShareButton({ file, title = 'Task Report' }) {
     <button
       type="button"
       onClick={handleShare}
-      className="mt-2 flex h-10 w-fit items-center gap-2 rounded-lg border border-green-600 px-3 text-sm text-green-700 hover:bg-green-50"
+      className={
+        variant === 'menuItem'
+          ? 'flex h-10 w-full items-center gap-2 rounded-md px-2 text-sm text-green-700 hover:bg-green-50'
+          : 'mt-2 flex h-10 w-fit items-center gap-2 rounded-lg border border-green-600 px-3 text-sm text-green-700 hover:bg-green-50'
+      }
     >
       <MessageCircle className="h-4 w-4" aria-hidden="true" />
       واٹس ایپ پر شیئر کریں

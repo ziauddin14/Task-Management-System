@@ -11,7 +11,10 @@ import WhatsAppShareButton from './WhatsAppShareButton.jsx';
 // building the actual request params from its own current state (Phase 10.3's
 // useDashboardFilters, or UserSummaryReportPage's own column state) — this is what makes the
 // component reusable between both pages rather than duplicated.
-function ExportMenu({ mode, onExport, isLoading }) {
+// variant="menuItem" (Prompt — TMS Dashboard header ایکشن menu) only swaps the trigger button's
+// classNames for a full-width menu row and always shows its label — the format picker, confirm
+// handler and WhatsAppShareButton child are untouched.
+function ExportMenu({ mode, onExport, isLoading, variant = 'standalone' }) {
   const [open, setOpen] = useState(false);
   const [format, setFormat] = useState('excel');
   const [lastUpdateOnly, setLastUpdateOnly] = useState(false);
@@ -28,16 +31,20 @@ function ExportMenu({ mode, onExport, isLoading }) {
   }
 
   return (
-    <div className="relative inline-block">
+    <div className={variant === 'menuItem' ? 'relative block w-full' : 'relative inline-block'}>
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
         title="ایکسپورٹ کریں"
-        className="flex h-10 items-center gap-1.5 rounded-lg border border-gray-300 px-2.5 text-sm text-gray-700 hover:bg-gray-50"
+        className={
+          variant === 'menuItem'
+            ? 'flex h-10 w-full items-center gap-2 rounded-md px-2 text-sm text-gray-700 hover:bg-gray-50'
+            : 'flex h-10 items-center gap-1.5 rounded-lg border border-gray-300 px-2.5 text-sm text-gray-700 hover:bg-gray-50'
+        }
       >
         <Download className="h-4 w-4" aria-hidden="true" />
-        <span className="hidden lg:inline">ایکسپورٹ کریں</span>
+        <span className={variant === 'menuItem' ? 'inline' : 'hidden lg:inline'}>ایکسپورٹ کریں</span>
       </button>
 
       {open && (
@@ -79,7 +86,7 @@ function ExportMenu({ mode, onExport, isLoading }) {
         </div>
       )}
 
-      <WhatsAppShareButton file={exportedFile} />
+      <WhatsAppShareButton file={exportedFile} variant={variant} />
     </div>
   );
 }

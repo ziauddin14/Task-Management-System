@@ -1,17 +1,34 @@
-import React from 'react'; // explicit import — see src/App.jsx's comment for why
+import React, { useRef, useState } from 'react'; // explicit import — see src/App.jsx's comment for why
 import clsx from 'clsx';
-import { ChevronUp, ChevronDown, ChevronsUpDown, Upload, History, Pencil } from 'lucide-react';
+import { ChevronUp, ChevronDown, ChevronsUpDown, Upload, History, Pencil, MoreVertical } from 'lucide-react';
 import Spinner from '../common/Spinner.jsx';
 import EmptyState from '../common/EmptyState.jsx';
 import Pagination from '../common/Pagination.jsx';
+import { useClickOutside } from '../../hooks/useClickOutside.js';
 import { COLUMN_DEFINITIONS } from '../../utils/dashboardColumns.js';
 import { formatDateShortYear, formatTimeStatusLabel, getTimeStatusColorClass } from '../../utils/formatDate.js';
 import { getStatusMeta, getPerformanceMeta } from '../../utils/taskDisplay.js';
 
-// Prompt — compact icon-only action buttons (was text-labeled), matching the row height already
-// established by the old h-10 text buttons. title + aria-label carry the same Urdu label the text
-// button used to show, so the action is still named on hover and for screen readers.
-function IconActionButton({ icon: Icon, label, onClick, disabled }) {
+// Prompt — variant="menuItem" (TMS Dashboard row ایکشن menu) renders the same icon + label +
+// onClick/disabled as a full-width menu row instead of a standalone square icon button; no
+// handler or gating logic changes between variants.
+function IconActionButton({ icon: Icon, label, onClick, disabled, variant = 'standalone' }) {
+  if (variant === 'menuItem') {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={disabled}
+        title={label}
+        aria-label={label}
+        className="flex h-10 w-full items-center gap-2 whitespace-nowrap rounded-md px-2 text-start text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-brand disabled:opacity-40"
+      >
+        <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+        <span>{label}</span>
+      </button>
+    );
+  }
+
   return (
     <button
       type="button"
@@ -23,6 +40,43 @@ function IconActionButton({ icon: Icon, label, onClick, disabled }) {
     >
       <Icon className="h-4 w-4" aria-hidden="true" />
     </button>
+  );
+}
+
+// Prompt — TMS Dashboard row actions cleanup: one compact three-dot trigger per row replacing the
+// old inline icon-button row, opening a small RTL-aligned dropdown with the SAME action buttons
+// (as menuItem-variant IconActionButtons) — closes on outside click/Escape via useClickOutside.
+function RowActionsMenu({ children }) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  useClickOutside(containerRef, open, () => setOpen(false));
+
+  return (
+    <div ref={containerRef} className="relative inline-block">
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        aria-expanded={open}
+        title="اقدامات"
+        aria-label="اقدامات"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-gray-300 text-gray-600 transition-colors hover:bg-gray-50 hover:text-brand"
+      >
+        <MoreVertical className="h-4 w-4" aria-hidden="true" />
+      </button>
+
+      {open && (
+        // onClick here just closes the menu after a row action is chosen (bubbles up from
+        // whichever IconActionButton was clicked) — it fires after the button's own onClick, so
+        // it never interferes with the action handler itself.
+        <div
+          onClick={() => setOpen(false)}
+          className="absolute end-0 z-20 mt-1 w-44 rounded-lg border border-gray-200 bg-white p-1.5 shadow-lg"
+        >
+          {children}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -201,7 +255,7 @@ function TaskTable({
                     className="whitespace-nowrap px-3 py-2 font-medium"
                   />
                 )}
-                <th className="no-print whitespace-nowrap px-3 py-2 font-medium">اقدامات</th>
+                <th className="no-print whitespace-nowrap px-3 py-2 font-medium">ایکشن</th>
               </tr>
             </thead>
             <tbody>
@@ -253,13 +307,30 @@ function TaskTable({
                       </td>
                     )}
                     <td className="no-print whitespace-nowrap px-3 py-2">
-                      <div className="flex items-center gap-1">
-                        <IconActionButton icon={Upload} label="اپڈیٹ کریں" onClick={() => onUpdate(task)} disabled={isClosed} />
-                        <IconActionButton icon={History} label="پرانی اپڈیٹس" onClick={() => onViewUpdates(task)} />
+                      <RowActionsMenu>
+                        <IconActionButton
+                          icon={Upload}
+                          label="اپڈیٹ کریں"
+                          onClick={() => onUpdate(task)}
+                          disabled={isClosed}
+                          variant="menuItem"
+                        />
+                        <IconActionButton
+                          icon={History}
+                          label="پرانی اپڈیٹس"
+                          onClick={() => onViewUpdates(task)}
+                          variant="menuItem"
+                        />
                         {isAdmin && (
-                          <IconActionButton icon={Pencil} label="ترمیم کریں" onClick={() => onEdit(task)} disabled={isClosed} />
+                          <IconActionButton
+                            icon={Pencil}
+                            label="ترمیم کریں"
+                            onClick={() => onEdit(task)}
+                            disabled={isClosed}
+                            variant="menuItem"
+                          />
                         )}
-                      </div>
+                      </RowActionsMenu>
                     </td>
                   </tr>
                 );

@@ -7,9 +7,6 @@ import FilterBar from '../../../src/components/dashboard/FilterBar.jsx';
 import { useDashboardFilters } from '../../../src/hooks/useDashboardFilters.js';
 
 vi.mock('../../../src/services/users.api.js', () => ({ getUsers: vi.fn().mockResolvedValue({ items: [], meta: {} }) }));
-vi.mock('../../../src/services/lookupLists.api.js', () => ({
-  getLookupList: vi.fn().mockResolvedValue([{ id: 'r1', value: 'IT', isActive: true }]),
-}));
 
 function Harness({ isAdmin }) {
   const filtersHook = useDashboardFilters(25);
@@ -57,17 +54,26 @@ describe('FilterBar (docs/08-ui-ux.md §5, docs/09-frontend-features.md §5)', (
     expect(screen.queryByLabelText('Assignee filter')).not.toBeInTheDocument();
   });
 
-  it('shows the assignee filter (Admin only)', () => {
+  it('shows the assignee filter (Admin only), labelled "تمام ذمہ داران"', () => {
     renderFilterBar(true);
-    expect(screen.getByLabelText('Assignee filter')).toBeInTheDocument();
+    const assigneeFilter = screen.getByLabelText('Assignee filter');
+    expect(assigneeFilter).toBeInTheDocument();
+    expect(screen.getByText('تمام ذمہ داران')).toBeInTheDocument();
   });
 
-  it('shows "Clear all filters" only once a filter is active', async () => {
+  // Prompt — TMS Dashboard filter bar cleanup: the separate Responsibility dropdown is removed
+  // entirely (no empty space, no lookup-list fetch left wired to it).
+  it('does not render a Responsibility filter', () => {
+    renderFilterBar(true);
+    expect(screen.queryByLabelText('Responsibility filter')).not.toBeInTheDocument();
+    expect(screen.queryByText('ہر ذمہ داری')).not.toBeInTheDocument();
+  });
+
+  it('shows "Clear all filters" only once a filter is active', () => {
     renderFilterBar();
     expect(screen.queryByText('تمام فلٹرز صاف کریں')).not.toBeInTheDocument();
 
-    await screen.findByText('IT'); // the Responsibility <option> lands once its fetch resolves
-    fireEvent.change(screen.getByLabelText('Responsibility filter'), { target: { value: 'IT' } });
+    fireEvent.change(screen.getByLabelText('از تاریخ'), { target: { value: '2026-08-01' } });
     expect(screen.getByText('تمام فلٹرز صاف کریں')).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('تمام فلٹرز صاف کریں'));

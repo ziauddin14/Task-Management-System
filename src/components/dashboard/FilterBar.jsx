@@ -1,15 +1,15 @@
 import React, { useEffect } from 'react'; // explicit import — see src/App.jsx's comment for why
 import SearchBar from './SearchBar.jsx';
 import { useAssignableUsers } from '../../hooks/useAssignableUsers.js';
-import { useLookupList } from '../../hooks/useLookupList.js';
 import { useDebouncedSearch } from '../../hooks/useDebouncedSearch.js';
 
-// docs/08-ui-ux.md §5, docs/09-frontend-features.md §5 — search + responsibility + (Admin-only)
-// assignee + date-type-toggle-with-range, all reading/writing through the useDashboardFilters
-// instance passed down from DashboardPage, so every change lands in the URL. Prompt — the status
-// dropdown was removed deliberately: the KPI cards already cover status filtering by click, so it
-// was a redundant second control for the same `status` URL param (still fully wired — just no
-// longer has its own dropdown UI).
+// docs/08-ui-ux.md §5, docs/09-frontend-features.md §5 — search + (Admin-only) assignee +
+// date-type-toggle-with-range, all reading/writing through the useDashboardFilters instance
+// passed down from DashboardPage, so every change lands in the URL. Prompt — the status dropdown
+// was removed deliberately: the KPI cards already cover status filtering by click, so it was a
+// redundant second control for the same `status` URL param (still fully wired — just no longer
+// has its own dropdown UI). The Responsibility dropdown was removed the same way (UI cleanup
+// only) — no `responsibility` filter UI remains, and its lookup-list hook call went with it.
 function FilterBar({ filtersHook, isAdmin }) {
   const { params, setFilter, clearAllFilters, hasActiveFilters } = filtersHook;
   const [searchInput, setSearchInput, debouncedSearch] = useDebouncedSearch(params.search || '');
@@ -27,7 +27,6 @@ function FilterBar({ filtersHook, isAdmin }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch]);
 
-  const { data: responsibilities } = useLookupList('responsibility');
   const { data: assignableUsers } = useAssignableUsers({ enabled: isAdmin });
 
   const dateType = params.dateType === 'entry' ? 'entry' : 'deadline';
@@ -36,20 +35,6 @@ function FilterBar({ filtersHook, isAdmin }) {
     <div className="flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-white p-3">
       <SearchBar value={searchInput} onChange={setSearchInput} />
 
-      <select
-        value={params.responsibility || ''}
-        onChange={(event) => setFilter('responsibility', event.target.value || undefined)}
-        aria-label="Responsibility filter"
-        className="h-10 rounded-lg border border-gray-300 px-2 focus:border-brand focus:outline-none"
-      >
-        <option value="">ہر ذمہ داری</option>
-        {(responsibilities || []).map((entry) => (
-          <option key={entry.id} value={entry.value}>
-            {entry.value}
-          </option>
-        ))}
-      </select>
-
       {isAdmin && (
         <select
           value={params.assigneeId || ''}
@@ -57,7 +42,7 @@ function FilterBar({ filtersHook, isAdmin }) {
           aria-label="Assignee filter"
           className="h-10 rounded-lg border border-gray-300 px-2 focus:border-brand focus:outline-none"
         >
-          <option value="">ہر ذمہ دار</option>
+          <option value="">تمام ذمہ داران</option>
           {(assignableUsers?.items || []).map((user) => (
             <option key={user.id} value={user.id}>
               {user.name}
