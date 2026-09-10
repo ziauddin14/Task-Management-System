@@ -39,7 +39,8 @@ describe('ActionsMenu', () => {
     fireEvent.click(screen.getByRole('button', { name: 'ایکشن' }));
     expect(screen.getByText('ایکسپورٹ کریں')).toBeInTheDocument();
 
-    fireEvent.mouseDown(screen.getByText('outside'));
+    // floating-ui's useDismiss listens for 'pointerdown' by default, not 'mousedown'.
+    fireEvent.pointerDown(screen.getByText('outside'));
     expect(screen.queryByText('ایکسپورٹ کریں')).not.toBeInTheDocument();
   });
 

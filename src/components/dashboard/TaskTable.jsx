@@ -1,10 +1,11 @@
-import React, { useRef, useState } from 'react'; // explicit import — see src/App.jsx's comment for why
+import React from 'react'; // explicit import — see src/App.jsx's comment for why
 import clsx from 'clsx';
 import { ChevronUp, ChevronDown, ChevronsUpDown, Upload, History, Pencil, MoreVertical } from 'lucide-react';
+import { FloatingPortal } from '@floating-ui/react';
 import Spinner from '../common/Spinner.jsx';
 import EmptyState from '../common/EmptyState.jsx';
 import Pagination from '../common/Pagination.jsx';
-import { useClickOutside } from '../../hooks/useClickOutside.js';
+import { useFloatingMenu } from '../../hooks/useFloatingMenu.js';
 import { COLUMN_DEFINITIONS } from '../../utils/dashboardColumns.js';
 import { formatDateShortYear, formatTimeStatusLabel, getTimeStatusColorClass } from '../../utils/formatDate.js';
 import { getStatusMeta, getPerformanceMeta } from '../../utils/taskDisplay.js';
@@ -45,38 +46,46 @@ function IconActionButton({ icon: Icon, label, onClick, disabled, variant = 'sta
 
 // Prompt — TMS Dashboard row actions cleanup: one compact three-dot trigger per row replacing the
 // old inline icon-button row, opening a small RTL-aligned dropdown with the SAME action buttons
-// (as menuItem-variant IconActionButtons) — closes on outside click/Escape via useClickOutside.
+// (as menuItem-variant IconActionButtons). Positioning goes through useFloatingMenu (see its own
+// comment): portal-rendered to document.body so the table's own overflow-auto can never clip it,
+// and it auto-flips above the row when opened near the bottom of the scroll area (e.g. the last
+// visible row) instead of being cut off.
 function RowActionsMenu({ children }) {
-  const [open, setOpen] = useState(false);
-  const containerRef = useRef(null);
-
-  useClickOutside(containerRef, open, () => setOpen(false));
+  const { open, setOpen, refs, floatingStyles, getReferenceProps, getFloatingProps } = useFloatingMenu({
+    placement: 'bottom-end',
+  });
 
   return (
-    <div ref={containerRef} className="relative inline-block">
+    <>
       <button
+        ref={refs.setReference}
         type="button"
-        onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
         title="اقدامات"
         aria-label="اقدامات"
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-gray-300 text-gray-600 transition-colors hover:bg-gray-50 hover:text-brand"
+        {...getReferenceProps()}
       >
         <MoreVertical className="h-4 w-4" aria-hidden="true" />
       </button>
 
       {open && (
-        // onClick here just closes the menu after a row action is chosen (bubbles up from
-        // whichever IconActionButton was clicked) — it fires after the button's own onClick, so
-        // it never interferes with the action handler itself.
-        <div
-          onClick={() => setOpen(false)}
-          className="absolute end-0 z-20 mt-1 w-44 rounded-lg border border-gray-200 bg-white p-1.5 shadow-lg"
-        >
-          {children}
-        </div>
+        <FloatingPortal>
+          {/* onClick here just closes the menu after a row action is chosen (bubbles up from
+              whichever IconActionButton was clicked) — it fires after the button's own onClick,
+              so it never interferes with the action handler itself. */}
+          <div
+            ref={refs.setFloating}
+            style={floatingStyles}
+            onClick={() => setOpen(false)}
+            className="z-50 w-44 rounded-lg border border-gray-200 bg-white p-1.5 shadow-lg"
+            {...getFloatingProps()}
+          >
+            {children}
+          </div>
+        </FloatingPortal>
       )}
-    </div>
+    </>
   );
 }
 

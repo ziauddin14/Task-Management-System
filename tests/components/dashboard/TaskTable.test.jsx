@@ -106,7 +106,8 @@ describe('TaskTable (docs/08-ui-ux.md §6)', () => {
     fireEvent.click(screen.getByLabelText('اقدامات'));
     expect(screen.getByLabelText('اپڈیٹ کریں')).toBeInTheDocument();
 
-    fireEvent.mouseDown(document.body);
+    // floating-ui's useDismiss listens for 'pointerdown' by default, not 'mousedown'.
+    fireEvent.pointerDown(document.body);
     expect(screen.queryByLabelText('اپڈیٹ کریں')).not.toBeInTheDocument();
   });
 
