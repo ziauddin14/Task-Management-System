@@ -5,9 +5,16 @@ import ActionsMenu from '../../../src/components/dashboard/ActionsMenu.jsx';
 
 const sampleFile = new File(['x'], 'report.xlsx', { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 
-// Prompt — TMS Dashboard header cleanup: replaces the old Print View/Print/Columns controls with
-// one "ایکشن" trigger holding exactly Export (and, nested inside it, WhatsApp Share) — reusing
-// the existing ExportMenu/WhatsAppShareButton components and handlers unchanged.
+const SAMPLE_COLUMNS = [
+  { key: 'codeNumber', label: 'کوڈ نمبر', locked: true },
+  { key: 'assignees', label: 'ذمہ دار', locked: false },
+];
+
+// Prompt — TMS Dashboard header cleanup: one "ایکشن" trigger holding کالمز (column visibility) +
+// Export (and, nested inside it, WhatsApp Share) — reusing the existing ColumnToggle/ExportMenu/
+// WhatsAppShareButton components and handlers unchanged; no standalone Columns button exists
+// anywhere else on the page. columns/isColumnVisible/onToggleColumn are optional — a caller that
+// omits them (none today) just doesn't get a کالمز item, which the first test below covers.
 describe('ActionsMenu', () => {
   it('hides its dropdown until the "ایکشن" trigger is clicked', () => {
     render(<ActionsMenu onExport={vi.fn()} isLoading={false} />);
@@ -15,6 +22,33 @@ describe('ActionsMenu', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'ایکشن' }));
     expect(screen.getByText('ایکسپورٹ کریں')).toBeInTheDocument();
+    // No columns prop passed — no کالمز item at all, not even hidden.
+    expect(screen.queryByText('کالمز')).not.toBeInTheDocument();
+  });
+
+  it('shows "کالمز" as the first item when column-visibility props are supplied, and toggling a checkbox calls the existing handler', () => {
+    const onToggleColumn = vi.fn();
+    render(
+      <ActionsMenu
+        onExport={vi.fn()}
+        isLoading={false}
+        columns={SAMPLE_COLUMNS}
+        isColumnVisible={(key) => key !== 'assignees'}
+        onToggleColumn={onToggleColumn}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'ایکشن' }));
+    fireEvent.click(screen.getByText('کالمز'));
+
+    const assigneesCheckbox = screen.getByText('ذمہ دار').previousSibling;
+    expect(assigneesCheckbox).not.toBeChecked();
+    fireEvent.click(assigneesCheckbox);
+    expect(onToggleColumn).toHaveBeenCalledWith('assignees');
+
+    // Locked columns stay disabled, matching the existing ColumnToggle behavior unchanged.
+    const codeNumberCheckbox = screen.getByText('کوڈ نمبر').previousSibling;
+    expect(codeNumberCheckbox).toBeDisabled();
   });
 
   it('the Export item calls the existing onExport handler with the selected format', async () => {

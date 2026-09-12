@@ -265,6 +265,34 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
     expect(params.columns).toBeUndefined(); // no per-column selection for this fixed report structure
   });
 
+  // Prompt — "کالمز" lives INSIDE the existing "ایکشن" dropdown, not as a separate standalone
+  // button anywhere else on the page; toggling a column there must actually hide/show it in the
+  // real TaskTable (same columnVisibility instance, not a disconnected copy).
+  it('the "ایکشن" menu\'s "کالمز" item toggles column visibility in the real table; no standalone Columns button exists elsewhere', async () => {
+    renderDashboard('admin');
+    await screen.findByText('260801');
+
+    // No standalone Columns control anywhere on the page before opening ایکشن.
+    expect(screen.queryByLabelText('Columns')).not.toBeInTheDocument();
+
+    expect(screen.getByText('ذمہ داری')).toBeInTheDocument(); // Responsibility column header, visible by default
+
+    fireEvent.click(screen.getByRole('button', { name: 'ایکشن' }));
+    fireEvent.click(screen.getByText('کالمز'));
+
+    // "ذمہ داری" now matches twice — the table's own <th> and the کالمز checklist's <label> — so
+    // pick the checklist one specifically rather than assuming there's only one match.
+    expect(screen.getAllByText('ذمہ داری')).toHaveLength(2);
+    const responsibilityLabel = screen.getAllByText('ذمہ داری').map((el) => el.closest('label')).find(Boolean);
+    const responsibilityCheckbox = responsibilityLabel.querySelector('input');
+    expect(responsibilityCheckbox).toBeChecked();
+    fireEvent.click(responsibilityCheckbox);
+
+    // Only the checklist's own label remains — the table's <th> actually disappeared.
+    expect(screen.getAllByText('ذمہ داری')).toHaveLength(1);
+    expect(screen.getByText('260801')).toBeInTheDocument(); // rest of the table/data untouched
+  });
+
   it('Admin-only "Reminders Bhejein" button triggers the reminder job and toasts the count', async () => {
     renderDashboard('admin');
     await screen.findByText('260801');

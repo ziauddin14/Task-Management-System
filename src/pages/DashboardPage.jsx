@@ -53,10 +53,10 @@ function DashboardPage() {
   const closeTaskMutation = useCloseTask(closingTask?.id);
 
   // Lifted here (rather than owned inside TaskTable, as it was through Phase 10.5) — TaskTable
-  // reads it to decide which columns to render. Prompt — no longer feeds the Export flow: the
-  // task report is one fixed grouped-by-Zimmedar structure, not a user-chosen column set; the
-  // header's column-visibility toggle control has since been removed, so this now just supplies
-  // TaskTable's stored/default column set.
+  // reads it to decide which columns to render, and the header's "ایکشن" menu's "کالمز" item
+  // (ActionsMenu below) reads/writes the same instance so both stay in sync. Prompt — still
+  // doesn't feed the Export flow: the task report is one fixed grouped-by-Zimmedar structure, not
+  // a user-chosen column set.
   const columnVisibility = useColumnVisibility(COLUMN_STORAGE_KEY, COLUMN_DEFINITIONS);
   const exportReportHook = useExportReport();
   const triggerRemindersMutation = useTriggerReminders();
@@ -201,11 +201,17 @@ function DashboardPage() {
         <FilterBar filtersHook={filtersHook} isAdmin={isAdmin} />
       </div>
 
-      {/* Prompt — TMS Dashboard header cleanup: the old Print View/Print/Columns controls are
-          gone; a single "ایکشن" trigger (rendered into the Navbar via the <PageActions> portal
-          below) now holds Export + WhatsApp Share. */}
+      {/* Prompt — TMS Dashboard header cleanup: a single "ایکشن" trigger (rendered into the
+          Navbar via the <PageActions> portal below) holds کالمز (column visibility) + Export +
+          WhatsApp Share — the standalone Columns button doesn't exist anywhere else on the page. */}
       <PageActions>
-        <ActionsMenu onExport={handleDashboardExport} isLoading={exportReportHook.isLoading} />
+        <ActionsMenu
+          onExport={handleDashboardExport}
+          isLoading={exportReportHook.isLoading}
+          columns={COLUMN_DEFINITIONS}
+          isColumnVisible={columnVisibility.isVisible}
+          onToggleColumn={columnVisibility.toggleColumn}
+        />
       </PageActions>
 
       <div>
