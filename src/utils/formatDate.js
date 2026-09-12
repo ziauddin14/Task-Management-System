@@ -1,26 +1,15 @@
 import { format, isValid } from 'date-fns';
 
-// docs/07-frontend-foundation.md §2 lists formatDate/formatDeadlineLabel among utils/. Latin
-// digits stay LTR inside the RTL flow automatically (§7) — no special handling needed here.
-export function formatDate(value) {
-  if (!value) return '-';
-  const date = value instanceof Date ? value : new Date(value);
-  return isValid(date) ? format(date, 'dd MMM yyyy') : '-';
-}
-
-// Dedicated to the Dashboard task table's Deadline/Last Update columns (TaskTable.jsx) only —
-// deliberately NOT a change to formatDate() above, which several other places (PrintView.jsx's
-// own Deadline column, PreviousUpdatesContent.jsx's summary-table Deadline and updates-table
-// Date) still rely on for the "dd MMM yyyy" format and were not asked to change. Display-only:
-// nothing reads this formatted string back for storage, API payloads, or Time Status comparisons
-// — those all still work off the raw ISO value.
-//
-// Prompt — Day(zero-padded)-Month(abbr)-Year(2-digit), e.g. "01 Sep 26", "25 Aug 26". Name kept
-// accurate to what it now does (was formatDateDDMMYY).
+// FINAL DATE FORMAT — every displayed date across the app is DD-MM-YY, zero-padded (e.g. "01-09-26"),
+// numeric order preserved regardless of RTL flow (§7 — Latin digits stay LTR inside RTL automatically).
+// formatDate/formatDateShortYear used to differ ("dd MMM yyyy" vs "dd MMM yy") but both prompts now
+// resolve to the same "dd-MM-yy" token, so formatDate was retired in favor of this single formatter —
+// its former call sites (PrintView.jsx's Deadline column, PreviousUpdatesContent.jsx's summary-table
+// Deadline and updates-table Date) now call formatDateShortYear directly.
 export function formatDateShortYear(value) {
   if (!value) return '-';
   const date = value instanceof Date ? value : new Date(value);
-  return isValid(date) ? format(date, 'dd MMM yy') : '-';
+  return isValid(date) ? format(date, 'dd-MM-yy') : '-';
 }
 
 // docs/08-ui-ux.md §7 — Previous Updates history entries show a date (with time, since a
@@ -28,7 +17,7 @@ export function formatDateShortYear(value) {
 export function formatDateTime(value) {
   if (!value) return '-';
   const date = value instanceof Date ? value : new Date(value);
-  return isValid(date) ? format(date, 'dd MMM yyyy, HH:mm') : '-';
+  return isValid(date) ? format(date, 'dd-MM-yy, HH:mm') : '-';
 }
 
 // Prompt 5A — the redesigned "Previous Updates" table shows تاریخ (Date) and وقت (Time) as two

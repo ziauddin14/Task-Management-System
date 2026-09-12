@@ -163,7 +163,7 @@ describe('PreviousUpdatesContent (docs/08-ui-ux.md §7, docs/09-frontend-feature
 
     expect(within(summaryTable).getByText('260801')).toBeInTheDocument();
     expect(within(summaryTable).getByText('Sample task')).toBeInTheDocument();
-    expect(within(summaryTable).getByText('01 Sep 2026')).toBeInTheDocument();
+    expect(within(summaryTable).getByText('01-09-26')).toBeInTheDocument();
     expect(within(summaryTable).getByText('5 دن باقی')).toBeInTheDocument();
     expect(within(summaryTable).getByText('40%')).toBeInTheDocument();
   });
@@ -179,9 +179,9 @@ describe('PreviousUpdatesContent (docs/08-ui-ux.md §7, docs/09-frontend-feature
     expect(headers).toEqual(['تاریخ', 'وقت', 'اپڈیٹ کرنے والا', 'ذمہ داری', 'وضاحت', 'تکمیل فیصد', 'اٹیچمنٹ']);
 
     const row = within(updatesTable()).getByText('Second update').closest('tr');
-    // Local-time display, mirroring how formatDate/formatTime already render everywhere else in
-    // this app — 2026-08-28T16:30:00.000Z is 21:30 in this test environment's timezone.
-    expect(within(row).getByText('28 Aug 2026')).toBeInTheDocument();
+    // Local-time display, mirroring how formatDateShortYear/formatTime already render everywhere
+    // else in this app — 2026-08-28T16:30:00.000Z is 21:30 in this test environment's timezone.
+    expect(within(row).getByText('28-08-26')).toBeInTheDocument();
     expect(within(row).getByText('21:30')).toBeInTheDocument();
     expect(within(row).getByText('Ali (User)')).toBeInTheDocument();
     expect(within(row).getByText('IT')).toBeInTheDocument();

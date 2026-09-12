@@ -5,7 +5,7 @@ import Spinner from '../common/Spinner.jsx';
 import EmptyState from '../common/EmptyState.jsx';
 import { useTask } from '../../hooks/useTask.js';
 import { useTaskUpdates } from '../../hooks/useTaskUpdates.js';
-import { formatDate, formatTime, formatTimeStatusLabel, getTimeStatusColorClass } from '../../utils/formatDate.js';
+import { formatDateShortYear, formatTime, formatTimeStatusLabel, getTimeStatusColorClass } from '../../utils/formatDate.js';
 
 const TH_CLASS = 'whitespace-nowrap px-3 py-2 text-start font-medium';
 const TD_CLASS = 'whitespace-nowrap px-3 py-2';
@@ -64,7 +64,7 @@ const PreviousUpdatesContent = forwardRef(function PreviousUpdatesContent({ task
                   <td className={clsx(TD_CLASS, 'max-w-[220px] truncate')} title={task?.title}>
                     {task?.title}
                   </td>
-                  <td className={TD_CLASS}>{formatDate(task?.deadline)}</td>
+                  <td className={TD_CLASS}>{formatDateShortYear(task?.deadline)}</td>
                   <td className={clsx(TD_CLASS, getTimeStatusColorClass(task?.timeStatus))}>
                     {formatTimeStatusLabel(task?.timeStatus)}
                   </td>
@@ -102,7 +102,7 @@ const PreviousUpdatesContent = forwardRef(function PreviousUpdatesContent({ task
                         key={update.id}
                         className={clsx('border-t border-gray-100', isAdminEntry ? 'bg-brand-light/30' : 'bg-white')}
                       >
-                        <td className={TD_CLASS}>{formatDate(update.createdAt)}</td>
+                        <td className={TD_CLASS}>{formatDateShortYear(update.createdAt)}</td>
                         <td className={TD_CLASS}>{formatTime(update.createdAt)}</td>
                         <td className={TD_CLASS}>
                           {update.updatedBy?.name} ({isAdminEntry ? 'Admin' : 'User'})

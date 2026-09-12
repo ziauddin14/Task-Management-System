@@ -72,13 +72,12 @@ describe('TaskTable (docs/08-ui-ux.md §6)', () => {
     expect(screen.getByText('IT')).toBeInTheDocument();
   });
 
-  // Deadline/Last Update columns use a dedicated formatter (formatDateShortYear), not the shared
-  // formatDate() used by PrintView/PreviousUpdatesContent — confirms it's actually wired in and
-  // produces the exact requested "dd MMM yy" format.
-  it('renders Deadline and Last Update as "dd MMM yy"', () => {
+  // Deadline/Last Update columns use formatDateShortYear — confirms it's actually wired in and
+  // produces the final requested "DD-MM-YY" format (zero-padded day/month/year, numeric order).
+  it('renders Deadline and Last Update as "DD-MM-YY"', () => {
     renderTable();
-    expect(screen.getByText('01 Sep 26')).toBeInTheDocument(); // deadline: 2026-09-01
-    expect(screen.getByText('20 Aug 26')).toBeInTheDocument(); // lastUpdateAt: 2026-08-20
+    expect(screen.getByText('01-09-26')).toBeInTheDocument(); // deadline: 2026-09-01
+    expect(screen.getByText('20-08-26')).toBeInTheDocument(); // lastUpdateAt: 2026-08-20
   });
 
   // Prompt — the column-visibility toggle bar (and the empty header-row space above the actual

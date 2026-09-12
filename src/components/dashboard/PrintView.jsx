@@ -1,7 +1,7 @@
 import React from 'react'; // explicit import — see src/App.jsx's comment for why
 import clsx from 'clsx';
 import EmptyState from '../common/EmptyState.jsx';
-import { formatDate, formatTimeStatusLabel } from '../../utils/formatDate.js';
+import { formatDateShortYear, formatTimeStatusLabel } from '../../utils/formatDate.js';
 import { getStatusMeta, getPerformanceMeta } from '../../utils/taskDisplay.js';
 import { COLUMN_DEFINITIONS } from '../../utils/dashboardColumns.js';
 
@@ -59,7 +59,7 @@ function PrintView({ tasks, isVisible }) {
                   <td className="px-2 py-1">{(task.assignees || []).map((a) => a.name).join(', ')}</td>
                 )}
                 {isVisible('responsibility') && <td className="whitespace-nowrap px-2 py-1">{task.responsibility}</td>}
-                {isVisible('deadline') && <td className="whitespace-nowrap px-2 py-1">{formatDate(task.deadline)}</td>}
+                {isVisible('deadline') && <td className="whitespace-nowrap px-2 py-1">{formatDateShortYear(task.deadline)}</td>}
                 {isVisible('status') && (
                   <td className="whitespace-nowrap px-2 py-1">
                     <span className={clsx('rounded-full px-1.5 py-0.5', statusMeta.badgeClass)}>{statusMeta.label}</span>
