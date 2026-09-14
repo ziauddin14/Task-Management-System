@@ -1,5 +1,5 @@
 import React, { useState } from 'react'; // explicit import — see src/App.jsx's comment for why
-import { Plus, BellRing } from 'lucide-react';
+import { Plus, BellRing, Send } from 'lucide-react';
 import { useAuthStore } from '../store/authStore.js';
 import { useDashboardFilters } from '../hooks/useDashboardFilters.js';
 import { usePageSize } from '../hooks/usePageSize.js';
@@ -16,6 +16,7 @@ import ActionsMenu from '../components/dashboard/ActionsMenu.jsx';
 import TaskFormModal from '../components/task/TaskFormModal.jsx';
 import UpdateModal from '../components/task/UpdateModal.jsx';
 import PreviousUpdatesModal from '../components/task/PreviousUpdatesModal.jsx';
+import SendNotificationDialog from '../components/admin/SendNotificationDialog.jsx';
 import ConfirmDialog from '../components/common/ConfirmDialog.jsx';
 import Spinner from '../components/common/Spinner.jsx';
 import { PageActions } from '../contexts/PageActionsPortal.jsx';
@@ -50,6 +51,10 @@ function DashboardPage() {
   const [closingTask, setClosingTask] = useState(null);
   const [updatingTask, setUpdatingTask] = useState(null);
   const [viewingUpdatesTask, setViewingUpdatesTask] = useState(null);
+  // null (closed) | { task: null } (general "نئی اطلاع بھیجیں") | { task } (row's "یاددہانی
+  // بھیجیں" — locked blueprint §10: the SAME dialog backs both entry points, just with the task
+  // pre-supplied or not, per §8.
+  const [sendNotificationState, setSendNotificationState] = useState(null);
   const closeTaskMutation = useCloseTask(closingTask?.id);
 
   // Lifted here (rather than owned inside TaskTable, as it was through Phase 10.5) — TaskTable
@@ -113,6 +118,17 @@ function DashboardPage() {
               >
                 <BellRing className="h-4 w-4" aria-hidden="true" />
                 یاد دہانیاں بھیجیں
+              </button>
+            )}
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => setSendNotificationState({ task: null })}
+                title="نئی اطلاع بھیجیں"
+                className="flex h-10 items-center gap-1 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 hover:border-brand/40 hover:bg-brand-light"
+              >
+                <Send className="h-4 w-4" aria-hidden="true" />
+                نئی اطلاع بھیجیں
               </button>
             )}
             {isAdmin && (
@@ -238,6 +254,7 @@ function DashboardPage() {
           onEdit={(task) => setFormModal({ mode: 'edit', task })}
           onUpdate={(task) => setUpdatingTask(task)}
           onViewUpdates={(task) => setViewingUpdatesTask(task)}
+          onSendReminder={(task) => setSendNotificationState({ task })}
           columnVisibility={columnVisibility}
           sortBy={sortBy}
           sortOrder={sortOrder}
@@ -283,6 +300,14 @@ function DashboardPage() {
         taskId={viewingUpdatesTask?.id}
         onClose={() => setViewingUpdatesTask(null)}
       />
+
+      {isAdmin && (
+        <SendNotificationDialog
+          isOpen={Boolean(sendNotificationState)}
+          task={sendNotificationState?.task}
+          onClose={() => setSendNotificationState(null)}
+        />
+      )}
     </div>
   );
 }

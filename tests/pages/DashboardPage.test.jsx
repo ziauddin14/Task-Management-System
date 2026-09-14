@@ -75,6 +75,14 @@ vi.mock('../../src/services/reports.api.js', () => ({
   exportUserSummary: vi.fn(),
   triggerReminders: vi.fn().mockResolvedValue({ remindersSent: 3 }),
 }));
+// Phase 2 — SendNotificationDialog is now always mounted (admin-gated, inert while closed) inside
+// DashboardPage. Mocked defensively so any test that opens it never hits a real network call,
+// mirroring AppLayout.test.jsx's own precedent for NotificationBell in Phase 1.
+vi.mock('../../src/services/notifications.api.js', () => ({
+  sendAdminNotification: vi.fn(),
+  sendTaskReminder: vi.fn(),
+  getAdminNotificationHistory: vi.fn().mockResolvedValue({ items: [], meta: { page: 1, limit: 20, total: 0, totalPages: 1 } }),
+}));
 vi.mock('file-saver', () => ({ saveAs: vi.fn() }));
 
 import { closeTask } from '../../src/services/tasks.api.js';
@@ -369,5 +377,55 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
     const performanceCardsContainer = performanceHeading.nextElementSibling;
     expect(performanceCardsContainer).toHaveClass('grid', 'grid-cols-2', 'sm:grid-cols-3', 'md:grid-cols-5');
     expect(performanceCardsContainer.children).toHaveLength(5);
+  });
+
+  // Phase 2 (locked blueprint §5/§19) — "نئی اطلاع بھیجیں" is a distinct action from the existing
+  // "یاد دہانیاں بھیجیں", which keeps its Phase 3 meaning ("run the automatic reminder scan now")
+  // completely untouched by this addition.
+  describe('نئی اطلاع بھیجیں (Phase 2 manual notification composer)', () => {
+    it('admin sees both buttons, distinctly, and only "نئی اطلاع بھیجیں" opens SendNotificationDialog', async () => {
+      renderDashboard('admin');
+      await screen.findByText('260801');
+
+      expect(screen.getByRole('button', { name: /یاد دہانیاں بھیجیں/ })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /نئی اطلاع بھیجیں/ })).toBeInTheDocument();
+      // "تمام ذمہ داران" already appears elsewhere on the page (FilterBar's assignee-filter
+      // <option>) — the dialog-specific check is the radio INPUT's own label, not the bare text.
+      expect(screen.queryByLabelText('تمام ذمہ داران')).not.toBeInTheDocument(); // dialog not open yet
+
+      fireEvent.click(screen.getByRole('button', { name: /نئی اطلاع بھیجیں/ }));
+
+      expect(await screen.findByLabelText('تمام ذمہ داران')).toBeInTheDocument();
+    });
+
+    it('clicking "یاد دہانیاں بھیجیں" still only triggers the existing trigger-reminders mutation, never opens the new dialog', async () => {
+      renderDashboard('admin');
+      await screen.findByText('260801');
+
+      fireEvent.click(screen.getByRole('button', { name: /یاد دہانیاں بھیجیں/ }));
+
+      await waitFor(() => expect(triggerReminders).toHaveBeenCalled());
+      expect(screen.queryByLabelText('تمام ذمہ داران')).not.toBeInTheDocument();
+    });
+
+    it('a non-admin user sees neither button', async () => {
+      renderDashboard('user');
+      await screen.findByText('260801');
+
+      expect(screen.queryByRole('button', { name: /یاد دہانیاں بھیجیں/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /نئی اطلاع بھیجیں/ })).not.toBeInTheDocument();
+    });
+
+    it("the task row's یاددہانی بھیجیں action opens the SAME dialog locked to that task (Flow C)", async () => {
+      renderDashboard('admin');
+      await screen.findByText('260801');
+
+      fireEvent.click(screen.getByLabelText('اقدامات'));
+      fireEvent.click(screen.getByLabelText('یاددہانی بھیجیں'));
+
+      // Row-triggered mode: no recipient-type picker, the task is shown read-only instead.
+      expect(await screen.findByText('یاددہانی بھیجیں', { selector: 'h2' })).toBeInTheDocument();
+      expect(screen.queryByLabelText('تمام ذمہ داران')).not.toBeInTheDocument();
+    });
   });
 });

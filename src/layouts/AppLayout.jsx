@@ -6,6 +6,7 @@ import { useAuthStore } from '../store/authStore.js';
 import { useSidebarCollapsed } from '../hooks/useSidebarCollapsed.js';
 import Sidebar from '../components/common/Sidebar.jsx';
 import LogoMark from '../components/common/LogoMark.jsx';
+import NotificationBell from '../components/common/NotificationBell.jsx';
 import { PageActionsPortalProvider } from '../contexts/PageActionsPortal.jsx';
 
 // docs/08-ui-ux.md §3 item 1 — right-side navigation (Sidebar.jsx, Prompt 5C — RTL's natural
@@ -99,6 +100,9 @@ function AppLayout() {
           </div>
 
           <div className="flex items-center justify-end gap-1">
+            {/* Phase 1 — locked blueprint §Frontend Architecture: mounted here, next to the
+                existing user-info block. */}
+            <NotificationBell />
             <div className="hidden text-end leading-tight sm:block">
               <span className="text-sm font-medium text-gray-900">
                 {user?.name}

@@ -39,6 +39,7 @@ function renderTable(overrides = {}) {
   const onUpdate = vi.fn();
   const onViewUpdates = vi.fn();
   const onSortChange = vi.fn();
+  const onSendReminder = vi.fn();
   const utils = render(
     <Harness
       tasks={[baseTask]}
@@ -53,13 +54,14 @@ function renderTable(overrides = {}) {
       onEdit={onEdit}
       onUpdate={onUpdate}
       onViewUpdates={onViewUpdates}
+      onSendReminder={onSendReminder}
       sortBy="deadline"
       sortOrder="asc"
       onSortChange={onSortChange}
       {...overrides}
     />
   );
-  return { ...utils, onPageChange, onPageSizeChange, onEdit, onUpdate, onViewUpdates, onSortChange };
+  return { ...utils, onPageChange, onPageSizeChange, onEdit, onUpdate, onViewUpdates, onSendReminder, onSortChange };
 }
 
 describe('TaskTable (docs/08-ui-ux.md §6)', () => {
@@ -162,6 +164,19 @@ describe('TaskTable (docs/08-ui-ux.md §6)', () => {
     renderTable({ isAdmin: false });
     fireEvent.click(screen.getByLabelText('اقدامات'));
     expect(screen.queryByLabelText('ترمیم کریں')).not.toBeInTheDocument();
+  });
+
+  it('User role: no "یاددہانی بھیجیں" row action (Phase 2, admin-only)', () => {
+    renderTable({ isAdmin: false });
+    fireEvent.click(screen.getByLabelText('اقدامات'));
+    expect(screen.queryByLabelText('یاددہانی بھیجیں')).not.toBeInTheDocument();
+  });
+
+  it('Admin role: "یاددہانی بھیجیں" row action appears and calls onSendReminder with the row\'s task', () => {
+    const { onSendReminder } = renderTable({ isAdmin: true });
+    fireEvent.click(screen.getByLabelText('اقدامات'));
+    fireEvent.click(screen.getByLabelText('یاددہانی بھیجیں'));
+    expect(onSendReminder).toHaveBeenCalledWith(baseTask);
   });
 
   it('Admin role: Edit row action appears and calls its handler', () => {

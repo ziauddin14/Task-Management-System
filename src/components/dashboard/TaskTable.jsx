@@ -1,6 +1,6 @@
 import React from 'react'; // explicit import — see src/App.jsx's comment for why
 import clsx from 'clsx';
-import { ChevronUp, ChevronDown, ChevronsUpDown, Upload, History, Pencil, MoreVertical } from 'lucide-react';
+import { ChevronUp, ChevronDown, ChevronsUpDown, Upload, History, Pencil, MoreVertical, Bell } from 'lucide-react';
 import { FloatingPortal } from '@floating-ui/react';
 import Spinner from '../common/Spinner.jsx';
 import EmptyState from '../common/EmptyState.jsx';
@@ -163,6 +163,7 @@ function TaskTable({
   onEdit,
   onUpdate,
   onViewUpdates,
+  onSendReminder,
   columnVisibility,
   sortBy,
   sortOrder,
@@ -336,6 +337,18 @@ function TaskTable({
                             label="ترمیم کریں"
                             onClick={() => onEdit(task)}
                             disabled={isClosed}
+                            variant="menuItem"
+                          />
+                        )}
+                        {/* Locked blueprint §Phase 2/§10 — admin-only, Flow C's row-level entry
+                            point. Reuses the same SendNotificationDialog as the header's "نئی
+                            اطلاع بھیجیں" button (DashboardPage.jsx), just pre-supplied with this
+                            row's task so it opens locked to Flow C — no separate page/modal. */}
+                        {isAdmin && (
+                          <IconActionButton
+                            icon={Bell}
+                            label="یاددہانی بھیجیں"
+                            onClick={() => onSendReminder(task)}
                             variant="menuItem"
                           />
                         )}

@@ -7,6 +7,17 @@ import AppLayout from '../../src/layouts/AppLayout.jsx';
 import { useAuthStore } from '../../src/store/authStore.js';
 import { PageActions } from '../../src/contexts/PageActionsPortal.jsx';
 
+// Phase 1 — AppLayout now always mounts <NotificationBell/>, which fires a real
+// useUnreadNotificationCount() query on every render. Mocked here (rather than left to hit a real,
+// unreachable API in this test environment) so this file's existing assertions/timings are
+// unaffected — NotificationBell/NotificationDrawer get their own dedicated test coverage.
+vi.mock('../../src/services/notifications.api.js', () => ({
+  getUnreadNotificationCount: vi.fn().mockResolvedValue({ count: 0 }),
+  getNotifications: vi.fn().mockResolvedValue({ items: [], meta: { page: 1, limit: 20, total: 0, totalPages: 1 } }),
+  markNotificationRead: vi.fn(),
+  markAllNotificationsRead: vi.fn(),
+}));
+
 function PageWithNavbarAction() {
   return (
     <div>
