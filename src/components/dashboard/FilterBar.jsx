@@ -51,7 +51,10 @@ function FilterBar({ filtersHook, isAdmin }) {
         </select>
       )}
 
-      <div className="flex items-center gap-1">
+      {/* flex-wrap — this trio (type + two date inputs) was a non-wrapping flex item inside the
+          outer flex-wrap bar, so it could overflow a narrow viewport on its own even though the
+          bar itself wrapped correctly around it. */}
+      <div className="flex flex-wrap items-center gap-1">
         <select
           value={dateType}
           onChange={(event) => setFilter('dateType', event.target.value)}

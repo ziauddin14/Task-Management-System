@@ -18,7 +18,7 @@ function UsersPage() {
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
-      <div className="flex items-center justify-between border-b-2 border-brand/10 pb-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-brand/10 pb-3">
         <h1 className="text-3xl font-bold text-gray-900">صارفین</h1>
         <button
           type="button"

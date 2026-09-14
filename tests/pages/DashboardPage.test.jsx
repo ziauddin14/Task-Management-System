@@ -348,24 +348,26 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
     expect(gridContainer).toHaveClass('md:grid-cols-2');
   });
 
-  // Prompt — TMS Dashboard responsive fix: each group's own 5 cards use a CSS Grid
-  // (grid-cols-5), not flex-wrap, so they can never wrap onto a second line regardless of
-  // viewport width (a flex item's default min-width:auto can force wrapping even when the
-  // parent has room; a grid track's minmax(0,1fr) genuinely has none) — see browser-verified
-  // screenshots at 1366/1440/1920px for the actual rendered proof.
-  it('each KPI group renders its 5 cards in a grid-cols-5 container (never wraps)', async () => {
+  // Prompt — TMS Dashboard responsive fix: each group's own 5 cards use a CSS Grid (a grid
+  // track's minmax(0,1fr) genuinely has a zero min-width floor, unlike a flex item's
+  // min-width:auto), so they never wrap via a layout bug — but the column COUNT itself is now
+  // responsive on purpose (2-up on a phone, 3-up on a tablet, the original one-row-of-5 from
+  // `md`/768px up unchanged) rather than "grid-cols-5 regardless of viewport width", which
+  // crushed 5 Urdu-labeled cards into unreadable slivers below ~480px — see browser-verified
+  // screenshots at 375/768/1366/1920px for the actual rendered proof.
+  it('each KPI group renders its 5 cards in a responsive grid (2-up mobile, 3-up tablet, 5-up desktop)', async () => {
     renderDashboard('admin');
     await screen.findByText('260801');
 
     const statusHeading = screen.getByText('کام کی کیفیت');
     const statusCardsContainer = statusHeading.nextElementSibling;
-    expect(statusCardsContainer).toHaveClass('grid', 'grid-cols-5');
+    expect(statusCardsContainer).toHaveClass('grid', 'grid-cols-2', 'sm:grid-cols-3', 'md:grid-cols-5');
     expect(statusCardsContainer.children).toHaveLength(5);
 
     // "کارکردگی" also labels the table's Performance column header — scope to the <p> group label.
     const performanceHeading = screen.getAllByText('کارکردگی').find((el) => el.tagName === 'P');
     const performanceCardsContainer = performanceHeading.nextElementSibling;
-    expect(performanceCardsContainer).toHaveClass('grid', 'grid-cols-5');
+    expect(performanceCardsContainer).toHaveClass('grid', 'grid-cols-2', 'sm:grid-cols-3', 'md:grid-cols-5');
     expect(performanceCardsContainer.children).toHaveLength(5);
   });
 });

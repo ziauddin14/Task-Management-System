@@ -117,9 +117,15 @@ function AppLayout() {
         </header>
 
         <main className="min-w-0 flex-1 p-4 md:p-6">
-          <PageActionsPortalProvider target={actionsSlot}>
-            <Outlet />
-          </PageActionsPortalProvider>
+          {/* max-w-[1920px] mx-auto — no padding of its own, so DashboardPage's own -mx-4/md:-mx-6
+              sticky-header bleed still reaches exactly this wrapper's edges unchanged below the
+              cap. Only engages past a standard 1080p-class desktop, keeping KPI cards/tables from
+              stretching edge-to-edge into a giant spreadsheet on an ultrawide monitor. */}
+          <div className="mx-auto w-full max-w-[1920px]">
+            <PageActionsPortalProvider target={actionsSlot}>
+              <Outlet />
+            </PageActionsPortalProvider>
+          </div>
         </main>
       </div>
 

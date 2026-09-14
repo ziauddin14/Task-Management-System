@@ -32,8 +32,11 @@ function UserSummaryReportPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between border-b-2 border-brand/10 pb-3">
-        <h1 className="text-3xl font-bold text-gray-900">User Summary Report</h1>
+      {/* flex-wrap + a slightly smaller mobile heading — "User Summary Report" is a long,
+          non-wrapping English string next to two buttons; unlike DashboardPage's short Urdu
+          heading, this one alone risked overflowing a phone-width row. */}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-brand/10 pb-3">
+        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">User Summary Report</h1>
         <div className="flex items-center gap-2">
           <ColumnToggle
             columns={USER_SUMMARY_COLUMN_DEFINITIONS}

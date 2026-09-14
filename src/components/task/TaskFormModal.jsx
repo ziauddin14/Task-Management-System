@@ -130,8 +130,11 @@ function TaskFormModal({ isOpen, onClose, mode, task }) {
         {/* Prompt 3A — Zimmedar/Zimmedari/Akhri Tareekh share one row instead of stacking three
             separate blocks, which is most of the vertical space this change reclaims (the row's
             height is only as tall as its tallest column, the assignee picker, rather than the sum
-            of all three). */}
-        <div className="grid grid-cols-3 gap-2">
+            of all three). Responsive fix — the assignee picker alone (search input + a checkbox
+            list of names) genuinely does not fit a ~100px-wide grid column on a phone; single
+            column below `sm` stacks all three full-width, reverting to the original 3-up row at
+            `sm` (640px) and up where there's actually room for it. */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-2">
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="assignee-search">
               ذمہ دار

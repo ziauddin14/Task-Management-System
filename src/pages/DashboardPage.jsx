@@ -91,11 +91,18 @@ function DashboardPage() {
           sticky unit: top-16 seats it flush against AppLayout's own sticky h-16 header, so between
           the two there's never a gap the table can show through while scrolling. A solid
           background is required here — without one, the table's own rows would show through as
-          they scroll underneath this block. */}
-      <div className="no-print sticky top-16 z-20 -mx-4 flex flex-col gap-3 bg-gray-50 px-4 pb-3 pt-4 md:-mx-6 md:px-6">
-        <div className="flex items-center justify-between border-b-2 border-brand/10 pb-3">
+          they scroll underneath this block.
+
+          Responsive fix — sticky only from `md` (768px) up. Below that, the KPI cards' own mobile
+          reflow (2-up instead of one row of 5) makes this whole block taller than a phone's
+          viewport; kept sticky there, it would pin itself across the entire screen and the task
+          table below it could never scroll into view. Unstuck on mobile, it just scrolls away
+          normally like the rest of the page — no functionality lost, since "stays visible while
+          scrolling the table" was never achievable on a screen shorter than the block itself. */}
+      <div className="no-print z-20 -mx-4 flex flex-col gap-3 bg-gray-50 px-4 pb-3 pt-4 md:sticky md:top-16 md:-mx-6 md:px-6">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-brand/10 pb-3">
           <h1 className="text-3xl font-bold text-gray-900">ڈیش بورڈ</h1>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {isAdmin && (
               <button
                 type="button"
@@ -131,7 +138,10 @@ function DashboardPage() {
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:divide-x md:divide-brand/25">
               <div className="md:pe-4">
                 <p className="mb-1.5 text-center text-sm font-semibold text-gray-700">کام کی کیفیت</p>
-                <div className="grid grid-cols-5 gap-1.5">
+                {/* Responsive fix — was a bare grid-cols-5, which crushed 5 Urdu-labeled cards into
+                    unreadable slivers below ~480px; reflows 2-up on mobile, 3-up on tablet, and
+                    keeps the original one-row-of-5 from `md` (768px) up unchanged. */}
+                <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 md:grid-cols-5">
                   {STATUS_KEYS.map((key) => {
                     const entry = summaryQuery.data.byStatus[key] || { count: 0, percent: 0 };
                     return (
@@ -160,7 +170,7 @@ function DashboardPage() {
 
               <div className="md:ps-4">
                 <p className="mb-1.5 text-center text-sm font-semibold text-gray-700">کارکردگی</p>
-                <div className="grid grid-cols-5 gap-1.5">
+                <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 md:grid-cols-5">
                   {PERFORMANCE_SUMMARY_KEYS.map((key) => {
                     const entry = summaryQuery.data.byPerformance[key] || { count: 0, percent: 0 };
                     const ratingValue = PERFORMANCE_SUMMARY_KEY_TO_VALUE[key];
