@@ -56,7 +56,7 @@ describe('useSubscribeToPush', () => {
     expect(toast.success).toHaveBeenCalledTimes(1);
   });
 
-  it('stops quietly (no error, no backend call, no toast) when permission is denied', async () => {
+  it('resolves (not throws) with a distinguishable reason when permission is denied — no backend call, no toast', async () => {
     Notification.requestPermission.mockResolvedValue('denied');
 
     const { result } = renderHook(() => useSubscribeToPush(), { wrapper: createWrapper() });
@@ -66,7 +66,25 @@ describe('useSubscribeToPush', () => {
 
     expect(subscribeBrowserToPush).not.toHaveBeenCalled();
     expect(subscribeToPush).not.toHaveBeenCalled();
-    expect(result.current.data).toEqual({ granted: false });
+    expect(result.current.data).toEqual({ granted: false, reason: 'permission-not-granted', permission: 'denied' });
+    expect(toast.success).not.toHaveBeenCalled();
+  });
+
+  // Audit fix — this used to be swallowed entirely (only a console.error, no way for a caller to
+  // detect it happened at all). Now it must propagate as a real mutation error so
+  // PushPermissionBanner.jsx can render its name/message on-screen.
+  it('propagates a real thrown error (e.g. pushManager.subscribe() rejecting) as the mutation error, not silently', async () => {
+    Notification.requestPermission.mockResolvedValue('granted');
+    const thrown = Object.assign(new Error('Registration failed - permission denied'), { name: 'NotAllowedError' });
+    subscribeBrowserToPush.mockRejectedValue(thrown);
+
+    const { result } = renderHook(() => useSubscribeToPush(), { wrapper: createWrapper() });
+    result.current.mutate();
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    expect(result.current.error).toBe(thrown);
+    expect(subscribeToPush).not.toHaveBeenCalled();
     expect(toast.success).not.toHaveBeenCalled();
   });
 });
