@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import clsx from 'clsx';
-import { LayoutDashboard, Users, FileText, LogOut, X, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { LayoutDashboard, Settings, Users, FileText, LogOut, X, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import LogoMark from './LogoMark.jsx';
 
 // Matches Tailwind's default `md` breakpoint (768px) — the same one the CSS classes below use to
@@ -56,6 +56,8 @@ function Sidebar({ isOpen, onClose, isAdmin, onLogout, collapsed, onToggleCollap
 
   const links = [
     { to: '/', label: 'ڈیش بورڈ', icon: LayoutDashboard, end: true },
+    // Web Push addition — personal, available to every user, not just Admins.
+    { to: '/settings', label: 'ترتیبات', icon: Settings, end: false },
     ...(isAdmin ? [{ to: '/users', label: 'تمام یوزرز', icon: Users, end: false }] : []),
     ...(isAdmin ? [{ to: '/reports/user-summary', label: 'یوزر سمری رپورٹ', icon: FileText, end: false }] : []),
   ];

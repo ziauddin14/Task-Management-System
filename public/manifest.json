@@ -1,0 +1,19 @@
+{
+  "name": "ٹاسک مینجمنٹ سسٹم",
+  "short_name": "ٹاسک مینجمنٹ",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1F6F3F",
+  "dir": "rtl",
+  "lang": "ur",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "300x300",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

@@ -19,6 +19,7 @@ import PreviousUpdatesModal from '../components/task/PreviousUpdatesModal.jsx';
 import SendNotificationDialog from '../components/admin/SendNotificationDialog.jsx';
 import ConfirmDialog from '../components/common/ConfirmDialog.jsx';
 import Spinner from '../components/common/Spinner.jsx';
+import PushPermissionBanner from '../components/common/PushPermissionBanner.jsx';
 import { PageActions } from '../contexts/PageActionsPortal.jsx';
 import {
   STATUS_META,
@@ -92,6 +93,11 @@ function DashboardPage() {
 
   return (
     <div className="flex min-w-0 flex-col gap-3">
+      {/* Web Push addition — deliberately outside the sticky header block below: this banner
+          appears once (if at all) and disappears for good once dismissed/decided, so it should
+          never be pinned like the KPI/filter block is. */}
+      <PushPermissionBanner />
+
       {/* Prompt — Navbar + this whole block (heading, KPI cards, filter bar) together read as one
           sticky unit: top-16 seats it flush against AppLayout's own sticky h-16 header, so between
           the two there's never a gap the table can show through while scrolling. A solid

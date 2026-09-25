@@ -6,6 +6,7 @@ import RoleGuard from '../components/common/RoleGuard.jsx';
 import AppLayout from '../layouts/AppLayout.jsx';
 import LoginPage from '../pages/LoginPage.jsx';
 import DashboardPage from '../pages/DashboardPage.jsx';
+import SettingsPage from '../pages/SettingsPage.jsx';
 import UsersPage from '../pages/UsersPage.jsx';
 import UserSummaryReportPage from '../pages/UserSummaryReportPage.jsx';
 import UnauthorizedPage from '../pages/UnauthorizedPage.jsx';
@@ -32,6 +33,9 @@ function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<DashboardPage />} />
+          {/* Web Push addition — personal, not admin-only (every user, not just Admins, may want
+              push on/off for their own device), so it sits outside the RoleGuard below. */}
+          <Route path="/settings" element={<SettingsPage />} />
 
           <Route element={<RoleGuard role="admin" />}>
             <Route path="/users" element={<UsersPage />} />
