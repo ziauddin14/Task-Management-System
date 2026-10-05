@@ -51,6 +51,19 @@ function FilterBar({ filtersHook, isAdmin }) {
         </select>
       )}
 
+      {/* Where a rating came from: developer-assigned ("تخمینی") or real ("اصل"). Narrows the table,
+          the KPI cards and an export alike (backend: ratingSource). */}
+      <select
+        value={params.ratingSource || ''}
+        onChange={(event) => setFilter('ratingSource', event.target.value || undefined)}
+        aria-label="Rating source filter"
+        className="h-10 rounded-lg border border-gray-300 px-2 focus:border-brand focus:outline-none"
+      >
+        <option value="">تمام درجہ بندی</option>
+        <option value="synthetic">تخمینی</option>
+        <option value="real">اصل</option>
+      </select>
+
       {/* flex-wrap — this trio (type + two date inputs) was a non-wrapping flex item inside the
           outer flex-wrap bar, so it could overflow a narrow viewport on its own even though the
           bar itself wrapped correctly around it. */}

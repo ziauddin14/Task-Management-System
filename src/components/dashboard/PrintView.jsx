@@ -2,7 +2,8 @@ import React from 'react'; // explicit import — see src/App.jsx's comment for 
 import clsx from 'clsx';
 import EmptyState from '../common/EmptyState.jsx';
 import { formatDateShortYear, formatTimeStatusLabel } from '../../utils/formatDate.js';
-import { getStatusMeta, getPerformanceMeta } from '../../utils/taskDisplay.js';
+import { getStatusMeta, getPerformanceMeta, isSyntheticRating } from '../../utils/taskDisplay.js';
+import SyntheticBadge from './SyntheticBadge.jsx';
 import { COLUMN_DEFINITIONS } from '../../utils/dashboardColumns.js';
 
 // Prompt 2F — headers here now come from the same COLUMN_DEFINITIONS TaskTable.jsx uses, instead
@@ -72,6 +73,9 @@ function PrintView({ tasks, isVisible }) {
                 {isVisible('performance') && (
                   <td className="whitespace-nowrap px-2 py-1">
                     <span className={clsx('rounded-full px-1.5 py-0.5', performanceMeta.badgeClass)}>{performanceMeta.label}</span>
+                    {/* Print can't be hovered or tapped: a synthetic rating says so outright,
+                        with its assumed percent. The real completion percent stays in its own column. */}
+                    {isSyntheticRating(task) && <SyntheticBadge static assumedPercent={task.syntheticRating.assumedPercent} className="ms-1" />}
                   </td>
                 )}
               </tr>

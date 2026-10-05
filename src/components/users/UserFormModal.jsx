@@ -80,9 +80,11 @@ function UserFormModal({ isOpen, onClose, mode, user }) {
     // before the mutation fires; reactivating or an unrelated field change does not.
     if (isEdit && user?.isActive && values.isActive === false) {
       setPendingValues(values);
-      return;
+      return undefined;
     }
-    submit(values);
+    // Returned so react-hook-form's handleSubmit waits for it: `isSubmitting` (the Save button's
+    // busy state) stays true until the request settles, instead of flipping back at once.
+    return submit(values);
   }
 
   return (
@@ -169,7 +171,9 @@ function UserFormModal({ isOpen, onClose, mode, user }) {
             </button>
             <BusyButton
               type="submit"
-              busy={isSubmitting}
+              // mutation.isPending covers the save that follows the deactivation confirmation: by
+              // then the form's own submit has already returned, so isSubmitting alone would miss it.
+              busy={isSubmitting || mutation.isPending}
               busyLabel="محفوظ ہو رہا ہے…"
               className="h-10 min-w-[40px] rounded-lg bg-brand px-4 text-white hover:bg-brand/90 disabled:opacity-50"
             >

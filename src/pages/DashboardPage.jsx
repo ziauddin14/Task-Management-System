@@ -10,12 +10,14 @@ import { useColumnVisibility } from '../hooks/useColumnVisibility.js';
 import { useExportReport } from '../hooks/useExportReport.js';
 import { useTriggerReminders } from '../hooks/useTriggerReminders.js';
 import KpiCard from '../components/dashboard/KpiCard.jsx';
+import RatingKpiGroup from '../components/dashboard/RatingKpiGroup.jsx';
 import FilterBar from '../components/dashboard/FilterBar.jsx';
 import TaskTable from '../components/dashboard/TaskTable.jsx';
 import ActionsMenu from '../components/dashboard/ActionsMenu.jsx';
 import TaskFormModal from '../components/task/TaskFormModal.jsx';
 import UpdateModal from '../components/task/UpdateModal.jsx';
 import PreviousUpdatesModal from '../components/task/PreviousUpdatesModal.jsx';
+import SyntheticRatingDialog from '../components/task/SyntheticRatingDialog.jsx';
 import SendNotificationDialog from '../components/admin/SendNotificationDialog.jsx';
 import ConfirmDialog from '../components/common/ConfirmDialog.jsx';
 import LoadingPhrase from '../components/common/LoadingPhrase.jsx';
@@ -23,17 +25,10 @@ import BusyButton from '../components/common/BusyButton.jsx';
 import BusyRegion from '../components/common/BusyRegion.jsx';
 import PushPermissionBanner from '../components/common/PushPermissionBanner.jsx';
 import { PageActions } from '../contexts/PageActionsPortal.jsx';
-import {
-  STATUS_META,
-  getStatusMeta,
-  getPerformanceMeta,
-  PERFORMANCE_SUMMARY_KEY_TO_VALUE,
-  PERFORMANCE_CARD_NOT_APPLICABLE_LABEL,
-} from '../utils/taskDisplay.js';
+import { STATUS_META, getStatusMeta } from '../utils/taskDisplay.js';
 import { COLUMN_DEFINITIONS } from '../utils/dashboardColumns.js';
 
 const STATUS_KEYS = Object.keys(STATUS_META);
-const PERFORMANCE_SUMMARY_KEYS = Object.keys(PERFORMANCE_SUMMARY_KEY_TO_VALUE);
 const COLUMN_STORAGE_KEY = 'dashboard.visibleColumns.v1';
 
 // docs/08-ui-ux.md §3 — top to bottom: header (AppLayout, already wired, ایکشن menu portalled
@@ -45,10 +40,20 @@ function DashboardPage() {
 
   const [pageSize, setPageSize] = usePageSize();
   const filtersHook = useDashboardFilters(pageSize);
-  const { apiFilters, page, params, sortBy, sortOrder, toggleKpiFilter, setFilters, setSort, setPage } = filtersHook;
+  const { apiFilters, statusSummaryFilters, ratingSummaryFilters, page, params, sortBy, sortOrder, toggleKpiFilter, setFilters, setSort, setPage } =
+    filtersHook;
 
   const tasksQuery = useTasks(apiFilters);
-  const summaryQuery = useDashboardSummary();
+  // The KPI cards follow the dashboard's filters: the same filter state the table uses, minus
+  // sort/paging — and each group of cards minus its OWN filter, so the group a card was clicked in
+  // keeps showing the whole distribution (see useDashboardFilters). Hence two reads of the same
+  // endpoint; with no status and no rating chosen they are one and the same request.
+  const statusSummaryQuery = useDashboardSummary(statusSummaryFilters);
+  const ratingSummaryQuery = useDashboardSummary(ratingSummaryFilters);
+  const statusSummary = statusSummaryQuery.data;
+  const ratingSummary = ratingSummaryQuery.data;
+  const isSummaryLoading = statusSummaryQuery.isLoading || ratingSummaryQuery.isLoading;
+  const isSummaryRefreshing = statusSummaryQuery.isPlaceholderData || ratingSummaryQuery.isPlaceholderData;
 
   const [formModal, setFormModal] = useState(null); // { mode: 'create' } | { mode: 'edit', task }
   const [closingTask, setClosingTask] = useState(null);
@@ -58,6 +63,8 @@ function DashboardPage() {
   // بھیجیں" — locked blueprint §10: the SAME dialog backs both entry points, just with the task
   // pre-supplied or not, per §8.
   const [sendNotificationState, setSendNotificationState] = useState(null);
+  // Admin-only: the task whose synthetic ("تخمینی") rating is being changed, or null.
+  const [syntheticRatingTask, setSyntheticRatingTask] = useState(null);
   const closeTaskMutation = useCloseTask(closingTask?.id);
 
   // Lifted here (rather than owned inside TaskTable, as it was through Phase 10.5) — TaskTable
@@ -106,13 +113,15 @@ function DashboardPage() {
           background is required here — without one, the table's own rows would show through as
           they scroll underneath this block.
 
-          Responsive fix — sticky only from `md` (768px) up. Below that, the KPI cards' own mobile
-          reflow (2-up instead of one row of 5) makes this whole block taller than a phone's
-          viewport; kept sticky there, it would pin itself across the entire screen and the task
-          table below it could never scroll into view. Unstuck on mobile, it just scrolls away
-          normally like the rest of the page — no functionality lost, since "stays visible while
-          scrolling the table" was never achievable on a screen shorter than the block itself. */}
-      <div className="no-print z-20 -mx-4 flex flex-col gap-3 bg-gray-50 px-4 pb-3 pt-4 md:sticky md:top-16 md:-mx-6 md:px-6">
+          Responsive fix — sticky only from `xl` (1280px) up, the width at which the two KPI
+          groups fit side by side (see the grid below). Below that the groups are stacked and the
+          cards reflow, which makes this whole block tall: kept sticky there, it would pin itself
+          across most of the screen and the task table below it could barely (on a phone, never)
+          scroll into view. Unstuck, it just scrolls away normally like the rest of the page — no
+          functionality lost, since "stays visible while scrolling the table" was never achievable
+          on a screen shorter than the block itself. (It used to switch at `md`/768px, where the
+          side-by-side groups left each card about 40px wide once the sidebar took its share.) */}
+      <div className="no-print z-20 -mx-4 flex flex-col gap-3 bg-gray-50 px-4 pb-3 pt-4 md:-mx-6 md:px-6 xl:sticky xl:top-16">
         {/* BusyRegion: while "یاد دہانیاں بھیجیں" is in flight, the loading phrase shows on its own
             line under this header row (lineClassName cancels the column's own gap above it). */}
         <BusyRegion lineClassName="-mt-2">
@@ -156,22 +165,26 @@ function DashboardPage() {
           </div>
         </BusyRegion>
 
-        {summaryQuery.isLoading && <LoadingPhrase label="خلاصہ لوڈ ہو رہا ہے۔۔۔" />}
+        {isSummaryLoading && <LoadingPhrase label="خلاصہ لوڈ ہو رہا ہے۔۔۔" />}
 
-        {summaryQuery.data && (
+        {statusSummary && ratingSummary && (
           <div className="flex flex-col gap-2">
-            {/* Prompt — a subtle brand-colored divider (md:divide-x) now separates the two
-                groups; each group's own label is centered above its cards (was start-aligned with
-                a side accent bar before). */}
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:divide-x md:divide-brand/25">
-              <div className="md:pe-4">
+            {/* Prompt — a subtle brand-colored divider (xl:divide-x) separates the two groups;
+                each group's own label is centered above its cards (was start-aligned with a side
+                accent bar before). Side by side only from `xl`: any narrower and ten cards in one
+                row are too thin to hold a count and a percentage — the groups stack instead, each
+                with its own full-width row of five from `md`. */}
+            <div className="grid grid-cols-1 gap-3 xl:grid-cols-2 xl:divide-x xl:divide-brand/25">
+              <div className="xl:pe-4">
                 <p className="mb-1.5 text-center text-sm font-semibold text-gray-700">کام کی کیفیت</p>
                 {/* Responsive fix — was a bare grid-cols-5, which crushed 5 Urdu-labeled cards into
                     unreadable slivers below ~480px; reflows 2-up on mobile, 3-up on tablet, and
                     keeps the original one-row-of-5 from `md` (768px) up unchanged. */}
-                <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 md:grid-cols-5">
+                <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 md:grid-cols-5" aria-busy={statusSummaryQuery.isPlaceholderData || undefined}>
                   {STATUS_KEYS.map((key) => {
-                    const entry = summaryQuery.data.byStatus[key] || { count: 0, percent: 0 };
+                    // From the summary asked for WITHOUT the status filter: the four cards always
+                    // show the whole status distribution of the tasks the other filters leave.
+                    const entry = statusSummary.byStatus[key] || { count: 0, percent: 0 };
                     return (
                       <KpiCard
                         key={key}
@@ -186,38 +199,30 @@ function DashboardPage() {
                   {/* Prompt 2C item 5 — a 5th "Total" card: every task regardless of status, from
                       the summary's own top-level total (not a byStatus bucket, so there's no
                       single status value to toggle active/inactive on) — clicking it clears both
-                      KPI filters, the same "see everything" action as the Clear filter link below. */}
+                      KPI filters, the same "see everything" action as the Clear filter link below.
+                      Like the four cards beside it, it is not narrowed by the status filter. */}
                   <KpiCard
                     label="مجموعی"
-                    count={summaryQuery.data.total}
+                    count={statusSummary.total}
                     active={false}
                     onClick={() => setFilters({ status: undefined, performanceRating: undefined })}
                   />
                 </div>
               </div>
 
-              <div className="md:ps-4">
+              <div className="xl:ps-4">
                 <p className="mb-1.5 text-center text-sm font-semibold text-gray-700">کارکردگی</p>
-                <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 md:grid-cols-5">
-                  {PERFORMANCE_SUMMARY_KEYS.map((key) => {
-                    const entry = summaryQuery.data.byPerformance[key] || { count: 0, percent: 0 };
-                    const ratingValue = PERFORMANCE_SUMMARY_KEY_TO_VALUE[key];
-                    // Prompt 2D item 5 — the "notApplicable" card gets the clearer card-only label
-                    // instead of getPerformanceMeta's bare "-" (which stays correct for a single
-                    // task's own badge elsewhere — see taskDisplay.js's comment on why these differ).
-                    const label = key === 'notApplicable' ? PERFORMANCE_CARD_NOT_APPLICABLE_LABEL : getPerformanceMeta(ratingValue).label;
-                    return (
-                      <KpiCard
-                        key={key}
-                        label={label}
-                        count={entry.count}
-                        percent={entry.percent}
-                        active={params.performanceRating === ratingValue}
-                        onClick={() => handleKpiClick('performanceRating', ratingValue)}
-                      />
-                    );
-                  })}
-                </div>
+                {/* KPI redesign — four band cards (count + share of the RATED tasks) and a real
+                    overall-quality card, replacing the old fifth card that showed the number of
+                    UNRATED tasks under the label "مجموعی کیفیت". Same component for an Admin (all
+                    tasks) and a normal user (their own): the scope is the server's. */}
+                <RatingKpiGroup
+                  ratings={ratingSummary.ratings}
+                  activeRating={params.performanceRating}
+                  onToggleRating={(rating) => handleKpiClick('performanceRating', rating)}
+                  // One "updating" line for the whole KPI block, whichever group is being refetched.
+                  isRefreshing={isSummaryRefreshing}
+                />
               </div>
             </div>
 
@@ -267,6 +272,7 @@ function DashboardPage() {
           onUpdate={(task) => setUpdatingTask(task)}
           onViewUpdates={(task) => setViewingUpdatesTask(task)}
           onSendReminder={(task) => setSendNotificationState({ task })}
+          onEditSyntheticRating={(task) => setSyntheticRatingTask(task)}
           columnVisibility={columnVisibility}
           sortBy={sortBy}
           sortOrder={sortOrder}
@@ -312,6 +318,14 @@ function DashboardPage() {
         taskId={viewingUpdatesTask?.id}
         onClose={() => setViewingUpdatesTask(null)}
       />
+
+      {isAdmin && (
+        <SyntheticRatingDialog
+          isOpen={Boolean(syntheticRatingTask)}
+          task={syntheticRatingTask}
+          onClose={() => setSyntheticRatingTask(null)}
+        />
+      )}
 
       {isAdmin && (
         <SendNotificationDialog

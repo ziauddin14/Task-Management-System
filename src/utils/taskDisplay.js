@@ -7,11 +7,10 @@
 // are shared by the KPI cards AND the per-task badge shown in the table/modals (docs/08-ui-ux.md
 // §1's own "consistent everywhere" rule), so every one of them reads correctly in both places.
 //
-// The "-" (not-applicable) entry deliberately keeps its bare-dash label here — it's still correct
-// for a single TASK row whose performance genuinely isn't applicable yet (ongoing/pending). The
-// KPI card's 5th "overall" bucket needing a clearer label than a bare dash (client's complaint) is
-// a DIFFERENT concern — see PERFORMANCE_CARD_NOT_APPLICABLE_LABEL below — conflating the two would
-// have mislabeled every ongoing task's row badge as "Overall" instead of "not applicable yet".
+// The "-" (not-applicable) entry keeps its bare-dash label — correct for a single TASK row that
+// has no rating. The KPI group no longer has a card for that bucket at all: its fifth card is the
+// real overall quality (an average), and unrated tasks are a plain count under the cards
+// (components/dashboard/RatingKpiGroup.jsx).
 export const STATUS_META = {
   ongoing: { label: 'جاری', badgeClass: 'bg-blue-100 text-blue-800' },
   pending: { label: 'پینڈنگ', badgeClass: 'bg-orange-100 text-orange-800' },
@@ -27,23 +26,31 @@ export const PERFORMANCE_META = {
   '-': { label: '-', badgeClass: 'bg-gray-100 text-gray-500' },
 };
 
-// Prompt 2D — the KPI card for the "notApplicable" bucket gets this label instead of the bare "-"
-// (the client found the dash confusing, "like something was broken"). Used only by
-// DashboardPage.jsx's 5th performance KpiCard — never by the per-task badge (PERFORMANCE_META
-// above), which legitimately means something different in that context (this task's performance
-// isn't applicable yet, not "here is the overall figure").
-export const PERFORMANCE_CARD_NOT_APPLICABLE_LABEL = 'مجموعی کیفیت';
+// The four rating bands, best first — the order the KPI cards are shown in.
+export const PERFORMANCE_BAND_KEYS = ['excellent', 'good', 'fair', 'weak'];
 
-// Dashboard summary's byPerformance uses the key "notApplicable" (docs/05-apis.md §8) for what's
-// stored on the Task document itself as performanceRating: '-' (docs/04-db-models.md §3) — this
-// map lets KPI cards and the query-param toggle share one lookup regardless of which key they hold.
-export const PERFORMANCE_SUMMARY_KEY_TO_VALUE = {
-  excellent: 'excellent',
-  good: 'good',
-  fair: 'fair',
-  weak: 'weak',
-  notApplicable: '-',
-};
+// A developer-assigned ("synthetic") rating is always labelled with this word wherever it shows,
+// so it is never read as a real one (backend: Task.syntheticRating, docs/02-db-design.md §7).
+export const SYNTHETIC_LABEL = 'تخمینی';
+
+export function isSyntheticRating(task) {
+  return task?.syntheticRating?.isSynthetic === true;
+}
+
+// "تخمینی 80%" — the badge's tooltip / expanded text, and what print and exports show outright.
+export function syntheticDetail(assumedPercent) {
+  return `${SYNTHETIC_LABEL} ${assumedPercent}%`;
+}
+
+// The rating thresholds (>=90 / >=80 / >=70 / below), with no late downgrade — a mirror of the
+// backend's ratingForPercent, used ONLY to preview the band while an admin types a new assumed
+// percentage. Every rating actually shown for a task comes from the server.
+export function ratingForPercent(percent) {
+  if (percent >= 90) return 'excellent';
+  if (percent >= 80) return 'good';
+  if (percent >= 70) return 'fair';
+  return 'weak';
+}
 
 export function getStatusMeta(status) {
   return STATUS_META[status] || { label: status || '-', badgeClass: 'bg-gray-100 text-gray-600' };

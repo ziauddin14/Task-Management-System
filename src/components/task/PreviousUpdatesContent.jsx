@@ -4,9 +4,11 @@ import { Paperclip } from 'lucide-react';
 import LoadingPhrase from '../common/LoadingPhrase.jsx';
 import BusyButton from '../common/BusyButton.jsx';
 import EmptyState from '../common/EmptyState.jsx';
+import SyntheticBadge from '../dashboard/SyntheticBadge.jsx';
 import { useTask } from '../../hooks/useTask.js';
 import { useTaskUpdates } from '../../hooks/useTaskUpdates.js';
 import { formatDateShortYear, formatTime, formatTimeStatusLabel, getTimeStatusColorClass } from '../../utils/formatDate.js';
+import { getPerformanceMeta, isSyntheticRating } from '../../utils/taskDisplay.js';
 
 const TH_CLASS = 'whitespace-nowrap px-3 py-2 text-start font-medium';
 const TD_CLASS = 'whitespace-nowrap px-3 py-2';
@@ -78,6 +80,19 @@ const PreviousUpdatesContent = forwardRef(function PreviousUpdatesContent({ task
               </tbody>
             </table>
           </div>
+
+          {/* The task's rating, when it has one — and, if that rating is developer-assigned rather
+              than real, the "تخمینی" badge beside it. The completion percent above is always the
+              real one. Static badge text: this block is also what the PNG export captures. */}
+          {task?.performanceRating && task.performanceRating !== '-' && (
+            <p className="flex flex-wrap items-center gap-2 text-sm text-gray-700">
+              <span className="font-medium">کارکردگی:</span>
+              <span className={clsx('rounded-full px-2 py-0.5 text-xs font-medium', getPerformanceMeta(task.performanceRating).badgeClass)}>
+                {getPerformanceMeta(task.performanceRating).label}
+              </span>
+              {isSyntheticRating(task) && <SyntheticBadge static assumedPercent={task.syntheticRating.assumedPercent} />}
+            </p>
+          )}
 
           {/* Prompt 5A.3 — the updates themselves, in table form, newest first (backend already
               sorts createdAt:-1 in taskUpdate.service.js, so date+time-descending ordering needs

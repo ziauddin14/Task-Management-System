@@ -1,14 +1,15 @@
 import React from 'react'; // explicit import — see src/App.jsx's comment for why
 import clsx from 'clsx';
-import { ChevronUp, ChevronDown, ChevronsUpDown, Upload, History, Pencil, MoreVertical, Bell } from 'lucide-react';
+import { ChevronUp, ChevronDown, ChevronsUpDown, Upload, History, Pencil, MoreVertical, Bell, Gauge } from 'lucide-react';
 import { FloatingPortal } from '@floating-ui/react';
 import LoadingPhrase from '../common/LoadingPhrase.jsx';
 import EmptyState from '../common/EmptyState.jsx';
 import Pagination from '../common/Pagination.jsx';
+import SyntheticBadge from './SyntheticBadge.jsx';
 import { useFloatingMenu } from '../../hooks/useFloatingMenu.js';
 import { COLUMN_DEFINITIONS } from '../../utils/dashboardColumns.js';
 import { formatDateShortYear, formatTimeStatusLabel, getTimeStatusColorClass } from '../../utils/formatDate.js';
-import { getStatusMeta, getPerformanceMeta } from '../../utils/taskDisplay.js';
+import { getStatusMeta, getPerformanceMeta, isSyntheticRating, SYNTHETIC_LABEL } from '../../utils/taskDisplay.js';
 
 // Prompt — variant="menuItem" (TMS Dashboard row ایکشن menu) renders the same icon + label +
 // onClick/disabled as a full-width menu row instead of a standalone square icon button; no
@@ -78,7 +79,7 @@ function RowActionsMenu({ children }) {
             ref={refs.setFloating}
             style={floatingStyles}
             onClick={() => setOpen(false)}
-            className="z-50 w-44 rounded-lg border border-gray-200 bg-white p-1.5 shadow-lg"
+            className="z-50 w-max min-w-[11rem] max-w-[calc(100vw-1rem)] rounded-lg border border-gray-200 bg-white p-1.5 shadow-lg"
             {...getFloatingProps()}
           >
             {children}
@@ -164,6 +165,7 @@ function TaskTable({
   onUpdate,
   onViewUpdates,
   onSendReminder,
+  onEditSyntheticRating,
   columnVisibility,
   sortBy,
   sortOrder,
@@ -273,6 +275,7 @@ function TaskTable({
                 const statusMeta = getStatusMeta(task.status);
                 const performanceMeta = getPerformanceMeta(task.performanceRating);
                 const isClosed = task.status === 'closed';
+                const isSynthetic = isSyntheticRating(task);
                 return (
                   <tr key={task.id} className="border-t border-gray-100 hover:bg-brand-light/40">
                     <td className="whitespace-nowrap px-3 py-2 font-mono">{task.codeNumber}</td>
@@ -311,9 +314,16 @@ function TaskTable({
                     )}
                     {isVisible('performance') && (
                       <td className="whitespace-nowrap px-3 py-2">
-                        <span className={clsx('rounded-full px-2 py-0.5 text-xs font-medium', performanceMeta.badgeClass)}>
-                          {performanceMeta.label}
-                        </span>
+                        {/* A developer-assigned rating is marked "تخمینی" right beside it. The
+                            completion-percent column to the side is untouched — it always shows
+                            the task's REAL percent, so a closed task at 0% rated "بہتر" reads
+                            exactly as that: a real 0%, and an assumed rating. */}
+                        <div className="flex items-center gap-1">
+                          <span className={clsx('rounded-full px-2 py-0.5 text-xs font-medium', performanceMeta.badgeClass)}>
+                            {performanceMeta.label}
+                          </span>
+                          {isSynthetic && <SyntheticBadge assumedPercent={task.syntheticRating.assumedPercent} />}
+                        </div>
                       </td>
                     )}
                     <td className="no-print whitespace-nowrap px-3 py-2">
@@ -349,6 +359,17 @@ function TaskTable({
                             icon={Bell}
                             label="یاددہانی بھیجیں"
                             onClick={() => onSendReminder(task)}
+                            variant="menuItem"
+                          />
+                        )}
+                        {/* Admin-only, and only on a task whose rating is synthetic — there is
+                            nothing to change on a real rating or an unrated task (the backend
+                            refuses those with 409). Works on closed tasks too. */}
+                        {isAdmin && isSynthetic && (
+                          <IconActionButton
+                            icon={Gauge}
+                            label={`${SYNTHETIC_LABEL} درجہ بندی تبدیل کریں`}
+                            onClick={() => onEditSyntheticRating(task)}
                             variant="menuItem"
                           />
                         )}

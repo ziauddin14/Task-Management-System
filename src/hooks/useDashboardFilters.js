@@ -6,13 +6,27 @@ import { useSearchParams } from 'react-router-dom';
 // refresh). Column visibility and page size are the documented exceptions (localStorage instead —
 // see hooks/useColumnVisibility.js and hooks/usePageSize.js), so neither is handled here.
 //
-// URL param names used by this dashboard: status, performanceRating, assigneeId, responsibility,
-// search, dateType ('deadline' | 'entry'), from, to, sortBy, sortOrder, page. `dateType`/`from`/`to`
+// URL param names used by this dashboard: status, performanceRating, ratingSource ('synthetic' |
+// 'real'), assigneeId, responsibility, search, dateType ('deadline' | 'entry'), from, to, sortBy,
+// sortOrder, page. `dateType`/`from`/`to`
 // are a frontend-only representation of docs/08-ui-ux.md §5's "toggle between Deadline and Entry
 // Date, plus a from/to range" — translated below into the backend's actual query param names
 // (deadlineFrom/deadlineTo or entryFrom/entryTo, docs/05-apis.md §5) so services/tasks.api.js never
 // has to know about the toggle.
-const FILTER_KEYS = ['status', 'performanceRating', 'assigneeId', 'responsibility', 'search', 'dateType', 'from', 'to'];
+const FILTER_KEYS = ['status', 'performanceRating', 'ratingSource', 'assigneeId', 'responsibility', 'search', 'dateType', 'from', 'to'];
+// What GET /dashboard/summary must never be sent: sort and paging (it rejects them).
+const NOT_SUMMARY_PARAMS = ['sortBy', 'sortOrder', 'page', 'limit'];
+
+// The filters one KPI group's summary is asked for: every task filter that is set, except the
+// group's OWN one — a group of cards is the picker for that filter, so it has to keep showing
+// every choice (clicking "پینڈنگ" must not turn the other status cards into zeroes).
+function summaryFiltersWithout(apiFilters, ownFilter) {
+  const filters = {};
+  Object.entries(apiFilters).forEach(([key, value]) => {
+    if (value !== undefined && key !== ownFilter && !NOT_SUMMARY_PARAMS.includes(key)) filters[key] = value;
+  });
+  return filters;
+}
 
 function paramsToObject(searchParams) {
   const obj = {};
@@ -30,12 +44,12 @@ export function useDashboardFilters(pageSize) {
   const sortBy = params.sortBy || 'deadline';
   const sortOrder = params.sortOrder || 'asc';
 
-  // docs/05-apis.md §5 — the exact query object GET /tasks (and, by extension, the dashboard
-  // summary's own scoping — though that endpoint currently ignores query params entirely) expects.
+  // docs/05-apis.md §5 — the exact query object GET /tasks expects.
   const apiFilters = useMemo(() => {
     const filters = {
       status: params.status || undefined,
       performanceRating: params.performanceRating || undefined,
+      ratingSource: params.ratingSource || undefined,
       assigneeId: params.assigneeId || undefined,
       responsibility: params.responsibility || undefined,
       search: params.search || undefined,
@@ -56,6 +70,16 @@ export function useDashboardFilters(pageSize) {
     }
     return filters;
   }, [params, sortBy, sortOrder, page, pageSize]);
+
+  // docs/05-apis.md §8 — what the KPI summary is asked for: every task filter above, so the cards
+  // describe the same set the table lists — except that each group of cards leaves out its own
+  // filter (see summaryFiltersWithout): the status cards ignore the status filter, the rating
+  // ("کارکردگی") cards ignore the rating filter, and each still follows the other's.
+  // Only filters that are actually set are included, so the query keys are stable while nothing
+  // relevant changes (paging or sorting the table never refetches the KPIs), and the two are
+  // identical — one request, not two — whenever neither a status nor a rating is chosen.
+  const statusSummaryFilters = useMemo(() => summaryFiltersWithout(apiFilters, 'status'), [apiFilters]);
+  const ratingSummaryFilters = useMemo(() => summaryFiltersWithout(apiFilters, 'performanceRating'), [apiFilters]);
 
   const hasActiveFilters = FILTER_KEYS.some((key) => Boolean(params[key]));
 
@@ -123,6 +147,8 @@ export function useDashboardFilters(pageSize) {
     sortBy,
     sortOrder,
     apiFilters,
+    statusSummaryFilters,
+    ratingSummaryFilters,
     hasActiveFilters,
     setFilter,
     setFilters,

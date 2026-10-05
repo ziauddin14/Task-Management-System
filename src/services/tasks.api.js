@@ -34,3 +34,17 @@ export async function closeTask(taskId) {
   const response = await apiClient.patch(`/tasks/${taskId}/close`);
   return response.data.data;
 }
+
+// PATCH /tasks/:id/synthetic-rating — Admin only. { assumedPercent (0-100), note? }; 409 unless the
+// task's rating is a synthetic one. Returns the updated task.
+export async function editSyntheticRating(taskId, payload) {
+  const response = await apiClient.patch(`/tasks/${taskId}/synthetic-rating`, payload);
+  return response.data.data;
+}
+
+// DELETE /tasks/:id/synthetic-rating — Admin only. Optional { note }. The task goes back to
+// unrated; returns the updated task.
+export async function removeSyntheticRating(taskId, payload = {}) {
+  const response = await apiClient.delete(`/tasks/${taskId}/synthetic-rating`, { data: payload });
+  return response.data.data;
+}
