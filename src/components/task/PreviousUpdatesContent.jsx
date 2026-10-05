@@ -1,7 +1,7 @@
 import React, { forwardRef, useEffect, useState } from 'react'; // explicit import — see src/App.jsx's comment for why
 import clsx from 'clsx';
 import { Paperclip } from 'lucide-react';
-import Spinner from '../common/Spinner.jsx';
+import LoadingPhrase from '../common/LoadingPhrase.jsx';
 import EmptyState from '../common/EmptyState.jsx';
 import { useTask } from '../../hooks/useTask.js';
 import { useTaskUpdates } from '../../hooks/useTaskUpdates.js';
@@ -42,7 +42,7 @@ const PreviousUpdatesContent = forwardRef(function PreviousUpdatesContent({ task
   return (
     <div ref={ref} className="flex flex-col gap-4 bg-white">
       {isInitialLoading ? (
-        <Spinner label="کام کی تفصیل لوڈ ہو رہی ہے…" />
+        <LoadingPhrase label="کام کی تفصیل لوڈ ہو رہی ہے…" />
       ) : (
         <>
           {/* Prompt 5A.2 — 5-column summary table directly below the heading: کام کوڈ, کام, آخری

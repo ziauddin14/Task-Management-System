@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
 import ConfirmDialog from '../common/ConfirmDialog.jsx';
-import Spinner from '../common/Spinner.jsx';
+import LoadingPhrase from '../common/LoadingPhrase.jsx';
 import EmptyState from '../common/EmptyState.jsx';
 import { useLookupList } from '../../hooks/useLookupList.js';
 import { useCreateLookupValue } from '../../hooks/useCreateLookupValue.js';
@@ -91,7 +91,7 @@ function LookupListPanel() {
       <h2 className="mb-2 text-base font-bold">ذمہ داری لسٹ</h2>
 
       {isLoading ? (
-        <Spinner label="لوڈ ہو رہا ہے…" />
+        <LoadingPhrase label="لوڈ ہو رہا ہے…" />
       ) : (entries || []).length === 0 ? (
         <EmptyState message="ابھی کوئی ذمہ داری ویلیو موجود نہیں۔" />
       ) : (

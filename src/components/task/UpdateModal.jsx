@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
 import Modal from '../common/Modal.jsx';
-import Spinner from '../common/Spinner.jsx';
+import LoadingPhrase from '../common/LoadingPhrase.jsx';
 import AttachmentPicker from './AttachmentPicker.jsx';
 import PreviousUpdatesContent from './PreviousUpdatesContent.jsx';
 import { useTask } from '../../hooks/useTask.js';
@@ -131,7 +131,7 @@ function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="کام اپڈیٹ کریں">
       {isTaskLoading ? (
-        <Spinner label="لوڈ ہو رہا ہے…" />
+        <LoadingPhrase label="لوڈ ہو رہا ہے…" />
       ) : reassignStep ? (
         <div className="flex flex-col gap-3">
           <div className="rounded-lg bg-gray-50 p-2 text-sm text-gray-600">
@@ -167,9 +167,9 @@ function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
                   نیا ذمہ دار منتخب کریں
                 </label>
                 {assignableLoading ? (
-                  <p className="rounded-lg border border-gray-200 px-2 py-3 text-center text-xs text-gray-500">
-                    لوڈ ہو رہا ہے…
-                  </p>
+                  <div className="rounded-lg border border-gray-200 px-1 py-1">
+                    <LoadingPhrase size="compact" />
+                  </div>
                 ) : (
                   <select
                     id="reassign-select"

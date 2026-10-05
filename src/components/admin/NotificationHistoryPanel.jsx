@@ -1,6 +1,6 @@
 import React, { useState } from 'react'; // explicit import — see src/App.jsx's comment for why
 import clsx from 'clsx';
-import Spinner from '../common/Spinner.jsx';
+import LoadingPhrase from '../common/LoadingPhrase.jsx';
 import EmptyState from '../common/EmptyState.jsx';
 import { useAdminNotificationHistory } from '../../hooks/useAdminNotificationHistory.js';
 import { formatDateTime } from '../../utils/formatDate.js';
@@ -34,7 +34,7 @@ function NotificationHistoryPanel() {
 
   return (
     <div className="flex flex-col gap-2">
-      {historyQuery.isLoading && <Spinner label="سرگزشت لوڈ ہو رہی ہے…" />}
+      {historyQuery.isLoading && <LoadingPhrase label="سرگزشت لوڈ ہو رہی ہے…" />}
 
       {!historyQuery.isLoading && historyQuery.isError && (
         <EmptyState message="سرگزشت لوڈ نہیں ہو سکی۔ دوبارہ کوشش کریں۔" />

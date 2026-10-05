@@ -56,7 +56,7 @@ describe('NotificationDrawer', () => {
     getNotifications.mockReturnValue(new Promise(() => {})); // never resolves
     renderDrawer();
 
-    expect(screen.getByRole('status')).toBeInTheDocument(); // Spinner
+    expect(screen.getByRole('status')).toBeInTheDocument(); // LoadingPhrase
   });
 
   it('shows the empty state when there are no notifications', async () => {

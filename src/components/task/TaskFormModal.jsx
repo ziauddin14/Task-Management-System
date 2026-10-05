@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
 import Modal from '../common/Modal.jsx';
+import LoadingPhrase from '../common/LoadingPhrase.jsx';
 import { useAssignableUsers } from '../../hooks/useAssignableUsers.js';
 import { useCreateTask } from '../../hooks/useCreateTask.js';
 import { useUpdateTask } from '../../hooks/useUpdateTask.js';
@@ -135,7 +136,7 @@ function TaskFormModal({ isOpen, onClose, mode, task }) {
             column below `sm` stacks all three full-width, reverting to the original 3-up row at
             `sm` (640px) and up where there's actually room for it. */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-2">
-          <div>
+          <div className="order-1">
             <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="assignee-search">
               ذمہ دار
             </label>
@@ -176,12 +177,9 @@ function TaskFormModal({ isOpen, onClose, mode, task }) {
                   {/* Prompt 3B — previously this list rendered silently empty whether the query was
                       still loading, had failed, or genuinely had zero active users, so a real
                       failure was indistinguishable from "no data yet". Now every one of those
-                      three states shows its own message instead of a blank box. */}
-                  {usersLoading ? (
-                    <p className="rounded-lg border border-gray-200 px-2 py-3 text-center text-xs text-gray-500">
-                      لوڈ ہو رہا ہے…
-                    </p>
-                  ) : usersError ? (
+                      three states shows its own message instead of a blank box. (The loading
+                      state's box is rendered as its own grid row further down, not here.) */}
+                  {usersLoading ? null : usersError ? (
                     <p className="rounded-lg border border-red-200 bg-red-50 px-2 py-3 text-center text-xs text-red-600">
                       یوزرز لوڈ نہیں ہو سکے
                     </p>
@@ -220,7 +218,18 @@ function TaskFormModal({ isOpen, onClose, mode, task }) {
             )}
           </div>
 
-          <div>
+          {/* The assignee list's loading state. It is its own grid row rather than sitting inside
+              the assignee column because that column is only ~150px wide in the 3-up layout — too
+              narrow for the one-line loading phrase at a readable size in a fallback font. Below
+              `sm` it stays directly under the assignee search (order-2); from `sm` up it spans all
+              three columns beneath them. */}
+          {usersLoading && (
+            <div className="order-2 -mt-2 rounded-lg border border-gray-200 px-1 py-1 sm:order-4 sm:col-span-3 sm:mt-0">
+              <LoadingPhrase size="compact" />
+            </div>
+          )}
+
+          <div className="order-3 sm:order-2">
             <label htmlFor="task-responsibility" className="mb-1 block text-sm font-medium text-gray-700">
               ذمہ داری
             </label>
@@ -250,7 +259,7 @@ function TaskFormModal({ isOpen, onClose, mode, task }) {
             )}
           </div>
 
-          <div>
+          <div className="order-4 sm:order-3">
             <label htmlFor="task-deadline" className="mb-1 block text-sm font-medium text-gray-700">
               آخری تاریخ
             </label>

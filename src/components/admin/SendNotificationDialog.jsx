@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'; // explicit import — see s
 import { useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import Modal from '../common/Modal.jsx';
+import LoadingPhrase from '../common/LoadingPhrase.jsx';
 import NotificationHistoryPanel from './NotificationHistoryPanel.jsx';
 import { useAssignableUsers } from '../../hooks/useAssignableUsers.js';
 import { useDebouncedSearch } from '../../hooks/useDebouncedSearch.js';
@@ -130,7 +131,9 @@ function SendNotificationDialog({ isOpen, onClose, task }) {
               ذمہ دار منتخب کریں
             </label>
             {usersLoading ? (
-              <p className="rounded-lg border border-gray-200 px-2 py-3 text-center text-xs text-gray-500">لوڈ ہو رہا ہے…</p>
+              <div className="rounded-lg border border-gray-200 px-1 py-1">
+                <LoadingPhrase size="compact" />
+              </div>
             ) : (
               <select
                 id="notification-user-select"
@@ -176,7 +179,9 @@ function SendNotificationDialog({ isOpen, onClose, task }) {
                 {debouncedTaskSearch.trim().length > 0 && (
                   <div className="max-h-32 overflow-y-auto rounded-lg border border-gray-200">
                     {taskSearchQuery.isLoading ? (
-                      <p className="px-2 py-3 text-center text-xs text-gray-500">لوڈ ہو رہا ہے…</p>
+                      <div className="px-1 py-1">
+                        <LoadingPhrase size="compact" />
+                      </div>
                     ) : (taskSearchQuery.data?.items || []).length === 0 ? (
                       <p className="px-2 py-3 text-center text-xs text-gray-500">کوئی کام نہیں ملا</p>
                     ) : (

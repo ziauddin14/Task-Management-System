@@ -1,12 +1,12 @@
 import React from 'react'; // explicit import — see src/App.jsx's comment for why
 import clsx from 'clsx';
-import Spinner from '../common/Spinner.jsx';
+import LoadingPhrase from '../common/LoadingPhrase.jsx';
 import EmptyState from '../common/EmptyState.jsx';
 
 // Prompt 3E — Name, Zimmedari (Responsibility), Email, Role, Status (Active/Inactive), per-row
 // Edit action, in this exact right-to-left order. No delete action anywhere on this page.
 function UserTable({ users, isLoading, isError, onEdit }) {
-  if (isLoading) return <Spinner label="صارفین لوڈ ہو رہے ہیں…" />;
+  if (isLoading) return <LoadingPhrase label="صارفین لوڈ ہو رہے ہیں…" />;
   if (isError) return <EmptyState message="صارفین لوڈ نہیں ہو سکے۔ دوبارہ کوشش کریں۔" />;
   if (users.length === 0) return <EmptyState message="اس تلاش سے مطابقت رکھنے والا کوئی صارف نہیں ملا۔" />;
 

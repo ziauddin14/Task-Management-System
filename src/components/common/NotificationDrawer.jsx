@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'; // explicit import — see src/App.jsx's comment for why
 import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
-import Spinner from './Spinner.jsx';
+import LoadingPhrase from './LoadingPhrase.jsx';
 import EmptyState from './EmptyState.jsx';
 import NotificationItem from './NotificationItem.jsx';
 import { useNotifications } from '../../hooks/useNotifications.js';
@@ -109,7 +109,7 @@ function NotificationDrawer({ isOpen, onClose }) {
         )}
 
         <div className="flex-1 overflow-y-auto p-2">
-          {isInitialLoading && <Spinner label="اطلاعات لوڈ ہو رہی ہیں…" />}
+          {isInitialLoading && <LoadingPhrase label="اطلاعات لوڈ ہو رہی ہیں…" />}
 
           {!isInitialLoading && notificationsQuery.isError && (
             <EmptyState message="اطلاعات لوڈ نہیں ہو سکیں۔ دوبارہ کوشش کریں۔" />

@@ -6,7 +6,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import toast, { Toaster } from 'react-hot-toast';
 import AppRoutes from './routes/AppRoutes.jsx';
-import Spinner from './components/common/Spinner.jsx';
+import LoadingPhrase from './components/common/LoadingPhrase.jsx';
 import { useAuthStore } from './store/authStore.js';
 import { useCurrentUser } from './hooks/useCurrentUser.js';
 
@@ -36,14 +36,9 @@ function SessionGate({ children }) {
   const { isLoading } = useCurrentUser();
 
   if (token && isLoading) {
-    // Prompt — this bespoke loading div is replaced with the shared Spinner (now themed as the
-    // animated Durood Shareef loader) instead of keeping its own separate "Loading…" markup, so
-    // every full-screen and inline loading state in the app renders identically from one place.
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Spinner label="سیشن بحال ہو رہا ہے…" />
-      </div>
-    );
+    // The shared loader's own full-screen size — it owns the viewport-height centering itself, so
+    // every full-screen and inline loading state in the app renders from the one component.
+    return <LoadingPhrase size="fullscreen" label="سیشن بحال ہو رہا ہے…" />;
   }
 
   return children;

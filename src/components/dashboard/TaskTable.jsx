@@ -2,7 +2,7 @@ import React from 'react'; // explicit import — see src/App.jsx's comment for 
 import clsx from 'clsx';
 import { ChevronUp, ChevronDown, ChevronsUpDown, Upload, History, Pencil, MoreVertical, Bell } from 'lucide-react';
 import { FloatingPortal } from '@floating-ui/react';
-import Spinner from '../common/Spinner.jsx';
+import LoadingPhrase from '../common/LoadingPhrase.jsx';
 import EmptyState from '../common/EmptyState.jsx';
 import Pagination from '../common/Pagination.jsx';
 import { useFloatingMenu } from '../../hooks/useFloatingMenu.js';
@@ -198,7 +198,7 @@ function TaskTable({
     // next to Print View/Export — columnVisibility.isVisible below still gates which columns
     // render here exactly as before.
     <div className="rounded-lg border border-gray-200 bg-white">
-      {isLoading && <Spinner label="کام لوڈ ہو رہے ہیں…" />}
+      {isLoading && <LoadingPhrase label="کام لوڈ ہو رہے ہیں…" />}
 
       {!isLoading && isError && <EmptyState message="کام لوڈ نہیں ہو سکے۔ دوبارہ کوشش کریں۔" />}
 

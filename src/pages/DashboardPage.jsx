@@ -18,7 +18,7 @@ import UpdateModal from '../components/task/UpdateModal.jsx';
 import PreviousUpdatesModal from '../components/task/PreviousUpdatesModal.jsx';
 import SendNotificationDialog from '../components/admin/SendNotificationDialog.jsx';
 import ConfirmDialog from '../components/common/ConfirmDialog.jsx';
-import Spinner from '../components/common/Spinner.jsx';
+import LoadingPhrase from '../components/common/LoadingPhrase.jsx';
 import PushPermissionBanner from '../components/common/PushPermissionBanner.jsx';
 import { PageActions } from '../contexts/PageActionsPortal.jsx';
 import {
@@ -150,7 +150,7 @@ function DashboardPage() {
           </div>
         </div>
 
-        {summaryQuery.isLoading && <Spinner label="خلاصہ لوڈ ہو رہا ہے۔۔۔" />}
+        {summaryQuery.isLoading && <LoadingPhrase label="خلاصہ لوڈ ہو رہا ہے۔۔۔" />}
 
         {summaryQuery.data && (
           <div className="flex flex-col gap-2">

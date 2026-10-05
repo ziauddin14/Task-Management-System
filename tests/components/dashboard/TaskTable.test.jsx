@@ -117,7 +117,7 @@ describe('TaskTable (docs/08-ui-ux.md §6)', () => {
     expect(screen.getByText('اس فلٹر سے مطابقت رکھنے والا کوئی کام نہیں ملا۔')).toBeInTheDocument();
   });
 
-  it('shows a Spinner while loading', () => {
+  it('shows the shared loader while loading', () => {
     renderTable({ isLoading: true, tasks: [] });
     expect(screen.getByRole('status')).toBeInTheDocument();
   });
