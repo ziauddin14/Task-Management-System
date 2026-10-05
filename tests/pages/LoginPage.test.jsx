@@ -4,6 +4,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import LoginPage from '../../src/pages/LoginPage.jsx';
 import { useAuthStore } from '../../src/store/authStore.js';
+import { LOADING_PHRASE } from '../../src/utils/loadingPhrase.js';
 
 vi.mock('../../src/services/auth.api.js', () => ({ loginWithGoogle: vi.fn(), getCurrentUser: vi.fn() }));
 import { loginWithGoogle } from '../../src/services/auth.api.js';
@@ -46,10 +47,19 @@ describe('LoginPage (docs/11-auth.md §2.2-2.3)', () => {
   // docs/08-ui-ux.md §2 — the Login screen's actual visual content (a gap the Phase 10.2 kickoff
   // never covered — see Phase 10.7 report §B).
   it('renders the system name, Urdu department name, and the fixed salutation line', () => {
-    renderLoginPage();
+    const { container } = renderLoginPage();
     expect(screen.getByRole('heading', { name: 'ٹاسک مینیجمینٹ سسٹم' })).toBeInTheDocument();
     expect(screen.getByText('خود کفالت شعبہ جات (دعوتِ اسلامی)')).toBeInTheDocument();
-    expect(screen.getByText('صلوٰۃ علی الحبیب ﷺ')).toBeInTheDocument();
+
+    // The salutation is the shared phrase (utils/loadingPhrase.js — compared against the constant,
+    // never retyped here), as STATIC content: readable by assistive tech, not animated, and not
+    // announced as a loading status.
+    const salutation = container.querySelector('[data-phrase-line]');
+    expect(salutation.textContent).toBe(LOADING_PHRASE);
+    expect(salutation).toHaveClass('whitespace-nowrap', 'text-brand');
+    expect(salutation).not.toHaveAttribute('aria-hidden');
+    expect(salutation).not.toHaveClass('motion-safe:animate-pulse');
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
   it("Google's own sign-in failure (not a backend rejection) also shows the generic message inline, not just a toast", async () => {

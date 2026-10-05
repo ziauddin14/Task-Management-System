@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import Modal from '../common/Modal.jsx';
 import LoadingPhrase from '../common/LoadingPhrase.jsx';
+import BusyButton from '../common/BusyButton.jsx';
 import NotificationHistoryPanel from './NotificationHistoryPanel.jsx';
 import { useAssignableUsers } from '../../hooks/useAssignableUsers.js';
 import { useDebouncedSearch } from '../../hooks/useDebouncedSearch.js';
@@ -251,13 +252,15 @@ function SendNotificationDialog({ isOpen, onClose, task }) {
           >
             منسوخ کریں
           </button>
-          <button
+          <BusyButton
             type="submit"
+            busy={isPending}
+            busyLabel="بھیجا جا رہا ہے۔۔۔"
             disabled={!canSubmit}
             className="h-12 rounded-lg bg-brand text-base font-semibold text-white hover:bg-brand/90 disabled:opacity-50"
           >
-            {isPending ? 'بھیجا جا رہا ہے۔۔۔' : 'اطلاع بھیجیں'}
-          </button>
+            اطلاع بھیجیں
+          </BusyButton>
         </div>
 
         {!task && (

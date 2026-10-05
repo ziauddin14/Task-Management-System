@@ -5,6 +5,7 @@ import { z } from 'zod';
 import toast from 'react-hot-toast';
 import Modal from '../common/Modal.jsx';
 import LoadingPhrase from '../common/LoadingPhrase.jsx';
+import BusyButton from '../common/BusyButton.jsx';
 import { useAssignableUsers } from '../../hooks/useAssignableUsers.js';
 import { useCreateTask } from '../../hooks/useCreateTask.js';
 import { useUpdateTask } from '../../hooks/useUpdateTask.js';
@@ -285,13 +286,14 @@ function TaskFormModal({ isOpen, onClose, mode, task }) {
           >
             منسوخ کریں
           </button>
-          <button
+          <BusyButton
             type="submit"
-            disabled={isSubmitting}
+            busy={isSubmitting}
+            busyLabel="محفوظ ہو رہا ہے…"
             className="h-12 rounded-lg bg-brand text-base font-semibold text-white hover:bg-brand/90 disabled:opacity-50"
           >
             محفوظ کریں
-          </button>
+          </BusyButton>
         </div>
       </form>
     </Modal>

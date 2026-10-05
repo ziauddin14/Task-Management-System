@@ -2,6 +2,7 @@ import React, { useState } from 'react'; // explicit import — see src/App.jsx'
 import { useLoginWithGoogle } from '../hooks/useLoginWithGoogle.js';
 import GoogleSignInButton from '../components/auth/GoogleSignInButton.jsx';
 import LogoMark from '../components/common/LogoMark.jsx';
+import PhraseLine from '../components/common/PhraseLine.jsx';
 
 // docs/08-ui-ux.md §2 — centered, single-column, mobile-first: system name, Urdu department name,
 // a fixed salutation line, the Google Sign-In button (the only interactive element), and an
@@ -19,11 +20,15 @@ function LoginPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-gradient-to-b from-brand-light/60 to-white px-4 py-10 text-center">
-      <div className="flex flex-col items-center gap-2">
+      {/* w-full: the salutation line fits itself to this column's width, so the column has to be
+          as wide as the page allows rather than as wide as its longest sibling. */}
+      <div className="flex w-full flex-col items-center gap-2">
         <LogoMark className="h-20 w-20" />
         <h1 className="text-2xl font-bold text-brand">ٹاسک مینیجمینٹ سسٹم</h1>
         <p className="text-lg text-brand">خود کفالت شعبہ جات (دعوتِ اسلامی)</p>
-        <p className="text-base text-gray-600">صلوٰۃ علی الحبیب ﷺ</p>
+        {/* The same phrase, font and one-line sizing rules as every loader — here as a static
+            line (no animation, no "busy" semantics): on this screen it is content, not a loader. */}
+        <PhraseLine size="compact" />
       </div>
 
       <GoogleSignInButton

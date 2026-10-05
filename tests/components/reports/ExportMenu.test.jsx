@@ -44,12 +44,30 @@ describe('ExportMenu (docs/08-ui-ux.md §10, docs/09-frontend-features.md §8)',
     await waitFor(() => expect(onExport).toHaveBeenCalledWith('excel', undefined));
   });
 
-  it('shows a loading/disabled state during generation', () => {
+  // Confirm no longer swaps its own text while busy: it keeps "Confirm", and the busy signal is
+  // the shared loading phrase on a line under it (whose screen-reader label carries the old
+  // "تیار ہو رہا ہے۔۔۔" wording).
+  it('during generation, Confirm keeps its label, is busy + disabled, and the loading phrase shows under it', () => {
     render(<ExportMenu mode="dashboard" onExport={vi.fn()} isLoading />);
     fireEvent.click(screen.getByText('ایکسپورٹ کریں'));
 
-    const confirmButton = screen.getByText('تیار ہو رہا ہے۔۔۔');
+    const confirmButton = screen.getByRole('button', { name: 'Confirm' });
     expect(confirmButton).toBeDisabled();
+    expect(confirmButton).toHaveAttribute('aria-busy', 'true');
+
+    const status = screen.getByRole('status');
+    expect(status).toHaveTextContent('تیار ہو رہا ہے۔۔۔');
+    // Under the button, not inside it.
+    expect(confirmButton.contains(status)).toBe(false);
+    expect(confirmButton.compareDocumentPosition(status) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('shows no loading phrase while idle', () => {
+    render(<ExportMenu mode="dashboard" onExport={vi.fn()} isLoading={false} />);
+    fireEvent.click(screen.getByText('ایکسپورٹ کریں'));
+
+    expect(screen.getByRole('button', { name: 'Confirm' })).not.toHaveAttribute('aria-busy');
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
   it('on success, the WhatsApp share affordance appears (fallback hint, since jsdom has no Web Share API)', async () => {

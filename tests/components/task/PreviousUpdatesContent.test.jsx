@@ -130,6 +130,34 @@ describe('PreviousUpdatesContent (docs/08-ui-ux.md §7, docs/09-frontend-feature
     expect(getTaskUpdates).toHaveBeenCalledTimes(2);
   });
 
+  // The button used to vanish for as long as the next page was loading (that page's query has no
+  // data yet, so "are there more pages?" read false), leaving no loading signal at all.
+  it('while the next page loads, "load more" stays in place, busy, with the loading phrase inside it', async () => {
+    let resolveSecondPage;
+    getTaskUpdates.mockResolvedValueOnce(page1()).mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveSecondPage = resolve;
+      })
+    );
+    renderContent(<PreviousUpdatesContent taskId="t1" />);
+
+    await screen.findByText('Second update');
+    const loadMore = screen.getByRole('button', { name: 'مزید پرانی اپڈیٹس دیکھیں' });
+    // Full width, so the one-line phrase has room inside it.
+    expect(loadMore).toHaveClass('w-full');
+    fireEvent.click(loadMore);
+
+    await waitFor(() => expect(loadMore).toHaveAttribute('aria-busy', 'true'));
+    expect(loadMore).toBeInTheDocument(); // the very same button — not unmounted while loading
+    expect(loadMore).toBeDisabled();
+    expect(loadMore.querySelector('[data-phrase-line]')).not.toBeNull();
+    expect(loadMore).not.toHaveTextContent('مزید پرانی اپڈیٹس دیکھیں');
+    expect(screen.getByText('Second update')).toBeInTheDocument(); // the first page stays visible
+
+    resolveSecondPage(page2());
+    await waitFor(() => expect(screen.getByText('Oldest update')).toBeInTheDocument());
+  });
+
   it('does not show "load more" once every page has been fetched', async () => {
     getTaskUpdates.mockResolvedValue({ ...page1(), meta: { page: 1, totalPages: 1, total: 2 } });
     renderContent(<PreviousUpdatesContent taskId="t1" />);

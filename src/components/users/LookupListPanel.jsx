@@ -5,6 +5,8 @@ import { z } from 'zod';
 import toast from 'react-hot-toast';
 import ConfirmDialog from '../common/ConfirmDialog.jsx';
 import LoadingPhrase from '../common/LoadingPhrase.jsx';
+import BusyButton from '../common/BusyButton.jsx';
+import BusyRegion from '../common/BusyRegion.jsx';
 import EmptyState from '../common/EmptyState.jsx';
 import { useLookupList } from '../../hooks/useLookupList.js';
 import { useCreateLookupValue } from '../../hooks/useCreateLookupValue.js';
@@ -152,28 +154,30 @@ function LookupListPanel() {
         </ul>
       )}
 
-      <form onSubmit={handleSubmit(onAddValue)} className="flex items-start gap-2">
-        <div className="flex-1">
-          <input
-            aria-label="نئی ذمہ داری"
-            placeholder="نئی ویلیو…"
-            {...register('value')}
-            className="h-10 w-full rounded-lg border border-gray-300 px-2"
-          />
-          {errors.value && (
-            <p role="alert" className="mt-1 text-sm text-red-600">
-              {errors.value.message}
-            </p>
-          )}
-        </div>
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="h-10 min-w-[40px] rounded-lg bg-brand px-4 text-white hover:bg-brand/90 disabled:opacity-50"
-        >
-          Add
-        </button>
-      </form>
+      <BusyRegion>
+        <form onSubmit={handleSubmit(onAddValue)} className="flex items-start gap-2">
+          <div className="flex-1">
+            <input
+              aria-label="نئی ذمہ داری"
+              placeholder="نئی ویلیو…"
+              {...register('value')}
+              className="h-10 w-full rounded-lg border border-gray-300 px-2"
+            />
+            {errors.value && (
+              <p role="alert" className="mt-1 text-sm text-red-600">
+                {errors.value.message}
+              </p>
+            )}
+          </div>
+          <BusyButton
+            type="submit"
+            busy={isSubmitting}
+            className="h-10 min-w-[40px] rounded-lg bg-brand px-4 text-white hover:bg-brand/90 disabled:opacity-50"
+          >
+            Add
+          </BusyButton>
+        </form>
+      </BusyRegion>
 
       <ConfirmDialog
         isOpen={Boolean(deactivatingEntry)}

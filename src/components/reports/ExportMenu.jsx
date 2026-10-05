@@ -1,6 +1,8 @@
 import React, { useState } from 'react'; // explicit import — see src/App.jsx's comment for why
 import { Download } from 'lucide-react';
 import WhatsAppShareButton from './WhatsAppShareButton.jsx';
+import BusyButton from '../common/BusyButton.jsx';
+import BusyRegion from '../common/BusyRegion.jsx';
 
 // docs/08-ui-ux.md §10, docs/09-frontend-features.md §8 — format picker, plus (dashboard mode
 // only) a "Sirf Last Update" checkbox. Prompt — the old Report Type (Summary/Detailed) dropdown
@@ -75,14 +77,18 @@ function ExportMenu({ mode, onExport, isLoading, variant = 'standalone' }) {
             </label>
           )}
 
-          <button
-            type="button"
-            onClick={handleConfirm}
-            disabled={isLoading}
-            className="h-10 w-full rounded-lg bg-brand px-3 text-sm text-white hover:bg-brand/90 disabled:opacity-50"
-          >
-            {isLoading ? 'تیار ہو رہا ہے۔۔۔' : 'Confirm'}
-          </button>
+          {/* -mx-2: this popover is narrow, so the line under Confirm also uses most of its side
+              padding — enough for the phrase at a readable size in a wide fallback font. */}
+          <BusyRegion lineClassName="-mx-2 mt-1">
+            <BusyButton
+              onClick={handleConfirm}
+              busy={Boolean(isLoading)}
+              busyLabel="تیار ہو رہا ہے۔۔۔"
+              className="h-10 w-full rounded-lg bg-brand px-3 text-sm text-white hover:bg-brand/90 disabled:opacity-50"
+            >
+              Confirm
+            </BusyButton>
+          </BusyRegion>
         </div>
       )}
 

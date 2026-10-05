@@ -171,6 +171,44 @@ describe('NotificationDrawer', () => {
     expect(screen.getByText('Item 1')).toBeInTheDocument(); // accumulated, not replaced
   });
 
+  // The button used to vanish for as long as the next page was loading (that page's query has no
+  // data yet, so "are there more pages?" read false), leaving no loading signal at all.
+  it('while the next page loads, "مزید دیکھیں" stays in place, busy, with the loading phrase inside it', async () => {
+    let resolveSecondPage;
+    getNotifications.mockImplementation(({ page }) =>
+      page === 1
+        ? Promise.resolve({
+            items: [makeNotification({ id: 'n1', title: 'Item 1' })],
+            meta: { page: 1, limit: 20, total: 2, totalPages: 2 },
+          })
+        : new Promise((resolve) => {
+            resolveSecondPage = resolve;
+          })
+    );
+    renderDrawer();
+
+    await screen.findByText('Item 1');
+    const loadMore = screen.getByRole('button', { name: 'مزید دیکھیں' });
+    expect(loadMore).not.toHaveAttribute('aria-busy');
+    fireEvent.click(loadMore);
+
+    await waitFor(() => expect(loadMore).toHaveAttribute('aria-busy', 'true'));
+    expect(loadMore).toBeInTheDocument(); // the very same button — not unmounted while loading
+    expect(loadMore).toBeDisabled();
+    expect(loadMore.querySelector('[data-phrase-line]')).not.toBeNull();
+    expect(loadMore).not.toHaveTextContent('مزید دیکھیں');
+    expect(loadMore).toHaveTextContent('مزید اطلاعات لوڈ ہو رہی ہیں…'); // screen-reader label
+    expect(screen.getByText('Item 1')).toBeInTheDocument();
+
+    resolveSecondPage({
+      items: [makeNotification({ id: 'n2', title: 'Item 2' })],
+      meta: { page: 2, limit: 20, total: 2, totalPages: 2 },
+    });
+    expect(await screen.findByText('Item 2')).toBeInTheDocument();
+    // Last page reached: no more "load more".
+    await waitFor(() => expect(loadMore).not.toBeInTheDocument());
+  });
+
   it('resets to page 1 with a fresh list each time the drawer re-opens', async () => {
     getNotifications.mockResolvedValue({
       items: [makeNotification()],

@@ -146,19 +146,26 @@ describe('SendNotificationDialog', () => {
     expect(sendAdminNotification).not.toHaveBeenCalled();
   });
 
-  it('shows a loading label and disables the button while the request is in flight (double-submit prevention)', async () => {
+  // The button no longer swaps its own text while busy: it keeps "اطلاع بھیجیں", and the busy signal
+  // is the shared loading phrase in the dialog's strip (whose screen-reader label carries the old
+  // "بھیجا جا رہا ہے۔۔۔" wording).
+  it('keeps its label, goes busy + disabled, and shows the loading phrase while the request is in flight (double-submit prevention)', async () => {
     let resolveSend;
     sendAdminNotification.mockReturnValue(new Promise((resolve) => { resolveSend = resolve; }));
     renderDialog();
 
     fireEvent.change(screen.getByLabelText('پیغام کا ٹیمپلیٹ'), { target: { value: 'GENERAL_REMINDER' } });
-    fireEvent.click(screen.getByRole('button', { name: 'اطلاع بھیجیں' }));
+    const submit = screen.getByRole('button', { name: 'اطلاع بھیجیں' });
+    fireEvent.click(submit);
 
-    expect(await screen.findByRole('button', { name: 'بھیجا جا رہا ہے۔۔۔' })).toBeDisabled();
+    expect(await screen.findByRole('status')).toHaveTextContent('بھیجا جا رہا ہے۔۔۔');
+    expect(submit).toHaveTextContent('اطلاع بھیجیں');
+    expect(submit).toBeDisabled();
+    expect(submit).toHaveAttribute('aria-busy', 'true');
     expect(sendAdminNotification).toHaveBeenCalledTimes(1);
 
     // A second click attempt while pending must not fire a second request.
-    fireEvent.click(screen.getByRole('button', { name: 'بھیجا جا رہا ہے۔۔۔' }));
+    fireEvent.click(submit);
     expect(sendAdminNotification).toHaveBeenCalledTimes(1);
 
     resolveSend({ batchId: 'b1', recipientsResolved: 1, createdCount: 1, failures: [] });

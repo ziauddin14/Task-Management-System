@@ -1,5 +1,6 @@
 import React from 'react'; // explicit import — see src/App.jsx's comment for why
 import Modal from './Modal.jsx';
+import BusyButton from './BusyButton.jsx';
 
 // docs/09-frontend-features.md §2 — the Close action's "distinct, clearly-separated
 // button/confirmation" (and reused by the Deactivate-user confirmation, §9, in a later sub-phase).
@@ -16,14 +17,13 @@ function ConfirmDialog({ isOpen, title, message, confirmLabel = 'ہاں', cancel
         >
           {cancelLabel}
         </button>
-        <button
-          type="button"
+        <BusyButton
           onClick={onConfirm}
-          disabled={isLoading}
+          busy={Boolean(isLoading)}
           className="h-10 min-w-[40px] rounded-lg bg-brand px-4 text-white hover:bg-brand/90 disabled:opacity-50"
         >
           {confirmLabel}
-        </button>
+        </BusyButton>
       </div>
     </Modal>
   );

@@ -19,6 +19,8 @@ import PreviousUpdatesModal from '../components/task/PreviousUpdatesModal.jsx';
 import SendNotificationDialog from '../components/admin/SendNotificationDialog.jsx';
 import ConfirmDialog from '../components/common/ConfirmDialog.jsx';
 import LoadingPhrase from '../components/common/LoadingPhrase.jsx';
+import BusyButton from '../components/common/BusyButton.jsx';
+import BusyRegion from '../components/common/BusyRegion.jsx';
 import PushPermissionBanner from '../components/common/PushPermissionBanner.jsx';
 import { PageActions } from '../contexts/PageActionsPortal.jsx';
 import {
@@ -111,44 +113,48 @@ function DashboardPage() {
           normally like the rest of the page — no functionality lost, since "stays visible while
           scrolling the table" was never achievable on a screen shorter than the block itself. */}
       <div className="no-print z-20 -mx-4 flex flex-col gap-3 bg-gray-50 px-4 pb-3 pt-4 md:sticky md:top-16 md:-mx-6 md:px-6">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-brand/10 pb-3">
-          <h1 className="text-3xl font-bold text-gray-900">ڈیش بورڈ</h1>
-          <div className="flex flex-wrap items-center gap-2">
-            {isAdmin && (
-              <button
-                type="button"
-                onClick={() => triggerRemindersMutation.mutate()}
-                disabled={triggerRemindersMutation.isPending}
-                title="یاد دہانیاں فوراً بھیجیں (روزانہ خودکار بھیجے جانے کا دستی ٹرگر)"
-                className="flex h-10 items-center gap-1 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 hover:border-brand/40 hover:bg-brand-light disabled:opacity-50"
-              >
-                <BellRing className="h-4 w-4" aria-hidden="true" />
-                یاد دہانیاں بھیجیں
-              </button>
-            )}
-            {isAdmin && (
-              <button
-                type="button"
-                onClick={() => setSendNotificationState({ task: null })}
-                title="نئی اطلاع بھیجیں"
-                className="flex h-10 items-center gap-1 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 hover:border-brand/40 hover:bg-brand-light"
-              >
-                <Send className="h-4 w-4" aria-hidden="true" />
-                نئی اطلاع بھیجیں
-              </button>
-            )}
-            {isAdmin && (
-              <button
-                type="button"
-                onClick={() => setFormModal({ mode: 'create' })}
-                className="flex h-10 items-center gap-1 rounded-lg bg-brand px-4 text-white hover:bg-brand/90"
-              >
-                <Plus className="h-4 w-4" aria-hidden="true" />
-                نیا کام
-              </button>
-            )}
+        {/* BusyRegion: while "یاد دہانیاں بھیجیں" is in flight, the loading phrase shows on its own
+            line under this header row (lineClassName cancels the column's own gap above it). */}
+        <BusyRegion lineClassName="-mt-2">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-brand/10 pb-3">
+            <h1 className="text-3xl font-bold text-gray-900">ڈیش بورڈ</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              {isAdmin && (
+                <BusyButton
+                  onClick={() => triggerRemindersMutation.mutate()}
+                  busy={triggerRemindersMutation.isPending}
+                  busyLabel="یاد دہانیاں بھیجی جا رہی ہیں…"
+                  title="یاد دہانیاں فوراً بھیجیں (روزانہ خودکار بھیجے جانے کا دستی ٹرگر)"
+                  className="flex h-10 items-center gap-1 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 hover:border-brand/40 hover:bg-brand-light disabled:opacity-50"
+                >
+                  <BellRing className="h-4 w-4" aria-hidden="true" />
+                  یاد دہانیاں بھیجیں
+                </BusyButton>
+              )}
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => setSendNotificationState({ task: null })}
+                  title="نئی اطلاع بھیجیں"
+                  className="flex h-10 items-center gap-1 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 hover:border-brand/40 hover:bg-brand-light"
+                >
+                  <Send className="h-4 w-4" aria-hidden="true" />
+                  نئی اطلاع بھیجیں
+                </button>
+              )}
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => setFormModal({ mode: 'create' })}
+                  className="flex h-10 items-center gap-1 rounded-lg bg-brand px-4 text-white hover:bg-brand/90"
+                >
+                  <Plus className="h-4 w-4" aria-hidden="true" />
+                  نیا کام
+                </button>
+              )}
+            </div>
           </div>
-        </div>
+        </BusyRegion>
 
         {summaryQuery.isLoading && <LoadingPhrase label="خلاصہ لوڈ ہو رہا ہے۔۔۔" />}
 

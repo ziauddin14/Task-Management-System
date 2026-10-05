@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'; // explicit import — see s
 import { Bell, X } from 'lucide-react';
 import { isPushSupported, getExistingSubscription } from '../../utils/pushNotifications.js';
 import { useSubscribeToPush } from '../../hooks/useSubscribeToPush.js';
+import BusyButton from './BusyButton.jsx';
+import BusyRegion from './BusyRegion.jsx';
 
 const DISMISS_STORAGE_KEY = 'pushPermissionBanner.dismissed.v1';
 
@@ -83,34 +85,35 @@ function PushPermissionBanner() {
 
   return (
     <div className="no-print flex flex-col gap-1.5 rounded-lg border border-brand/20 bg-brand-light px-4 py-2.5 text-sm">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2 text-gray-700">
-          <Bell className="h-4 w-4 shrink-0 text-brand" aria-hidden="true" />
-          <span className="truncate">
-            {reason
-              ? 'فون/کمپیوٹر نوٹیفیکیشن فعال نہیں ہو سکیں۔'
-              : 'فون/کمپیوٹر کی نوٹیفیکیشن ٹرے میں بھی اطلاعات پانا چاہیں؟'}
-          </span>
+      <BusyRegion lineClassName="">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2 text-gray-700">
+            <Bell className="h-4 w-4 shrink-0 text-brand" aria-hidden="true" />
+            <span className="truncate">
+              {reason
+                ? 'فون/کمپیوٹر نوٹیفیکیشن فعال نہیں ہو سکیں۔'
+                : 'فون/کمپیوٹر کی نوٹیفیکیشن ٹرے میں بھی اطلاعات پانا چاہیں؟'}
+            </span>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <BusyButton
+              onClick={handleAllow}
+              busy={subscribeMutation.isPending}
+              className="h-8 rounded-lg bg-brand px-3 text-sm font-medium text-white hover:bg-brand/90 disabled:opacity-50"
+            >
+              {reason ? 'دوبارہ کوشش کریں' : 'فعال کریں'}
+            </BusyButton>
+            <button
+              type="button"
+              onClick={handleDismiss}
+              aria-label="بند کریں"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-gray-500 hover:bg-white/60"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <button
-            type="button"
-            onClick={handleAllow}
-            disabled={subscribeMutation.isPending}
-            className="h-8 rounded-lg bg-brand px-3 text-sm font-medium text-white hover:bg-brand/90 disabled:opacity-50"
-          >
-            {reason ? 'دوبارہ کوشش کریں' : 'فعال کریں'}
-          </button>
-          <button
-            type="button"
-            onClick={handleDismiss}
-            aria-label="بند کریں"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-gray-500 hover:bg-white/60"
-          >
-            <X className="h-4 w-4" aria-hidden="true" />
-          </button>
-        </div>
-      </div>
+      </BusyRegion>
       {/* The diagnostic payoff of this whole fix — a short, specific, copy-pasteable reason,
           since a phone's own devtools console isn't practically reachable. */}
       {reason && <p className="ps-6 text-xs text-gray-500" dir="ltr">{reason}</p>}

@@ -6,6 +6,7 @@ import { z } from 'zod';
 import toast from 'react-hot-toast';
 import Modal from '../common/Modal.jsx';
 import LoadingPhrase from '../common/LoadingPhrase.jsx';
+import BusyButton from '../common/BusyButton.jsx';
 import AttachmentPicker from './AttachmentPicker.jsx';
 import PreviousUpdatesContent from './PreviousUpdatesContent.jsx';
 import { useTask } from '../../hooks/useTask.js';
@@ -212,14 +213,15 @@ function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
                 >
                   منسوخ کریں
                 </button>
-                <button
-                  type="button"
+                <BusyButton
                   onClick={handleReassignSave}
-                  disabled={!newAssigneeId || reassignTask.isPending}
+                  busy={reassignTask.isPending}
+                  busyLabel="محفوظ ہو رہا ہے…"
+                  disabled={!newAssigneeId}
                   className="h-10 min-w-[40px] rounded-lg bg-brand px-4 text-white hover:bg-brand/90 disabled:opacity-50"
                 >
                   محفوظ کریں
-                </button>
+                </BusyButton>
               </div>
             </>
           )}
@@ -313,13 +315,15 @@ function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
               >
                 منسوخ کریں
               </button>
-              <button
+              <BusyButton
                 type="submit"
-                disabled={isSubmitting || attachmentStatus === 'uploading'}
+                busy={isSubmitting}
+                busyLabel="محفوظ ہو رہا ہے…"
+                disabled={attachmentStatus === 'uploading'}
                 className="h-11 min-w-0 rounded-lg bg-brand px-1 text-center text-xs font-semibold leading-tight text-white hover:bg-brand/90 disabled:opacity-50 sm:text-sm"
               >
                 محفوظ کریں
-              </button>
+              </BusyButton>
               {canManageTask && (
                 <>
                   <button

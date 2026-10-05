@@ -8,7 +8,7 @@ import { LOADING_PHRASE } from '../../../src/utils/loadingPhrase.js';
 // font size itself can only be checked in a real browser; these tests cover what jsdom can prove:
 // the verbatim phrase, the one-line/RTL/brand-colour contract and accessibility.
 function getPhrase(container) {
-  return container.querySelector('[data-loading-phrase]');
+  return container.querySelector('[data-phrase-line]');
 }
 
 describe('LoadingPhrase', () => {

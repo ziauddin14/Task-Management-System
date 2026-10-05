@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react'; // explicit import — see src/App.jsx's comment for why
 import { Download } from 'lucide-react';
 import Modal from '../common/Modal.jsx';
+import BusyButton from '../common/BusyButton.jsx';
 import PreviousUpdatesContent from './PreviousUpdatesContent.jsx';
 import WhatsAppShareButton from '../reports/WhatsAppShareButton.jsx';
 import { useExportNodeAsImage } from '../../hooks/useExportNodeAsImage.js';
@@ -40,15 +41,15 @@ function PreviousUpdatesModal({ isOpen, onClose, taskId }) {
       title="کام کی تفصیل"
       maxWidthClassName="max-w-4xl"
       headerActions={
-        <button
-          type="button"
+        <BusyButton
           onClick={handleExport}
-          disabled={isLoading}
+          busy={isLoading}
+          busyLabel="تیار ہو رہا ہے۔۔۔"
           className="flex h-10 items-center gap-1 rounded-lg border border-brand px-3 text-sm text-brand hover:bg-brand-light disabled:opacity-50"
         >
           <Download className="h-4 w-4" aria-hidden="true" />
-          {isLoading ? 'تیار ہو رہا ہے۔۔۔' : 'ایکسپورٹ کریں'}
-        </button>
+          ایکسپورٹ کریں
+        </BusyButton>
       }
     >
       <PreviousUpdatesContent ref={contentRef} taskId={taskId} />

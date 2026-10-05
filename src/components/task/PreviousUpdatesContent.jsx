@@ -2,6 +2,7 @@ import React, { forwardRef, useEffect, useState } from 'react'; // explicit impo
 import clsx from 'clsx';
 import { Paperclip } from 'lucide-react';
 import LoadingPhrase from '../common/LoadingPhrase.jsx';
+import BusyButton from '../common/BusyButton.jsx';
 import EmptyState from '../common/EmptyState.jsx';
 import { useTask } from '../../hooks/useTask.js';
 import { useTaskUpdates } from '../../hooks/useTaskUpdates.js';
@@ -36,7 +37,11 @@ const PreviousUpdatesContent = forwardRef(function PreviousUpdatesContent({ task
     setItems((prev) => (page === 1 ? updatesQuery.data.items : [...prev, ...updatesQuery.data.items]));
   }, [updatesQuery.data, page]);
 
-  const hasMore = updatesQuery.data?.meta ? page < updatesQuery.data.meta.totalPages : false;
+  // The next page is in flight. Its query has no data yet, so on its own the `hasMore` test below
+  // would be false for exactly that moment and the load-more button would vanish while loading —
+  // keeping it mounted (busy) is what lets it show the loading phrase.
+  const isLoadingMore = updatesQuery.isLoading && page > 1;
+  const hasMore = isLoadingMore || (updatesQuery.data?.meta ? page < updatesQuery.data.meta.totalPages : false);
   const isInitialLoading = isTaskLoading || (updatesQuery.isLoading && page === 1);
 
   return (
@@ -134,14 +139,19 @@ const PreviousUpdatesContent = forwardRef(function PreviousUpdatesContent({ task
           )}
 
           {hasMore && (
-            <button
-              type="button"
+            // Full width (it used to be a centred, label-sized button): the loading phrase shows
+            // INSIDE this button while the next page loads, and it needs the whole row to fit on
+            // one line at a readable size.
+            <BusyButton
               onClick={() => setPage((prev) => prev + 1)}
+              busy={isLoadingMore}
+              busyLabel="مزید اپڈیٹس لوڈ ہو رہی ہیں…"
+              phraseInside
               disabled={updatesQuery.isFetching}
-              className="h-10 min-w-[40px] self-center rounded-lg border border-gray-300 px-4 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              className="h-10 w-full rounded-lg border border-gray-300 px-4 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
             >
               مزید پرانی اپڈیٹس دیکھیں
-            </button>
+            </BusyButton>
           )}
         </>
       )}

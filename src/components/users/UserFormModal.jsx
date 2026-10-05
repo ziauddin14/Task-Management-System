@@ -5,6 +5,7 @@ import { z } from 'zod';
 import toast from 'react-hot-toast';
 import Modal from '../common/Modal.jsx';
 import ConfirmDialog from '../common/ConfirmDialog.jsx';
+import BusyButton from '../common/BusyButton.jsx';
 import { useCreateUser } from '../../hooks/useCreateUser.js';
 import { useUpdateUser } from '../../hooks/useUpdateUser.js';
 
@@ -166,13 +167,14 @@ function UserFormModal({ isOpen, onClose, mode, user }) {
             <button type="button" onClick={onClose} className="h-10 min-w-[40px] rounded-lg px-4 text-gray-700 hover:bg-gray-100">
               منسوخ کریں
             </button>
-            <button
+            <BusyButton
               type="submit"
-              disabled={isSubmitting}
+              busy={isSubmitting}
+              busyLabel="محفوظ ہو رہا ہے…"
               className="h-10 min-w-[40px] rounded-lg bg-brand px-4 text-white hover:bg-brand/90 disabled:opacity-50"
             >
               محفوظ کریں
-            </button>
+            </BusyButton>
           </div>
         </form>
       </Modal>

@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'; // explicit import — see s
 import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 import LoadingPhrase from './LoadingPhrase.jsx';
+import BusyButton from './BusyButton.jsx';
+import BusyRegion from './BusyRegion.jsx';
 import EmptyState from './EmptyState.jsx';
 import NotificationItem from './NotificationItem.jsx';
 import { useNotifications } from '../../hooks/useNotifications.js';
@@ -46,8 +48,13 @@ function NotificationDrawer({ isOpen, onClose }) {
     setItems((prev) => (page === 1 ? notificationsQuery.data.items : [...prev, ...notificationsQuery.data.items]));
   }, [notificationsQuery.data, page]);
 
-  const hasMore = notificationsQuery.data?.meta ? page < notificationsQuery.data.meta.totalPages : false;
   const isInitialLoading = notificationsQuery.isLoading && page === 1;
+  // The next page is in flight. Its query has no data yet, so on its own the `hasMore` test below
+  // would be false for exactly that moment and the "مزید دیکھیں" button would vanish while loading
+  // — keeping it mounted (busy) is what lets it show the loading phrase.
+  const isLoadingMore = notificationsQuery.isLoading && page > 1;
+  const hasMore =
+    isLoadingMore || (notificationsQuery.data?.meta ? page < notificationsQuery.data.meta.totalPages : false);
 
   // Mark-read always happens. Navigation is intentionally minimal for Phase 1 (no task-detail
   // page/route exists, and nothing yet populates metadata.taskCodeNumber — see the locked
@@ -97,14 +104,15 @@ function NotificationDrawer({ isOpen, onClose }) {
 
         {hasUnread && (
           <div className="shrink-0 border-b border-gray-100 px-4 py-2">
-            <button
-              type="button"
-              onClick={() => markAllRead.mutate()}
-              disabled={markAllRead.isPending}
-              className="h-10 text-sm font-medium text-brand hover:underline disabled:opacity-50"
-            >
-              سب کو پڑھا ہوا نشان زد کریں
-            </button>
+            <BusyRegion lineClassName="">
+              <BusyButton
+                onClick={() => markAllRead.mutate()}
+                busy={markAllRead.isPending}
+                className="h-10 text-sm font-medium text-brand hover:underline disabled:opacity-50"
+              >
+                سب کو پڑھا ہوا نشان زد کریں
+              </BusyButton>
+            </BusyRegion>
           </div>
         )}
 
@@ -128,14 +136,16 @@ function NotificationDrawer({ isOpen, onClose }) {
           )}
 
           {hasMore && (
-            <button
-              type="button"
+            <BusyButton
               onClick={() => setPage((prev) => prev + 1)}
+              busy={isLoadingMore}
+              busyLabel="مزید اطلاعات لوڈ ہو رہی ہیں…"
+              phraseInside
               disabled={notificationsQuery.isFetching}
               className="mt-2 h-10 w-full rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
             >
               مزید دیکھیں
-            </button>
+            </BusyButton>
           )}
         </div>
       </div>
