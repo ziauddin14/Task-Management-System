@@ -9,6 +9,7 @@ import NotificationItem from './NotificationItem.jsx';
 import { useNotifications } from '../../hooks/useNotifications.js';
 import { useMarkNotificationRead } from '../../hooks/useMarkNotificationRead.js';
 import { useMarkAllNotificationsRead } from '../../hooks/useMarkAllNotificationsRead.js';
+import { useIsMobile } from '../../hooks/useIsMobile.js';
 
 const PAGE_SIZE = 20;
 
@@ -28,6 +29,7 @@ const PAGE_SIZE = 20;
 // hidden.
 function NotificationDrawer({ isOpen, onClose }) {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [page, setPage] = useState(1);
   const [items, setItems] = useState([]);
   const notificationsQuery = useNotifications({ page, limit: PAGE_SIZE }, { enabled: isOpen });
@@ -67,7 +69,8 @@ function NotificationDrawer({ isOpen, onClose }) {
     }
     const codeNumber = notification.metadata?.taskCodeNumber;
     if (notification.taskId && codeNumber) {
-      navigate(`/?search=${encodeURIComponent(codeNumber)}`);
+      // The task list is "/" on desktop and its own "/tasks" tab on a phone.
+      navigate(`${isMobile ? '/tasks' : '/'}?search=${encodeURIComponent(codeNumber)}`);
     }
     onClose();
   }

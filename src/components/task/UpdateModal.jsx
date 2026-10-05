@@ -262,7 +262,7 @@ function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
                   value={completionPercent}
                   onChange={(event) => setValue('completionPercent', Number(event.target.value), { shouldValidate: true })}
                   aria-label="Completion % slider"
-                  className="flex-1"
+                  className="flex-1 max-md:h-11"
                 />
                 <input
                   id="update-percent"
@@ -329,14 +329,14 @@ function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
                   <button
                     type="button"
                     onClick={() => setReassignStep('confirm')}
-                    className="h-11 min-w-0 rounded-lg border border-amber-300 px-1 text-center text-[11px] font-medium leading-tight text-amber-700 hover:bg-amber-50 sm:text-xs"
+                    className="h-11 min-w-0 rounded-lg border border-amber-300 px-1 text-center text-[12px] font-medium leading-tight text-amber-700 hover:bg-amber-50 sm:text-xs"
                   >
                     ذمہ دار تبدیل کریں
                   </button>
                   <button
                     type="button"
                     onClick={onCloseTask}
-                    className="h-11 min-w-0 rounded-lg border border-red-300 px-1 text-center text-[11px] font-medium leading-tight text-red-600 hover:bg-red-50 sm:text-xs"
+                    className="h-11 min-w-0 rounded-lg border border-red-300 px-1 text-center text-[12px] font-medium leading-tight text-red-600 hover:bg-red-50 sm:text-xs"
                   >
                     کام بند کریں
                   </button>

@@ -23,6 +23,14 @@ import { BusyRegionContext, useBusyRegionState } from '../../contexts/BusyRegion
 // card instead, it always shows and nothing inside the card moves or is covered. The card is at
 // most 90vh tall and centred, so there is always at least 5vh free beneath it: BUSY_STRIP_ROOM
 // keeps the strip within that on a short phone screen.
+//
+// Mobile (< 768px) — every dialog is a bottom sheet: the same card, docked to the bottom edge at
+// full width with rounded top corners, where a thumb reaches it. Done here, once, with `max-md:`
+// classes only, so every dialog in the app converts together and nothing at 768px and up changes.
+// A sheet has no free space beneath it, so there the busy strip hangs ABOVE the card instead
+// (the card's top corners square off rather than its bottom ones) — still outside the card, still
+// never moving or covering the button that was pressed. The sheet is at most 88vh tall, which
+// leaves the strip its 5vh above.
 const BUSY_STRIP_ROOM = '5vh';
 
 function Modal({ isOpen, onClose, title, headerActions, maxWidthClassName = 'max-w-lg', children }) {
@@ -40,18 +48,19 @@ function Modal({ isOpen, onClose, title, headerActions, maxWidthClassName = 'max
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 max-md:items-end max-md:p-0">
       <button
         type="button"
         aria-label="بند کریں"
         className="absolute inset-0 bg-black/50"
         onClick={onClose}
       />
-      <div role="dialog" aria-modal="true" aria-label={title} className={clsx('relative w-full', maxWidthClassName)}>
+      <div role="dialog" aria-modal="true" aria-label={title} className={clsx('relative w-full max-md:max-w-none', maxWidthClassName)}>
         <div
           className={clsx(
             'relative max-h-[90vh] w-full overflow-y-auto rounded-lg border-t-4 border-brand bg-white p-4 shadow-xl',
-            busyRegion.isBusy && 'rounded-b-none'
+            'max-md:max-h-[88vh] max-md:rounded-b-none max-md:rounded-t-[20px] max-md:pb-[calc(1rem+env(safe-area-inset-bottom,0px))]',
+            busyRegion.isBusy && 'rounded-b-none max-md:rounded-t-none'
           )}
         >
           <BusyRegionContext.Provider value={busyRegion.report}>
@@ -71,7 +80,10 @@ function Modal({ isOpen, onClose, title, headerActions, maxWidthClassName = 'max
           </BusyRegionContext.Provider>
         </div>
         {busyRegion.isBusy && (
-          <div data-busy-strip className="absolute inset-x-0 top-full rounded-b-lg bg-white px-4 shadow-xl">
+          <div
+            data-busy-strip
+            className="absolute inset-x-0 top-full rounded-b-lg bg-white px-4 shadow-xl max-md:bottom-full max-md:top-auto max-md:rounded-b-none max-md:rounded-t-[20px]"
+          >
             <LoadingPhrase size="compact" label={busyRegion.label} maxRowHeight={BUSY_STRIP_ROOM} />
           </div>
         )}

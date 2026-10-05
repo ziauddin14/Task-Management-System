@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import App from './App.jsx';
 import './styles/fonts.css';
+import './styles/tokens.css';
 import './styles/print.css';
 import './index.css';
 

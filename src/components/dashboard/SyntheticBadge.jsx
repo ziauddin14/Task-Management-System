@@ -9,7 +9,7 @@ import { SYNTHETIC_LABEL, syntheticDetail } from '../../utils/taskDisplay.js';
 // Hover shows "تخمینی N%" (title); a tap/click expands the badge itself to the same text, since a
 // phone has no hover. `static` is for print and exports, where nothing can be hovered or tapped:
 // it renders the full text as plain content.
-const BADGE_CLASS = 'rounded-full border border-dashed border-amber-400 bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium leading-tight text-amber-800';
+const BADGE_CLASS = 'rounded-full border border-dashed border-amber-400 bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium leading-tight text-amber-800 max-md:text-[12px]';
 
 function SyntheticBadge({ assumedPercent, static: isStatic = false, className }) {
   const [expanded, setExpanded] = useState(false);

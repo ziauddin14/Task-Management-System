@@ -33,6 +33,10 @@ function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<DashboardPage />} />
+          {/* The task list as its own destination — the mobile layout's "ٹاسک" tab. The same page
+              and the same filters as "/"; from 768px up it simply redirects there (see
+              DashboardPage.jsx), so the desktop app still has exactly one dashboard. */}
+          <Route path="/tasks" element={<DashboardPage view="tasks" />} />
           {/* Web Push addition — personal, not admin-only (every user, not just Admins, may want
               push on/off for their own device), so it sits outside the RoleGuard below. */}
           <Route path="/settings" element={<SettingsPage />} />

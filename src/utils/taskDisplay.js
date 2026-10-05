@@ -59,3 +59,12 @@ export function getStatusMeta(status) {
 export function getPerformanceMeta(rating) {
   return PERFORMANCE_META[rating] || PERFORMANCE_META['-'];
 }
+
+// "Ali، Bilal +1" — a task's zimmedar on one line: the first two by name, then how many more.
+// Used where there is no room for the table's row of name chips (the mobile task card).
+export function assigneeSummary(assignees = [], maxNames = 2) {
+  const names = assignees.slice(0, maxNames).map((person) => person.name);
+  if (names.length === 0) return '-';
+  const extra = assignees.length - names.length;
+  return extra > 0 ? `${names.join('، ')} +${extra}` : names.join('، ');
+}

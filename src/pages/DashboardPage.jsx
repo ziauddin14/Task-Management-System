@@ -1,6 +1,8 @@
 import React, { useState } from 'react'; // explicit import — see src/App.jsx's comment for why
+import { Navigate, useLocation } from 'react-router-dom';
 import { Plus, BellRing, Send } from 'lucide-react';
 import { useAuthStore } from '../store/authStore.js';
+import { useIsMobile } from '../hooks/useIsMobile.js';
 import { useDashboardFilters } from '../hooks/useDashboardFilters.js';
 import { usePageSize } from '../hooks/usePageSize.js';
 import { useTasks } from '../hooks/useTasks.js';
@@ -14,6 +16,9 @@ import RatingKpiGroup from '../components/dashboard/RatingKpiGroup.jsx';
 import FilterBar from '../components/dashboard/FilterBar.jsx';
 import TaskTable from '../components/dashboard/TaskTable.jsx';
 import ActionsMenu from '../components/dashboard/ActionsMenu.jsx';
+import ExportMenu from '../components/reports/ExportMenu.jsx';
+import MobileDashboardView from '../components/mobile/MobileDashboardView.jsx';
+import MobileTasksView from '../components/mobile/MobileTasksView.jsx';
 import TaskFormModal from '../components/task/TaskFormModal.jsx';
 import UpdateModal from '../components/task/UpdateModal.jsx';
 import PreviousUpdatesModal from '../components/task/PreviousUpdatesModal.jsx';
@@ -25,6 +30,7 @@ import BusyButton from '../components/common/BusyButton.jsx';
 import BusyRegion from '../components/common/BusyRegion.jsx';
 import PushPermissionBanner from '../components/common/PushPermissionBanner.jsx';
 import { PageActions } from '../contexts/PageActionsPortal.jsx';
+import { useDismissPageActions } from '../contexts/PageActionsDismissContext.js';
 import { STATUS_META, getStatusMeta } from '../utils/taskDisplay.js';
 import { COLUMN_DEFINITIONS } from '../utils/dashboardColumns.js';
 
@@ -34,22 +40,34 @@ const COLUMN_STORAGE_KEY = 'dashboard.visibleColumns.v1';
 // docs/08-ui-ux.md §3 — top to bottom: header (AppLayout, already wired, ایکشن menu portalled
 // into it), KPI cards, filter bar, task table (frozen header, pagination), Update Modal, Previous
 // Updates Modal.
-function DashboardPage() {
+//
+// Mobile (< 768px, hooks/useIsMobile.js) — the same page, the same hooks and the same dialogs, laid
+// out as two bottom-tab destinations instead of one long screen: `view="dashboard"` (route "/")
+// shows the KPIs alone and `view="tasks"` (route "/tasks") the task list as cards. Both read the
+// one filter state in the URL, so they always describe the same set, and each fetches only what
+// it shows. From 768px up nothing changes: "/" is the whole dashboard as before, and "/tasks" just
+// redirects to it (keeping the query string, so a link shared from a phone opens correctly).
+function DashboardPage({ view = 'dashboard' }) {
   const user = useAuthStore((state) => state.user);
   const isAdmin = user?.role === 'admin';
+  const isMobile = useIsMobile();
+  const location = useLocation();
+  const dismissPageActions = useDismissPageActions();
+  const showsTaskList = !isMobile || view === 'tasks';
+  const showsKpis = !isMobile || view !== 'tasks';
 
   const [pageSize, setPageSize] = usePageSize();
   const filtersHook = useDashboardFilters(pageSize);
   const { apiFilters, statusSummaryFilters, ratingSummaryFilters, page, params, sortBy, sortOrder, toggleKpiFilter, setFilters, setSort, setPage } =
     filtersHook;
 
-  const tasksQuery = useTasks(apiFilters);
+  const tasksQuery = useTasks(apiFilters, { enabled: showsTaskList });
   // The KPI cards follow the dashboard's filters: the same filter state the table uses, minus
   // sort/paging — and each group of cards minus its OWN filter, so the group a card was clicked in
   // keeps showing the whole distribution (see useDashboardFilters). Hence two reads of the same
   // endpoint; with no status and no rating chosen they are one and the same request.
-  const statusSummaryQuery = useDashboardSummary(statusSummaryFilters);
-  const ratingSummaryQuery = useDashboardSummary(ratingSummaryFilters);
+  const statusSummaryQuery = useDashboardSummary(statusSummaryFilters, { enabled: showsKpis });
+  const ratingSummaryQuery = useDashboardSummary(ratingSummaryFilters, { enabled: showsKpis });
   const statusSummary = statusSummaryQuery.data;
   const ratingSummary = ratingSummaryQuery.data;
   const isSummaryLoading = statusSummaryQuery.isLoading || ratingSummaryQuery.isLoading;
@@ -98,6 +116,143 @@ function DashboardPage() {
     // eslint-disable-next-line no-unused-vars
     const { page: _page, limit: _limit, ...taskFilters } = apiFilters;
     return exportReportHook.run({ ...taskFilters, format, lastUpdateOnly });
+  }
+
+  // Every dialog the page can open. Rendered identically by the desktop layout and by both mobile
+  // views, which is why it is built once, here.
+  const dialogs = (
+    <>
+      {isAdmin && (
+        <TaskFormModal
+          isOpen={Boolean(formModal)}
+          mode={formModal?.mode}
+          task={formModal?.task}
+          onClose={() => setFormModal(null)}
+        />
+      )}
+
+      {isAdmin && (
+        <ConfirmDialog
+          isOpen={Boolean(closingTask)}
+          title="کام بند کریں"
+          message="اس کام کو بند کرنے کے بعد کوئی نئی اپڈیٹ درج نہیں کی جا سکے گی۔ کیا واقعی بند کرنا چاہتے ہیں؟"
+          confirmLabel="ہاں، بند کریں"
+          cancelLabel="منسوخ کریں"
+          onConfirm={handleCloseConfirm}
+          onCancel={() => setClosingTask(null)}
+          isLoading={closeTaskMutation.isPending}
+        />
+      )}
+
+      <UpdateModal
+        isOpen={Boolean(updatingTask)}
+        taskId={updatingTask?.id}
+        onClose={() => setUpdatingTask(null)}
+        isAdmin={isAdmin}
+        onCloseTask={() => {
+          setClosingTask(updatingTask);
+          setUpdatingTask(null);
+        }}
+      />
+
+      <PreviousUpdatesModal
+        isOpen={Boolean(viewingUpdatesTask)}
+        taskId={viewingUpdatesTask?.id}
+        onClose={() => setViewingUpdatesTask(null)}
+      />
+
+      {isAdmin && (
+        <SyntheticRatingDialog
+          isOpen={Boolean(syntheticRatingTask)}
+          task={syntheticRatingTask}
+          onClose={() => setSyntheticRatingTask(null)}
+        />
+      )}
+
+      {isAdmin && (
+        <SendNotificationDialog
+          isOpen={Boolean(sendNotificationState)}
+          task={sendNotificationState?.task}
+          onClose={() => setSendNotificationState(null)}
+        />
+      )}
+    </>
+  );
+
+  if (!isMobile && view === 'tasks') {
+    return <Navigate to={{ pathname: '/', search: location.search }} replace />;
+  }
+
+  if (isMobile) {
+    return (
+      <>
+        {view === 'tasks' ? (
+          <MobileTasksView
+            tasks={tasksQuery.data?.items || []}
+            meta={tasksQuery.data?.meta}
+            isLoading={tasksQuery.isLoading}
+            isError={tasksQuery.isError}
+            isAdmin={isAdmin}
+            filtersHook={filtersHook}
+            pageSize={pageSize}
+            onPageSizeChange={setPageSize}
+            onCreateTask={() => setFormModal({ mode: 'create' })}
+            onEdit={(task) => setFormModal({ mode: 'edit', task })}
+            onUpdate={(task) => setUpdatingTask(task)}
+            onViewUpdates={(task) => setViewingUpdatesTask(task)}
+            onSendReminder={(task) => setSendNotificationState({ task })}
+            onEditSyntheticRating={(task) => setSyntheticRatingTask(task)}
+          />
+        ) : (
+          <MobileDashboardView
+            statusSummary={statusSummary}
+            ratingSummary={ratingSummary}
+            isLoading={isSummaryLoading}
+            isError={statusSummaryQuery.isError || ratingSummaryQuery.isError}
+            isRefreshing={isSummaryRefreshing}
+            filtersHook={filtersHook}
+            isAdmin={isAdmin}
+            onCreateTask={() => setFormModal({ mode: 'create' })}
+          />
+        )}
+
+        {/* The page's own actions, which have no room in the phone's app bar: they go into the
+            "مزید" sheet (the mobile layout's PageActions target). Export for everyone — it carries
+            the current filters, as on desktop; the two notification actions for an Admin. The
+            one that opens a dialog closes the sheet first. */}
+        <PageActions>
+          <ExportMenu mode="dashboard" onExport={handleDashboardExport} isLoading={exportReportHook.isLoading} variant="menuItem" />
+          {isAdmin && (
+            <BusyRegion lineClassName="">
+              <BusyButton
+                onClick={() => triggerRemindersMutation.mutate()}
+                busy={triggerRemindersMutation.isPending}
+                busyLabel="یاد دہانیاں بھیجی جا رہی ہیں…"
+                className="flex h-10 w-full items-center gap-2 rounded-md px-2 text-start text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                <BellRing className="h-4 w-4" aria-hidden="true" />
+                یاد دہانیاں بھیجیں
+              </BusyButton>
+            </BusyRegion>
+          )}
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => {
+                dismissPageActions();
+                setSendNotificationState({ task: null });
+              }}
+              className="flex h-10 w-full items-center gap-2 rounded-md px-2 text-start text-sm text-gray-700 hover:bg-gray-50"
+            >
+              <Send className="h-4 w-4" aria-hidden="true" />
+              نئی اطلاع بھیجیں
+            </button>
+          )}
+        </PageActions>
+
+        {dialogs}
+      </>
+    );
   }
 
   return (
@@ -280,60 +435,7 @@ function DashboardPage() {
         />
       </div>
 
-      {isAdmin && (
-        <TaskFormModal
-          isOpen={Boolean(formModal)}
-          mode={formModal?.mode}
-          task={formModal?.task}
-          onClose={() => setFormModal(null)}
-        />
-      )}
-
-      {isAdmin && (
-        <ConfirmDialog
-          isOpen={Boolean(closingTask)}
-          title="کام بند کریں"
-          message="اس کام کو بند کرنے کے بعد کوئی نئی اپڈیٹ درج نہیں کی جا سکے گی۔ کیا واقعی بند کرنا چاہتے ہیں؟"
-          confirmLabel="ہاں، بند کریں"
-          cancelLabel="منسوخ کریں"
-          onConfirm={handleCloseConfirm}
-          onCancel={() => setClosingTask(null)}
-          isLoading={closeTaskMutation.isPending}
-        />
-      )}
-
-      <UpdateModal
-        isOpen={Boolean(updatingTask)}
-        taskId={updatingTask?.id}
-        onClose={() => setUpdatingTask(null)}
-        isAdmin={isAdmin}
-        onCloseTask={() => {
-          setClosingTask(updatingTask);
-          setUpdatingTask(null);
-        }}
-      />
-
-      <PreviousUpdatesModal
-        isOpen={Boolean(viewingUpdatesTask)}
-        taskId={viewingUpdatesTask?.id}
-        onClose={() => setViewingUpdatesTask(null)}
-      />
-
-      {isAdmin && (
-        <SyntheticRatingDialog
-          isOpen={Boolean(syntheticRatingTask)}
-          task={syntheticRatingTask}
-          onClose={() => setSyntheticRatingTask(null)}
-        />
-      )}
-
-      {isAdmin && (
-        <SendNotificationDialog
-          isOpen={Boolean(sendNotificationState)}
-          task={sendNotificationState?.task}
-          onClose={() => setSendNotificationState(null)}
-        />
-      )}
+      {dialogs}
     </div>
   );
 }

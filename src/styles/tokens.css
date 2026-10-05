@@ -1,0 +1,132 @@
+/* The mobile UI's design tokens — the ONE place its colours, radii, shadows, spacing and the
+   Nastaleeq line-heights are defined. tailwind.config.js maps each of these onto a `tk-*`
+   utility (bg-tk-green-900, rounded-tk-card, px-tk-page, …), so no mobile component carries a
+   colour or a radius of its own. The desktop layout (>= 768px) does not use them: it keeps the
+   `brand` colours and Tailwind's default palette exactly as before.
+
+   Every text/background pair below is at least 4.5:1 (WCAG AA). */
+:root {
+  /* Brand greens */
+  --tk-green-900: #14522e; /* app bar, active tab label, active filter chip */
+  --tk-green-700: #1b6b3c; /* primary buttons, FAB */
+  --tk-green-100: #dcefe3; /* the pill behind the active tab's icon */
+  --tk-green-50: #e6f2ea;
+
+  /* Surfaces and ink */
+  --tk-page: #f2f6f3;
+  --tk-card: #ffffff;
+  --tk-ink: #14201a;
+  --tk-ink-soft: #3d4f45;
+  --tk-muted: #52645a;
+  --tk-line: #dfe8e2;
+  --tk-line-strong: #d3ded7;
+  --tk-track: #e8eeea; /* the unfilled part of a bar or ring */
+
+  /* Task status */
+  --tk-pending-bg: #fff0d1;
+  --tk-pending-text: #7a4a00;
+  --tk-pending-accent: #8a5a00;
+  --tk-pending-bar: #c9953a;
+  --tk-ongoing-bg: #e0ecfa;
+  --tk-ongoing-text: #1e5a99;
+  --tk-closed-bg: #e1f1e7;
+  --tk-closed-text: #1b6b3c;
+  --tk-complete-bg: #dcf0f0;
+  --tk-complete-text: #0f6a6a;
+
+  /* Rating bands: text colour, light tint of the same hue (chips), fill (ring and stacked bar).
+     The four fills are separable under colour-vision deficiency (adjacent pairs, validated). */
+  --tk-excellent: #5b3fa0;
+  --tk-excellent-bg: #efeaf8;
+  --tk-excellent-fill: #5b3fa0;
+  --tk-good: #1b6b3c;
+  --tk-good-bg: #e1f1e7;
+  --tk-good-fill: #1f8a4c;
+  --tk-fair: #9a5a00;
+  --tk-fair-bg: #fff0d1;
+  --tk-fair-fill: #e08a1e;
+  --tk-weak: #a4262c;
+  --tk-weak-bg: #fdeaea;
+  --tk-weak-fill: #c2413a;
+
+  /* Attention banner, overdue pill, badges */
+  --tk-attention-bg: #fff3d9;
+  --tk-attention-chip: #ffe0a3;
+  --tk-attention-text: #5a3a00;
+  --tk-attention-icon: #7a4a00;
+  --tk-danger: #a4262c;
+  --tk-danger-bg: #fdeaea;
+  --tk-badge: #c2413a;
+  --tk-bell-dot: #ffb4a8;
+
+  /* Radii */
+  --tk-radius-hero: 20px;
+  --tk-radius-card: 18px;
+  --tk-radius-tile: 16px;
+  --tk-radius-input: 14px;
+  --tk-radius-chip: 12px;
+  --tk-radius-pill: 999px;
+
+  /* Shadows */
+  --tk-shadow-soft: 0 1px 6px rgba(20, 60, 38, 0.07);
+  --tk-shadow-hero: 0 2px 10px rgba(20, 60, 38, 0.08);
+  --tk-shadow-fab: 0 6px 16px rgba(20, 82, 46, 0.35);
+  --tk-shadow-sheet: 0 -8px 28px rgba(20, 60, 38, 0.18);
+
+  /* Spacing and fixed sizes */
+  --tk-space-page: 16px; /* side gutter of every mobile screen */
+  --tk-space-card: 14px; /* padding inside a card */
+  --tk-space-gap: 12px; /* gap between cards */
+  --tk-space-gap-sm: 8px;
+  --tk-appbar-h: 68px;
+  --tk-tabbar-h: 76px;
+  --tk-touch: 44px; /* smallest touch target */
+
+  /* Line-heights. Nastaleeq glyphs rise and fall far beyond a Latin line box, so an Urdu label
+     needs about twice its font size or its dots and tails are clipped. Numbers do not. */
+  --tk-lh-label: 2.1;
+  --tk-lh-title: 2;
+  --tk-lh-number: 1.5;
+}
+
+/* A bottom sheet slides up and its backdrop fades in — only for people who have not asked their
+   device to reduce motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .tk-sheet-enter {
+    animation: tk-sheet-up 0.22s ease-out;
+  }
+
+  .tk-backdrop-enter {
+    animation: tk-fade-in 0.18s ease-out;
+  }
+}
+
+@keyframes tk-sheet-up {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes tk-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* The chip row under the search field scrolls sideways on its own; its scrollbar would only add
+   a grey strip under the chips. */
+.tk-no-scrollbar {
+  scrollbar-width: none;
+}
+
+.tk-no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

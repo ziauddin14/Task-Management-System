@@ -1,13 +1,88 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { Menu } from 'lucide-react';
 import { useAuthStore } from '../store/authStore.js';
 import { useSidebarCollapsed } from '../hooks/useSidebarCollapsed.js';
+import { useIsMobile } from '../hooks/useIsMobile.js';
+import { useUnreadNotificationCount } from '../hooks/useUnreadNotificationCount.js';
 import Sidebar from '../components/common/Sidebar.jsx';
 import LogoMark from '../components/common/LogoMark.jsx';
 import NotificationBell from '../components/common/NotificationBell.jsx';
+import NotificationDrawer from '../components/common/NotificationDrawer.jsx';
+import MobileAppBar from '../components/mobile/MobileAppBar.jsx';
+import BottomTabBar from '../components/mobile/BottomTabBar.jsx';
+import MoreSheet from '../components/mobile/MoreSheet.jsx';
 import { PageActionsPortalProvider } from '../contexts/PageActionsPortal.jsx';
+import { PageActionsDismissContext } from '../contexts/PageActionsDismissContext.js';
+
+const APP_NAME = 'ٹاسک مینجمنٹ سسٹم';
+// What the mobile app bar shows per screen. Every screen not named here has a heading of its own
+// in the page body, so the bar keeps the app's name there.
+const MOBILE_TITLES = { '/tasks': 'ٹاسک' };
+
+// The mobile layout (< 768px): a green app bar, the page, and a fixed bottom tab bar. The bell and
+// the "اطلاعات" tab open the one notification drawer; the menu button and the "مزید" tab open the
+// one "مزید" sheet, which also carries the current page's own actions (its `pageActionsRef` is the
+// same portal target the desktop header exposes). The page is given room at its end for the tab
+// bar, so nothing it renders can sit hidden behind it.
+function MobileLayout({ user, isAdmin, onLogout, pathname }) {
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const closeMore = useCallback(() => setIsMoreOpen(false), []);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [actionsSlot, setActionsSlot] = useState(null);
+  const unreadCount = useUnreadNotificationCount().data?.count ?? 0;
+
+  // A route change closes the menu (its links close it themselves; this covers back/forward).
+  useEffect(() => {
+    setIsMoreOpen(false);
+  }, [pathname]);
+
+  return (
+    <div className="flex min-h-screen flex-col bg-tk-page text-tk-ink">
+      <MobileAppBar
+        title={MOBILE_TITLES[pathname] || APP_NAME}
+        userName={user?.name}
+        unreadCount={unreadCount}
+        isMenuOpen={isMoreOpen}
+        onOpenMenu={() => setIsMoreOpen(true)}
+        isNotificationsOpen={isNotificationsOpen}
+        onOpenNotifications={() => setIsNotificationsOpen(true)}
+      />
+
+      <main
+        className="min-w-0 flex-1 px-tk-page pt-[14px]"
+        style={{ paddingBottom: 'calc(var(--tk-tabbar-h) + env(safe-area-inset-bottom, 0px) + 20px)' }}
+      >
+        <PageActionsPortalProvider target={actionsSlot}>
+          <PageActionsDismissContext.Provider value={closeMore}>
+            <Outlet />
+          </PageActionsDismissContext.Provider>
+        </PageActionsPortalProvider>
+      </main>
+
+      <BottomTabBar
+        isAdmin={isAdmin}
+        unreadCount={unreadCount}
+        isNotificationsOpen={isNotificationsOpen}
+        onOpenNotifications={() => setIsNotificationsOpen(true)}
+        isMoreOpen={isMoreOpen}
+        onOpenMore={() => setIsMoreOpen(true)}
+      />
+
+      <MoreSheet
+        isOpen={isMoreOpen}
+        onClose={closeMore}
+        user={user}
+        isAdmin={isAdmin}
+        onLogout={onLogout}
+        pageActionsRef={setActionsSlot}
+      />
+
+      <NotificationDrawer isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
+    </div>
+  );
+}
 
 // docs/08-ui-ux.md §3 item 1 — right-side navigation (Sidebar.jsx, Prompt 5C — RTL's natural
 // position, moved from the left) + a top header bar showing the app's own branding centered
@@ -20,6 +95,7 @@ function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const isAdmin = user?.role === 'admin';
+  const isMobile = useIsMobile();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { collapsed, toggleCollapsed } = useSidebarCollapsed();
@@ -45,6 +121,10 @@ function AppLayout() {
       window.google.accounts.id.disableAutoSelect();
     }
     navigate('/login');
+  }
+
+  if (isMobile) {
+    return <MobileLayout user={user} isAdmin={isAdmin} onLogout={handleLogout} pathname={location.pathname} />;
   }
 
   return (
@@ -96,7 +176,7 @@ function AppLayout() {
               content, next to the real Dawat-e-Islami logo (LogoMark.jsx). */}
           <div className="flex min-w-0 items-center justify-center gap-2">
             <LogoMark className="h-8 w-8 shrink-0 md:h-9 md:w-9" />
-            <span className="truncate text-lg font-extrabold text-brand md:text-2xl">ٹاسک مینجمنٹ سسٹم</span>
+            <span className="truncate text-lg font-extrabold text-brand md:text-2xl">{APP_NAME}</span>
           </div>
 
           <div className="flex items-center justify-end gap-1">
