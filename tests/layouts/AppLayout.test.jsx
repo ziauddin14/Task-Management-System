@@ -109,7 +109,7 @@ describe('AppLayout (docs/08-ui-ux.md §3, docs/11-auth.md §5)', () => {
     window.google = { accounts: { id: { disableAutoSelect } } };
     const { clearSpy } = renderLayout();
 
-    fireEvent.click(screen.getByText('لاگ آؤٹ'));
+    fireEvent.click(screen.getByRole('button', { name: 'لاگ آؤٹ', hidden: true }));
 
     // Step 1: authStore (and its persisted localStorage entry) cleared.
     expect(logoutSpy).toHaveBeenCalled();
@@ -137,7 +137,7 @@ describe('AppLayout (docs/08-ui-ux.md §3, docs/11-auth.md §5)', () => {
     useAuthStore.getState().login({ id: '1', name: 'Om', role: 'user' }, 'jwt-abc');
     renderLayout();
 
-    expect(() => fireEvent.click(screen.getByText('لاگ آؤٹ'))).not.toThrow();
+    expect(() => fireEvent.click(screen.getByRole('button', { name: 'لاگ آؤٹ', hidden: true }))).not.toThrow();
     expect(mockNavigate).toHaveBeenCalledWith('/login');
   });
 
@@ -232,24 +232,36 @@ describe('AppLayout (docs/08-ui-ux.md §3, docs/11-auth.md §5)', () => {
 
   // Prompt 5C.2 — collapsible on both desktop and mobile; the toggle lives in the sidebar itself.
   describe('sidebar collapse', () => {
-    it('starts expanded by default and collapses/expands via the toggle button, persisting to localStorage', () => {
+    // Desktop redesign — collapsed (icons only) is now the default; nothing is stored until the
+    // person makes a choice.
+    it('starts COLLAPSED by default and expands/collapses via the toggle button, persisting to localStorage', () => {
       useAuthStore.getState().login({ id: '1', name: 'Om', role: 'user' }, 'jwt-abc');
       renderLayout();
 
-      // Expanded: the nav link labels and the sidebar's own brand text are visible.
-      expect(screen.getByText('ڈیش بورڈ')).toBeInTheDocument();
-      expect(screen.getByLabelText('سائیڈبار سکیڑیں')).toBeInTheDocument();
-
-      fireEvent.click(screen.getByLabelText('سائیڈبار سکیڑیں'));
-
+      // Collapsed: no link labels in the page, only icons (each link is named by aria-label).
       expect(screen.queryByText('ڈیش بورڈ')).not.toBeInTheDocument();
       expect(screen.getByLabelText('سائیڈبار پھیلائیں')).toBeInTheDocument();
-      expect(window.localStorage.getItem('sidebar.collapsed.v1')).toBe('true');
+      expect(window.localStorage.getItem('sidebar.collapsed.v1')).toBeNull();
 
       fireEvent.click(screen.getByLabelText('سائیڈبار پھیلائیں'));
 
       expect(screen.getByText('ڈیش بورڈ')).toBeInTheDocument();
+      expect(screen.getByLabelText('سائیڈبار سکیڑیں')).toBeInTheDocument();
       expect(window.localStorage.getItem('sidebar.collapsed.v1')).toBe('false');
+
+      fireEvent.click(screen.getByLabelText('سائیڈبار سکیڑیں'));
+
+      expect(screen.queryByText('ڈیش بورڈ')).not.toBeInTheDocument();
+      expect(window.localStorage.getItem('sidebar.collapsed.v1')).toBe('true');
+    });
+
+    it('restores an EXPANDED state that was saved to localStorage', () => {
+      window.localStorage.setItem('sidebar.collapsed.v1', 'false');
+      useAuthStore.getState().login({ id: '1', name: 'Om', role: 'user' }, 'jwt-abc');
+      renderLayout();
+
+      expect(screen.getByText('ڈیش بورڈ')).toBeInTheDocument();
+      expect(screen.getByLabelText('سائیڈبار سکیڑیں')).toBeInTheDocument();
     });
 
     it('restores a collapsed state that was already saved to localStorage', () => {

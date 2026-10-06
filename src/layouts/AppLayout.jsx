@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { Menu } from 'lucide-react';
@@ -17,6 +17,16 @@ import { PageActionsPortalProvider } from '../contexts/PageActionsPortal.jsx';
 import { PageActionsDismissContext } from '../contexts/PageActionsDismissContext.js';
 
 const APP_NAME = 'ٹاسک مینجمنٹ سسٹم';
+
+// "منگل، 6 اکتوبر 2026" — today's date in Urdu, with Latin digits like every other date in the
+// app. Empty where the browser cannot format it, in which case the navbar just shows nothing there.
+function formatToday() {
+  try {
+    return new Intl.DateTimeFormat('ur-PK-u-nu-latn', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
+  } catch {
+    return '';
+  }
+}
 // What the mobile app bar shows per screen. Every screen not named here has a heading of its own
 // in the page body, so the bar keeps the app's name there.
 const MOBILE_TITLES = { '/tasks': 'ٹاسک' };
@@ -106,6 +116,7 @@ function AppLayout() {
   // A callback ref (not useRef) is used deliberately, so state — and therefore the context value
   // consumers see — only updates once the node is genuinely mounted, not left permanently null.
   const [actionsSlot, setActionsSlot] = useState(null);
+  const today = useMemo(formatToday, []);
 
   // Close the mobile drawer on every route change (also triggered by Sidebar's own NavLink
   // onClick, but this covers back/forward navigation and any other route change too).
@@ -133,10 +144,9 @@ function AppLayout() {
     // height, which broke ordinary scrolling on content-heavy pages. Reverted to a normal
     // min-h-screen page: the page itself scrolls like any ordinary webpage, while the sidebar and
     // header stay put via `sticky` (below) instead of by constraining everything else's height.
-    <div className="flex min-h-screen bg-gray-50/50">
-      {/* Prompt 5C — Sidebar is the FIRST child of this row: in this RTL app a plain flex row's
-          first child lands at the visual/physical RIGHT edge, which is the sidebar's new home
-          (it was the LAST child before, which is what put it on the left). */}
+    <div className="flex min-h-screen bg-tk-surface">
+      {/* Sidebar is the FIRST child of this row: in this RTL app a plain flex row's first child
+          lands at the visual/physical RIGHT edge, which is the sidebar's home. */}
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
@@ -151,48 +161,44 @@ function AppLayout() {
           propagates all the way up to this row, pushing the whole page wider than the viewport
           instead of letting the table's own overflow-x-auto container do the scrolling. */}
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* sticky, not fixed: it stays pinned to the top of the viewport as the page scrolls
-            without needing to be pulled out of flow and hand-measured against the sidebar's
-            width — flow layout already handles that for free. */}
-        <header className="no-print sticky top-0 z-30 grid h-16 shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 border-b-2 border-brand/10 bg-white px-4 shadow-sm">
-          <div className="flex items-center justify-start gap-1">
+        {/* The navbar: white, 84px, sticky. Three columns so the logo and the app's name stay
+            centred whatever the two sides hold — start side: the page's own actions ("ایکشن") and
+            today's date; end side: who is signed in, the bell, their initial. */}
+        <header className="no-print sticky top-0 z-30 grid h-tk-navbar shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 bg-white px-4 shadow-[0_1px_0_var(--tk-line)] lg:px-7">
+          <div className="flex min-w-0 items-center justify-start gap-3">
             <button
               type="button"
               onClick={() => setIsSidebarOpen(true)}
               aria-label="مینیو کھولیں"
-              className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-600 hover:bg-brand-light hover:text-brand md:hidden"
+              className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-tk-input text-tk-green-900 hover:bg-tk-hover md:hidden"
             >
               <Menu className="h-5 w-5" aria-hidden="true" />
             </button>
-            {/* Prompt — Columns/Print View/Export live here now: the empty space between the
-                centered logo and the Sidebar (this column was previously only ever occupied by the
-                mobile menu button above, empty on desktop) — moved out of the opposite side, next
-                to the user info, which had no room to spare. Zero footprint when no page has
-                anything to put in it (DashboardPage.jsx is currently the only one that does). */}
-            <div ref={setActionsSlot} className="flex items-center gap-1" />
+            {/* Whatever the current page puts in the navbar (contexts/PageActionsPortal.jsx) —
+                today the dashboard's "ایکشن" menu. Zero footprint when a page has nothing. */}
+            <div ref={setActionsSlot} className="flex shrink-0 items-center gap-1" />
+            {today && <span className="hidden truncate text-[13px] leading-tk-label text-tk-muted xl:block">{today}</span>}
           </div>
 
-          {/* The app's own brand text, centered and large/bold, reads as the navbar's primary
-              content, next to the real Dawat-e-Islami logo (LogoMark.jsx). */}
-          <div className="flex min-w-0 items-center justify-center gap-2">
-            <LogoMark className="h-8 w-8 shrink-0 md:h-9 md:w-9" />
-            <span className="truncate text-lg font-extrabold text-brand md:text-2xl">{APP_NAME}</span>
+          {/* The real Dawat-e-Islami logo (LogoMark.jsx) and the app's name: the navbar's primary
+              content, centred. */}
+          <div className="flex min-w-0 items-center justify-center gap-3">
+            <LogoMark className="h-[46px] w-[46px] shrink-0 lg:h-[58px] lg:w-[58px]" />
+            <span className="truncate text-[22px] font-semibold leading-tk-label text-tk-green-700 lg:text-[28px]">{APP_NAME}</span>
           </div>
 
-          <div className="flex items-center justify-end gap-1">
-            {/* Phase 1 — locked blueprint §Frontend Architecture: mounted here, next to the
-                existing user-info block. */}
-            <NotificationBell />
-            <div className="hidden text-end leading-tight sm:block">
-              <span className="text-sm font-medium text-gray-900">
+          <div className="flex min-w-0 items-center justify-end gap-3">
+            <div className="hidden min-w-0 lg:block">
+              <span className="block truncate text-[13px] leading-tk-label text-tk-ink-soft">
                 {user?.name}
                 {user?.responsibility && <> ({user.responsibility})</>}
               </span>
             </div>
+            <NotificationBell />
             {user?.name && (
               <span
                 aria-hidden="true"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-bold text-white"
+                className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-full bg-tk-green-900 text-[18px] font-semibold text-white"
               >
                 {user.name.trim().charAt(0)}
               </span>
@@ -200,20 +206,21 @@ function AppLayout() {
           </div>
         </header>
 
-        <main className="min-w-0 flex-1 p-4 md:p-6">
-          {/* max-w-[1920px] mx-auto — no padding of its own, so DashboardPage's own -mx-4/md:-mx-6
-              sticky-header bleed still reaches exactly this wrapper's edges unchanged below the
-              cap. Only engages past a standard 1080p-class desktop, keeping KPI cards/tables from
-              stretching edge-to-edge into a giant spreadsheet on an ultrawide monitor. */}
-          <div className="mx-auto w-full max-w-[1920px]">
+        <main className="min-w-0 flex-1 px-4 pb-10 pt-5 md:px-6 lg:px-8">
+          {/* On screens of 1600px and wider the page content is capped (about 1320px) and centred,
+              so cards and tables do not stretch across an ultrawide monitor; the navbar and the
+              sidebar still span the full window. Below that it uses the width there is. */}
+          <div data-page-container className="mx-auto w-full min-[1600px]:max-w-tk-content">
             <PageActionsPortalProvider target={actionsSlot}>
-              <Outlet />
+              <div key={location.pathname} className="tk-fade-in">
+                <Outlet />
+              </div>
             </PageActionsPortalProvider>
           </div>
         </main>
       </div>
 
-      {/* Mobile-only backdrop, closes the drawer on tap. */}
+      {/* Drawer backdrop, closes the drawer on tap. */}
       {isSidebarOpen && (
         <button
           type="button"
