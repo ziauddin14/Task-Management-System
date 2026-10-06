@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react'; // explicit import — see src/App.jsx's comment for why
-import clsx from 'clsx';
+import { Pencil } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
-import Modal from '../common/Modal.jsx';
+import Modal, { ModalFooter } from '../common/Modal.jsx';
 import LoadingPhrase from '../common/LoadingPhrase.jsx';
 import BusyButton from '../common/BusyButton.jsx';
 import AttachmentPicker from './AttachmentPicker.jsx';
@@ -13,6 +13,7 @@ import { useTask } from '../../hooks/useTask.js';
 import { useCreateTaskUpdate } from '../../hooks/useCreateTaskUpdate.js';
 import { useUpdateTask } from '../../hooks/useUpdateTask.js';
 import { useAssignableUsers } from '../../hooks/useAssignableUsers.js';
+import { BUTTON_AMBER, BUTTON_DANGER, BUTTON_GHOST, BUTTON_PRIMARY, FIELD, FIELD_ERROR, FIELD_LABEL, FIELD_TEXTAREA } from '../../utils/uiClasses.js';
 
 // docs/09-frontend-features.md §3 — description required min 3 chars; completionPercent required
 // 0-100 (mirrors backend/src/validators/taskUpdate.validator.js's createTaskUpdateSchema).
@@ -129,32 +130,37 @@ function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
     onClose();
   }
 
+  // The task this dialog is about: its code as a pill, then its title.
+  const taskBanner = (
+    <div className="flex items-center gap-[10px] rounded-tk-tile bg-tk-hover px-[14px] py-[6px] text-[14px] leading-tk-label">
+      <span className="shrink-0 rounded-tk-pill bg-tk-green-700 px-3 font-mono text-[13px] leading-[2.3] text-white">{task?.codeNumber}</span>
+      <span aria-hidden="true">—</span>
+      <span className="min-w-0 flex-1">{task?.title}</span>
+    </div>
+  );
+  const sliderPercent = Number.isFinite(Number(completionPercent)) ? Math.min(Math.max(Number(completionPercent), 0), 100) : 0;
+
+  // Desktop redesign (approved mockup "4 — کام اپڈیٹ کریں") — the look only: the task banner, the
+  // تفصیل box, a styled slider kept in step with the number box beside it (they are two views of
+  // the one form value, as before), the attachment picker as a dashed drop area (the same hidden
+  // file input underneath), "پرانی اپڈیٹس دیکھیں" as a link, and a footer whose buttons wrap on a
+  // narrow screen. The reassign and close-task steps behave exactly as they did.
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="کام اپڈیٹ کریں">
+    <Modal isOpen={isOpen} onClose={onClose} title="کام اپڈیٹ کریں" variant="redesign" icon={Pencil} subtitle="پیش رفت درج کریں" maxWidthClassName="max-w-[720px]">
       {isTaskLoading ? (
         <LoadingPhrase label="لوڈ ہو رہا ہے…" />
       ) : reassignStep ? (
-        <div className="flex flex-col gap-3">
-          <div className="rounded-lg bg-gray-50 p-2 text-sm text-gray-600">
-            <span className="font-mono">{task?.codeNumber}</span> — <span>{task?.title}</span>
-          </div>
+        <div className="flex flex-col gap-[14px]">
+          {taskBanner}
 
           {reassignStep === 'confirm' && (
             <>
-              <p className="text-gray-800">کیا آپ یہ کام کسی دوسرے ذمہ دار کو دینا چاہتے ہیں؟</p>
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={handleReassignNo}
-                  className="h-10 min-w-[40px] rounded-lg border border-gray-300 px-4 text-gray-700 hover:bg-gray-50"
-                >
+              <p className="text-[15px] leading-tk-label text-tk-ink">کیا آپ یہ کام کسی دوسرے ذمہ دار کو دینا چاہتے ہیں؟</p>
+              <div className="flex flex-wrap justify-end gap-3">
+                <button type="button" onClick={handleReassignNo} className={BUTTON_GHOST}>
                   نہیں
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setReassignStep('select')}
-                  className="h-10 min-w-[40px] rounded-lg bg-brand px-4 text-white hover:bg-brand/90"
-                >
+                <button type="button" onClick={() => setReassignStep('select')} className={BUTTON_PRIMARY}>
                   ہاں
                 </button>
               </div>
@@ -164,20 +170,15 @@ function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
           {reassignStep === 'select' && (
             <>
               <div>
-                <label htmlFor="reassign-select" className="mb-1 block text-sm font-medium text-gray-700">
+                <label htmlFor="reassign-select" className={FIELD_LABEL}>
                   نیا ذمہ دار منتخب کریں
                 </label>
                 {assignableLoading ? (
-                  <div className="rounded-lg border border-gray-200 px-1 py-1">
+                  <div className="rounded-tk-input border border-tk-line px-1 py-1">
                     <LoadingPhrase size="compact" />
                   </div>
                 ) : (
-                  <select
-                    id="reassign-select"
-                    value={newAssigneeId}
-                    onChange={(event) => setNewAssigneeId(event.target.value)}
-                    className="h-10 w-full rounded-lg border border-gray-300 px-2 text-sm"
-                  >
+                  <select id="reassign-select" value={newAssigneeId} onChange={(event) => setNewAssigneeId(event.target.value)} className={FIELD}>
                     <option value="">انتخاب کریں</option>
                     {(assignableUsers?.items || []).map((person) => (
                       <option key={person.id} value={person.id}>
@@ -188,38 +189,21 @@ function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
                 )}
               </div>
 
-              {/* Prompt — read-only, auto-filled from the selected person's own User.responsibility
-                  (the same field already stored per-user, e.g. TaskFormModal's own responsibility
-                  options) — never a separate input, nothing new to select here. */}
+              {/* Read-only: shows the chosen person's own responsibility; the task's is not changed. */}
               {!assignableLoading && (
                 <div>
-                  {/* A plain span, not <label> — this isn't a form control, just read-only display
-                      text, so it shouldn't claim form-labeling semantics it doesn't have. */}
-                  <span className="mb-1 block text-sm font-medium text-gray-700">ذمہ داری</span>
-                  <p
-                    aria-label="ذمہ داری"
-                    className="flex h-10 items-center rounded-lg border border-gray-200 bg-gray-50 px-2 text-sm text-gray-600"
-                  >
+                  <span className={FIELD_LABEL}>ذمہ داری</span>
+                  <p aria-label="ذمہ داری" className="flex h-[48px] items-center rounded-tk-input border border-tk-line bg-tk-surface px-[14px] text-[14px] text-tk-ink-soft">
                     {newSelectedAssignee?.responsibility || '—'}
                   </p>
                 </div>
               )}
 
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setReassignStep(null)}
-                  className="h-10 min-w-[40px] rounded-lg px-4 text-gray-700 hover:bg-gray-100"
-                >
+              <div className="flex flex-wrap justify-end gap-3">
+                <button type="button" onClick={() => setReassignStep(null)} className={BUTTON_GHOST}>
                   منسوخ کریں
                 </button>
-                <BusyButton
-                  onClick={handleReassignSave}
-                  busy={reassignTask.isPending}
-                  busyLabel="محفوظ ہو رہا ہے…"
-                  disabled={!newAssigneeId}
-                  className="h-10 min-w-[40px] rounded-lg bg-brand px-4 text-white hover:bg-brand/90 disabled:opacity-50"
-                >
+                <BusyButton onClick={handleReassignSave} busy={reassignTask.isPending} busyLabel="محفوظ ہو رہا ہے…" disabled={!newAssigneeId} className={BUTTON_PRIMARY}>
                   محفوظ کریں
                 </BusyButton>
               </div>
@@ -228,33 +212,26 @@ function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
         </div>
       ) : (
         <>
-          <div className="mb-3 rounded-lg bg-gray-50 p-2 text-sm text-gray-600">
-            <span className="font-mono">{task?.codeNumber}</span> — <span>{task?.title}</span>
-          </div>
+          {taskBanner}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
+          <form onSubmit={handleSubmit(onSubmit)} className="mt-3 flex flex-col gap-3">
             <div>
-              <label htmlFor="update-description" className="mb-1 block text-sm font-medium text-gray-700">
+              <label htmlFor="update-description" className={FIELD_LABEL}>
                 تفصیل
               </label>
-              <textarea
-                id="update-description"
-                {...register('description')}
-                rows={3}
-                className="w-full rounded-lg border border-gray-300 p-2"
-              />
+              <textarea id="update-description" {...register('description')} rows={3} className={`${FIELD_TEXTAREA} resize-none`} />
               {errors.description && (
-                <p role="alert" className="mt-1 text-sm text-red-600">
+                <p role="alert" className={FIELD_ERROR}>
                   {errors.description.message}
                 </p>
               )}
             </div>
 
             <div>
-              <label htmlFor="update-percent" className="mb-1 block text-sm font-medium text-gray-700">
+              <label htmlFor="update-percent" className={FIELD_LABEL}>
                 تکمیل فیصد
               </label>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-[14px]">
                 <input
                   type="range"
                   min={0}
@@ -262,7 +239,8 @@ function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
                   value={completionPercent}
                   onChange={(event) => setValue('completionPercent', Number(event.target.value), { shouldValidate: true })}
                   aria-label="Completion % slider"
-                  className="flex-1 max-md:h-11"
+                  className="tk-range min-w-0 flex-1"
+                  style={{ '--tk-range': `${sliderPercent}%` }}
                 />
                 <input
                   id="update-percent"
@@ -270,79 +248,63 @@ function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
                   min={0}
                   max={100}
                   {...register('completionPercent', { valueAsNumber: true })}
-                  className="h-10 w-20 rounded-lg border border-gray-300 px-2"
+                  className="h-[44px] w-[76px] shrink-0 rounded-tk-input border-[1.5px] border-transparent bg-tk-surface px-1 text-center text-[16px] font-semibold text-tk-ink focus:border-tk-green-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-tk-green-700/25"
                 />
               </div>
               {errors.completionPercent && (
-                <p role="alert" className="mt-1 text-sm text-red-600">
+                <p role="alert" className={FIELD_ERROR}>
                   {errors.completionPercent.message}
                 </p>
               )}
             </div>
 
-            <AttachmentPicker
-              key={attachmentKey}
-              onStatusChange={(status, result) => {
-                setAttachmentStatus(status);
-                setAttachment(result);
-              }}
-            />
-
-            <button
-              type="button"
-              onClick={() => setShowHistory((prev) => !prev)}
-              className="flex h-10 w-fit items-center text-sm text-brand hover:underline"
-            >
-              {showHistory ? 'پرانی اپڈیٹس چھپائیں' : 'پرانی اپڈیٹس دیکھیں'}
-            </button>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <div className="min-w-[220px] flex-1">
+                <AttachmentPicker
+                  key={attachmentKey}
+                  onStatusChange={(status, result) => {
+                    setAttachmentStatus(status);
+                    setAttachment(result);
+                  }}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowHistory((prev) => !prev)}
+                className="flex h-[44px] w-fit shrink-0 items-center whitespace-nowrap text-[13px] font-semibold text-tk-green-700 underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-tk-green-700"
+              >
+                {showHistory ? 'پرانی اپڈیٹس چھپائیں' : 'پرانی اپڈیٹس دیکھیں'}
+              </button>
+            </div>
 
             {showHistory && <PreviousUpdatesContent taskId={taskId} />}
 
-            {/* Prompt — all (up to) 4 actions in a single non-wrapping row, at every viewport
-                width. CSS Grid, not flexbox: Tailwind's grid-cols-N utilities emit
-                `minmax(0, 1fr)` tracks, which have a genuine zero min-width floor — a plain flex
-                `flex-1` item's automatic minimum width is its own min-content size (roughly the
-                longest unbreakable run of text), which can silently force the row (and the modal
-                around it) wider than the viewport despite `min-w-0` on the item itself. Grid
-                sidesteps that whole class of overflow bug outright. The label itself is still
-                free to wrap to a second line on the narrowest phones; color alone carries the
-                primary/secondary/warning/danger hierarchy. */}
-            <div className={clsx('mt-2 grid gap-1.5', canManageTask ? 'grid-cols-4' : 'grid-cols-2')}>
-              <button
-                type="button"
-                onClick={onClose}
-                className="h-11 min-w-0 rounded-lg px-1 text-center text-xs font-semibold leading-tight text-gray-700 hover:bg-gray-100 sm:text-sm"
-              >
-                منسوخ کریں
-              </button>
+            {/* Save grows to fill the row; the others keep their own width and the row wraps when
+                there is no room. Reassign and close-task: Admin only, and never on a closed task. */}
+            <ModalFooter>
               <BusyButton
                 type="submit"
                 busy={isSubmitting}
                 busyLabel="محفوظ ہو رہا ہے…"
                 disabled={attachmentStatus === 'uploading'}
-                className="h-11 min-w-0 rounded-lg bg-brand px-1 text-center text-xs font-semibold leading-tight text-white hover:bg-brand/90 disabled:opacity-50 sm:text-sm"
+                className={`${BUTTON_PRIMARY} min-w-[140px] flex-1`}
               >
                 محفوظ کریں
               </BusyButton>
+              <button type="button" onClick={onClose} className={BUTTON_GHOST}>
+                منسوخ کریں
+              </button>
               {canManageTask && (
                 <>
-                  <button
-                    type="button"
-                    onClick={() => setReassignStep('confirm')}
-                    className="h-11 min-w-0 rounded-lg border border-amber-300 px-1 text-center text-[12px] font-medium leading-tight text-amber-700 hover:bg-amber-50 sm:text-xs"
-                  >
+                  <button type="button" onClick={() => setReassignStep('confirm')} className={BUTTON_AMBER}>
                     ذمہ دار تبدیل کریں
                   </button>
-                  <button
-                    type="button"
-                    onClick={onCloseTask}
-                    className="h-11 min-w-0 rounded-lg border border-red-300 px-1 text-center text-[12px] font-medium leading-tight text-red-600 hover:bg-red-50 sm:text-xs"
-                  >
+                  <button type="button" onClick={onCloseTask} className={BUTTON_DANGER}>
                     کام بند کریں
                   </button>
                 </>
               )}
-            </div>
+            </ModalFooter>
           </form>
         </>
       )}

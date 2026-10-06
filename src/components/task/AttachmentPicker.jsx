@@ -77,26 +77,26 @@ function AttachmentPicker({ onStatusChange }) {
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="flex h-10 items-center gap-2 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 hover:bg-gray-50"
+          className="flex h-[52px] w-full items-center justify-center gap-2 rounded-tk-tile border-2 border-dashed border-tk-line-btn text-[13px] leading-tk-label text-tk-muted transition-colors hover:border-tk-green-700 hover:bg-tk-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tk-green-700"
         >
-          <Paperclip className="h-4 w-4" aria-hidden="true" />
+          <Paperclip className="h-[18px] w-[18px]" aria-hidden="true" />
           اٹیچمنٹ لگائیں (اختیاری)
         </button>
       )}
       <input ref={inputRef} type="file" onChange={handleFileSelect} className="hidden" aria-label="منسلکہ فائل" />
 
       {precheckError && (
-        <p role="alert" className="mt-1 text-sm text-red-600">
+        <p role="alert" className="mt-1 text-[13px] leading-tk-label text-tk-danger">
           {precheckError}
         </p>
       )}
 
       {file && (
-        <div className="mt-1 flex items-center gap-2 rounded-lg border border-gray-200 p-2 text-sm">
-          <Paperclip className="h-4 w-4 shrink-0 text-gray-500" aria-hidden="true" />
+        <div className="flex min-h-[52px] items-center gap-2 rounded-tk-tile border border-tk-line bg-tk-surface px-3 text-[13px]">
+          <Paperclip className="h-4 w-4 shrink-0 text-tk-muted" aria-hidden="true" />
           <span className="flex-1 truncate">{file.name}</span>
           {status === 'uploading' && (
-            <span role="status" className="text-xs text-gray-500">
+            <span role="status" className="text-xs text-tk-muted">
               {progress}%
             </span>
           )}
@@ -104,7 +104,7 @@ function AttachmentPicker({ onStatusChange }) {
             <button
               type="button"
               onClick={handleRetry}
-              className="flex h-10 min-w-[40px] items-center gap-1 text-xs text-brand"
+              className="flex h-[44px] min-w-[40px] items-center gap-1 text-xs font-semibold text-tk-green-700"
             >
               <RotateCcw className="h-3 w-3" aria-hidden="true" />
               دوبارہ کوشش کریں
@@ -114,7 +114,7 @@ function AttachmentPicker({ onStatusChange }) {
             type="button"
             onClick={handleRemove}
             aria-label="ہٹا دیں"
-            className="flex h-10 w-10 items-center justify-center text-gray-500 hover:text-red-600"
+            className="flex h-[44px] w-[44px] items-center justify-center rounded-tk-chip text-tk-muted hover:bg-tk-danger-bg hover:text-tk-danger"
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>

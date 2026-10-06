@@ -3,12 +3,15 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
-import Modal from '../common/Modal.jsx';
+import clsx from 'clsx';
+import { Pencil, Plus, Search } from 'lucide-react';
+import Modal, { ModalFooter } from '../common/Modal.jsx';
 import LoadingPhrase from '../common/LoadingPhrase.jsx';
 import BusyButton from '../common/BusyButton.jsx';
 import { useAssignableUsers } from '../../hooks/useAssignableUsers.js';
 import { useCreateTask } from '../../hooks/useCreateTask.js';
 import { useUpdateTask } from '../../hooks/useUpdateTask.js';
+import { BUTTON_GHOST, BUTTON_PRIMARY, FIELD, FIELD_ERROR, FIELD_LABEL, FIELD_TEXTAREA } from '../../utils/uiClasses.js';
 
 function startOfDay(date) {
   const d = new Date(date);
@@ -114,31 +117,36 @@ function TaskFormModal({ isOpen, onClose, mode, task }) {
     person.name.toLowerCase().includes(assigneeSearch.toLowerCase())
   );
 
+  // Desktop redesign (approved mockup "1 — نیا کام") — the look only. The title on top; under it
+  // two columns: the ذمہ دار picker (the chosen people as removable chips, a search box, then a
+  // checklist where each row is an initial, the name and a checkbox, tinted when chosen), and
+  // beside it ذمہ داری and آخری تاریخ. Below 768px the columns stack and the dialog is a bottom sheet.
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? 'کام میں ترمیم کریں' : 'نیا کام'}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={isEdit ? 'کام میں ترمیم کریں' : 'نیا کام'}
+      variant="redesign"
+      icon={isEdit ? Pencil : Plus}
+      subtitle={isEdit ? 'کام کی تفصیل اور ذمہ داران میں تبدیلی کریں' : 'کام کی تفصیل اور ذمہ داران منتخب کریں'}
+      maxWidthClassName="max-w-[760px]"
+    >
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
         <div>
-          <label htmlFor="task-title" className="mb-1 block text-sm font-medium text-gray-700">
+          <label htmlFor="task-title" className={FIELD_LABEL}>
             کام کا عنوان
           </label>
-          <textarea id="task-title" {...register('title')} rows={3} className="w-full rounded-lg border border-gray-300 p-2" />
+          <textarea id="task-title" {...register('title')} rows={3} className={`${FIELD_TEXTAREA} resize-none`} />
           {errors.title && (
-            <p role="alert" className="mt-1 text-sm text-red-600">
+            <p role="alert" className={FIELD_ERROR}>
               {errors.title.message}
             </p>
           )}
         </div>
 
-        {/* Prompt 3A — Zimmedar/Zimmedari/Akhri Tareekh share one row instead of stacking three
-            separate blocks, which is most of the vertical space this change reclaims (the row's
-            height is only as tall as its tallest column, the assignee picker, rather than the sum
-            of all three). Responsive fix — the assignee picker alone (search input + a checkbox
-            list of names) genuinely does not fit a ~100px-wide grid column on a phone; single
-            column below `sm` stacks all three full-width, reverting to the original 3-up row at
-            `sm` (640px) and up where there's actually room for it. */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-2">
-          <div className="order-1">
-            <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="assignee-search">
+        <div className="grid grid-cols-1 gap-x-[18px] gap-y-3 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+          <div>
+            <label className={FIELD_LABEL} htmlFor="assignee-search">
               ذمہ دار
             </label>
             <Controller
@@ -146,20 +154,21 @@ function TaskFormModal({ isOpen, onClose, mode, task }) {
               name="assignees"
               render={({ field }) => (
                 <div>
-                  <div className="mb-1 flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-[6px] pb-[6px] empty:hidden">
                     {field.value.map((id) => {
                       const person = (users?.items || []).find((u) => u.id === id);
                       if (!person) return null;
                       return (
                         <span
                           key={id}
-                          className="flex items-center gap-1 rounded-full bg-brand-light px-1.5 py-0.5 text-xs text-brand"
+                          className="flex h-[34px] items-center rounded-tk-pill bg-tk-closed-tint ps-3 text-[13px] leading-tk-label text-tk-closed-ink max-md:h-tk-touch"
                         >
                           {person.name}
                           <button
                             type="button"
                             onClick={() => field.onChange(field.value.filter((v) => v !== id))}
                             aria-label={`${person.name} ہٹا دیں`}
+                            className="flex h-full w-[32px] items-center justify-center rounded-tk-pill text-[16px] hover:bg-tk-closed-chip focus-visible:outline focus-visible:outline-2 focus-visible:outline-tk-green-700 max-md:w-tk-touch"
                           >
                             &times;
                           </button>
@@ -167,33 +176,48 @@ function TaskFormModal({ isOpen, onClose, mode, task }) {
                       );
                     })}
                   </div>
-                  <input
-                    id="assignee-search"
-                    type="text"
-                    value={assigneeSearch}
-                    onChange={(event) => setAssigneeSearch(event.target.value)}
-                    placeholder="تلاش…"
-                    className="mb-1 h-10 w-full rounded-lg border border-gray-300 px-2 text-sm"
-                  />
-                  {/* Prompt 3B — previously this list rendered silently empty whether the query was
-                      still loading, had failed, or genuinely had zero active users, so a real
-                      failure was indistinguishable from "no data yet". Now every one of those
-                      three states shows its own message instead of a blank box. (The loading
-                      state's box is rendered as its own grid row further down, not here.) */}
+                  <div className="flex h-[44px] items-center gap-2 rounded-tk-input bg-tk-surface px-[14px] focus-within:ring-2 focus-within:ring-tk-green-700">
+                    <Search className="h-[18px] w-[18px] shrink-0 text-tk-muted" aria-hidden="true" />
+                    <input
+                      id="assignee-search"
+                      type="text"
+                      value={assigneeSearch}
+                      onChange={(event) => setAssigneeSearch(event.target.value)}
+                      placeholder="تلاش…"
+                      className="h-full min-w-0 flex-1 border-0 bg-transparent text-[14px] text-tk-ink placeholder:text-tk-muted focus:outline-none"
+                    />
+                  </div>
+                  {/* The checklist only renders once the user list itself has actually loaded — an
+                      EMPTY list here always means "search matched nothing", never "still loading". */}
                   {usersLoading ? null : usersError ? (
-                    <p className="rounded-lg border border-red-200 bg-red-50 px-2 py-3 text-center text-xs text-red-600">
+                    <p className="mt-[6px] rounded-tk-input border border-tk-danger-line bg-tk-danger-bg px-3 py-3 text-center text-[12px] text-tk-danger">
                       یوزرز لوڈ نہیں ہو سکے
                     </p>
                   ) : filteredUsers.length === 0 ? (
-                    <p className="rounded-lg border border-gray-200 px-2 py-3 text-center text-xs text-gray-500">
-                      کوئی یوزر نہیں ملا
-                    </p>
+                    <p className="mt-[6px] rounded-tk-input border border-tk-line px-3 py-3 text-center text-[12px] text-tk-muted">کوئی یوزر نہیں ملا</p>
                   ) : (
-                    <div className="max-h-32 overflow-y-auto rounded-lg border border-gray-200">
+                    <div className="mt-[6px] max-h-[176px] overflow-y-auto rounded-tk-input border border-tk-line">
                       {filteredUsers.map((person) => {
                         const checked = field.value.includes(person.id);
                         return (
-                          <label key={person.id} className="flex h-10 items-center gap-2 px-2 text-sm hover:bg-gray-50">
+                          <label
+                            key={person.id}
+                            className={clsx(
+                              'flex h-[44px] cursor-pointer items-center gap-[10px] border-b border-tk-line-row px-3 text-[14px] last:border-b-0',
+                              checked ? 'bg-tk-hover font-semibold' : 'hover:bg-tk-surface'
+                            )}
+                          >
+                            {/* The initial is drawn from data-initial (styles/tokens.css), so the
+                                label's own text — the checkbox's name — is the person's name alone. */}
+                            <span
+                              aria-hidden="true"
+                              data-initial={person.name.trim().charAt(0)}
+                              className={clsx(
+                                'tk-initial flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-full text-[12px] font-normal',
+                                checked ? 'bg-tk-green-700 text-white' : 'bg-tk-green-50 text-tk-green-900'
+                              )}
+                            />
+                            <span className="min-w-0 flex-1 truncate leading-tk-title">{person.name}</span>
                             <input
                               type="checkbox"
                               checked={checked}
@@ -202,8 +226,8 @@ function TaskFormModal({ isOpen, onClose, mode, task }) {
                                   checked ? field.value.filter((v) => v !== person.id) : [...field.value, person.id]
                                 )
                               }
+                              className="h-5 w-5 shrink-0 accent-tk-green-700"
                             />
-                            <span className="truncate">{person.name}</span>
                           </label>
                         );
                       })}
@@ -213,88 +237,67 @@ function TaskFormModal({ isOpen, onClose, mode, task }) {
               )}
             />
             {errors.assignees && (
-              <p role="alert" className="mt-1 text-sm text-red-600">
+              <p role="alert" className={FIELD_ERROR}>
                 {errors.assignees.message}
               </p>
             )}
           </div>
 
-          {/* The assignee list's loading state. It is its own grid row rather than sitting inside
-              the assignee column because that column is only ~150px wide in the 3-up layout — too
-              narrow for the one-line loading phrase at a readable size in a fallback font. Below
-              `sm` it stays directly under the assignee search (order-2); from `sm` up it spans all
-              three columns beneath them. */}
+          <div className="flex flex-col gap-3">
+            <div>
+              <label htmlFor="task-responsibility" className={FIELD_LABEL}>
+                ذمہ داری
+              </label>
+              {/* Options are the distinct responsibility values already on the assignable users
+                  (role=user, active) — the same list the ذمہ دار picker shows. */}
+              <select id="task-responsibility" {...register('responsibility')} disabled={usersLoading} className={FIELD}>
+                <option value="">انتخاب کریں</option>
+                {responsibilityOptions.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+              {!usersLoading && !usersError && responsibilityOptions.length === 0 && (
+                <p className="mt-1 text-[12px] leading-tk-label text-tk-muted">کوئی ذمہ داری نہیں ملی</p>
+              )}
+              {errors.responsibility && (
+                <p role="alert" className={FIELD_ERROR}>
+                  {errors.responsibility.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="task-deadline" className={FIELD_LABEL}>
+                آخری تاریخ
+              </label>
+              <input id="task-deadline" type="date" {...register('deadline')} className={FIELD} />
+              {errors.deadline && (
+                <p role="alert" className={FIELD_ERROR}>
+                  {errors.deadline.message}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* While the user list loads, the loading phrase takes a row of its own under the
+              fields (it needs the full width to stay readable). */}
           {usersLoading && (
-            <div className="order-2 -mt-2 rounded-lg border border-gray-200 px-1 py-1 sm:order-4 sm:col-span-3 sm:mt-0">
+            <div className="rounded-tk-input border border-tk-line px-1 py-1 md:col-span-2">
               <LoadingPhrase size="compact" />
             </div>
           )}
-
-          <div className="order-3 sm:order-2">
-            <label htmlFor="task-responsibility" className="mb-1 block text-sm font-medium text-gray-700">
-              ذمہ داری
-            </label>
-            {/* Prompt 3C — options are the distinct responsibility values already present among
-                active Users (the same useAssignableUsers() data as the assignee picker above),
-                not the retired LookupList collection. */}
-            <select
-              id="task-responsibility"
-              {...register('responsibility')}
-              disabled={usersLoading}
-              className="h-10 w-full rounded-lg border border-gray-300 px-1 text-sm disabled:bg-gray-100"
-            >
-              <option value="">انتخاب کریں</option>
-              {responsibilityOptions.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-            {!usersLoading && !usersError && responsibilityOptions.length === 0 && (
-              <p className="mt-1 text-xs text-gray-500">کوئی ذمہ داری نہیں ملی</p>
-            )}
-            {errors.responsibility && (
-              <p role="alert" className="mt-1 text-sm text-red-600">
-                {errors.responsibility.message}
-              </p>
-            )}
-          </div>
-
-          <div className="order-4 sm:order-3">
-            <label htmlFor="task-deadline" className="mb-1 block text-sm font-medium text-gray-700">
-              آخری تاریخ
-            </label>
-            <input
-              id="task-deadline"
-              type="date"
-              {...register('deadline')}
-              className="h-10 w-full rounded-lg border border-gray-300 px-1 text-sm"
-            />
-            {errors.deadline && (
-              <p role="alert" className="mt-1 text-sm text-red-600">
-                {errors.deadline.message}
-              </p>
-            )}
-          </div>
         </div>
 
-        <div className="mt-2 grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="h-12 rounded-lg text-base font-semibold text-gray-700 hover:bg-gray-100"
-          >
-            منسوخ کریں
-          </button>
-          <BusyButton
-            type="submit"
-            busy={isSubmitting}
-            busyLabel="محفوظ ہو رہا ہے…"
-            className="h-12 rounded-lg bg-brand text-base font-semibold text-white hover:bg-brand/90 disabled:opacity-50"
-          >
+        <ModalFooter>
+          <BusyButton type="submit" busy={isSubmitting} busyLabel="محفوظ ہو رہا ہے…" className={`${BUTTON_PRIMARY} flex-1`}>
             محفوظ کریں
           </BusyButton>
-        </div>
+          <button type="button" onClick={onClose} className={BUTTON_GHOST}>
+            منسوخ کریں
+          </button>
+        </ModalFooter>
       </form>
     </Modal>
   );
