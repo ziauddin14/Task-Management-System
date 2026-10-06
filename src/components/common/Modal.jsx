@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react'; // explicit import — see src/App.jsx's comment for why
+import { createPortal } from 'react-dom';
 import clsx from 'clsx';
 import LoadingPhrase from './LoadingPhrase.jsx';
 import { BusyRegionContext, useBusyRegionState } from '../../contexts/BusyRegionContext.js';
@@ -43,6 +44,18 @@ const BUSY_STRIP_ROOM = '5vh';
 //     subtitle and a 40px close button;
 //   - body: scrolls inside the card, so the header — and a <ModalFooter> — stay in reach;
 //   - below 768px: a bottom sheet (top corners rounded, safe-area padding under the footer).
+//
+// Where it is drawn — a portal on document.body, above everything in the layout (z-70: the navbar
+// is 30, the drawers and menus 50; toasts stay above it). It used to render where it was declared,
+// inside the page; anything around the page that formed its own stacking layer then kept the
+// dialog — and its overlay — underneath the navbar. From <body> nothing in the layout can do that.
+// The classic dialog below is deliberately left where it was.
+//
+// How tall it may be — never more than the window (styles/tokens.css, .tk-modal-root and
+// .tk-modal-panel): the card keeps at least 16px above it and room for the busy strip beneath,
+// measured in dvh where the browser has it. The header does not shrink and only the body
+// scrolls. On a short desktop window (700px and under, tighter again at 560px) the same
+// stylesheet tightens the paddings, the fields and the footer so more of the form is in view.
 // Same contract as before: role="dialog" named by its title, the backdrop and Escape close it,
 // and it is a busy region (the loading phrase shows in the strip outside the card).
 const ICON_TONE = {
@@ -51,19 +64,19 @@ const ICON_TONE = {
 };
 
 function RedesignModal({ onClose, title, subtitle, icon: Icon, iconTone, headerActions, maxWidthClassName, busyRegion, children }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 max-md:items-end max-md:p-0">
+  const dialog = (
+    <div data-modal-root className="tk-modal-root fixed inset-0 z-[70]">
       <button type="button" aria-label="بند کریں" className="tk-backdrop-enter absolute inset-0 bg-tk-overlay" onClick={onClose} />
       <div role="dialog" aria-modal="true" aria-label={title} data-modal-variant="redesign" className={clsx('relative w-full max-md:max-w-none', maxWidthClassName)}>
         <div
           className={clsx(
-            'tk-modal-enter relative flex max-h-[90vh] w-full flex-col overflow-hidden rounded-tk-modal bg-tk-card text-tk-ink shadow-tk-modal',
-            'max-md:max-h-[88vh] max-md:rounded-b-none',
+            'tk-modal-panel tk-modal-enter relative flex w-full flex-col overflow-hidden rounded-tk-modal bg-tk-card text-tk-ink shadow-tk-modal',
+            'max-md:rounded-b-none',
             busyRegion.isBusy && 'rounded-b-none max-md:rounded-t-none'
           )}
         >
           <BusyRegionContext.Provider value={busyRegion.report}>
-            <div className="flex shrink-0 items-center gap-3 border-b border-tk-line-soft px-6 py-4 max-md:px-4 max-md:py-3">
+            <div data-modal-header className="flex shrink-0 items-center gap-3 border-b border-tk-line-soft px-6 py-4 max-md:px-4 max-md:py-3">
               {Icon && (
                 <span
                   aria-hidden="true"
@@ -73,7 +86,7 @@ function RedesignModal({ onClose, title, subtitle, icon: Icon, iconTone, headerA
                   <Icon className="h-6 w-6" strokeWidth={2.2} />
                 </span>
               )}
-              <div className="min-w-0 flex-1">
+              <div data-modal-heading className="min-w-0 flex-1">
                 <h2 className="truncate text-[21px] font-semibold leading-tk-title">{title}</h2>
                 {subtitle && <p className="truncate text-[12px] leading-tk-title text-tk-muted">{subtitle}</p>}
               </div>
@@ -103,6 +116,8 @@ function RedesignModal({ onClose, title, subtitle, icon: Icon, iconTone, headerA
       </div>
     </div>
   );
+  // No document (server rendering): render in place. Everywhere else: on <body>.
+  return typeof document === 'undefined' ? dialog : createPortal(dialog, document.body);
 }
 
 // The button row of a redesigned dialog. It sticks to the bottom of the card's scrolling body, so
@@ -111,6 +126,7 @@ function RedesignModal({ onClose, title, subtitle, icon: Icon, iconTone, headerA
 export function ModalFooter({ children, className }) {
   return (
     <div
+      data-modal-footer
       className={clsx(
         'sticky bottom-0 z-[1] -mx-6 -mb-4 mt-4 flex flex-wrap items-center gap-3 border-t border-tk-line-soft bg-tk-card px-6 py-[14px]',
         'max-md:-mx-4 max-md:px-4 max-md:pb-[calc(14px+env(safe-area-inset-bottom,0px))]',

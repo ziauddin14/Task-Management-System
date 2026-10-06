@@ -71,6 +71,12 @@ function Sidebar({ isOpen, onClose, isAdmin, onLogout, collapsed, onToggleCollap
       className={clsx(
         'no-print fixed inset-y-0 start-0 z-50 flex shrink-0 flex-col bg-tk-sidebar py-4 text-white shadow-lg transition-[width,transform] duration-200 ease-in-out motion-reduce:transition-none',
         collapsed ? 'w-tk-rail items-center px-0' : 'w-tk-rail-open px-[14px]',
+        // The tooltips are drawn outside the rail, over the page beside it. The rail is its own
+        // stacking layer (it is sticky) and comes first in the page, so on its own everything
+        // after it — the navbar, the page's cards — is painted over them. While the pointer or
+        // the keyboard focus is in the collapsed rail it is lifted above both; the rest of the
+        // time it keeps its place, under the notification drawer's backdrop and the dialogs.
+        collapsed && 'md:hover:z-40 md:focus-within:z-40',
         // Desktop: sticky (not static) — stays pinned to the viewport as the page scrolls, while
         // still an ordinary flex sibling for width purposes.
         'md:sticky md:top-0 md:z-auto md:h-screen md:translate-x-0 md:shadow-none',

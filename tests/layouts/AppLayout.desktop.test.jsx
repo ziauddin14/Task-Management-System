@@ -1,4 +1,5 @@
 import React from 'react'; // explicit import — see src/App.jsx's comment for why
+import fs from 'node:fs';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
@@ -108,6 +109,18 @@ describe('AppLayout — desktop shell', () => {
         expect(link).toHaveAttribute('data-tooltip', link.getAttribute('aria-label'));
       });
       expect(screen.getByRole('button', { name: 'لاگ آؤٹ' })).toHaveAttribute('data-tooltip', 'لاگ آؤٹ');
+    });
+
+    // The tooltips are drawn beside the rail, over the navbar and the page. The rail is lifted
+    // above both only while the pointer or the keyboard focus is in it — and only when collapsed,
+    // the one state that has tooltips.
+    it('lifts the collapsed rail above the navbar and the page while hovered or focused, so its tooltips are not painted over', () => {
+      renderLayout();
+      expect(sidebar()).toHaveClass('md:hover:z-40', 'md:focus-within:z-40');
+
+      fireEvent.click(screen.getByRole('button', { name: 'سائیڈبار پھیلائیں' }));
+      expect(sidebar()).not.toHaveClass('md:hover:z-40');
+      expect(sidebar()).not.toHaveClass('md:focus-within:z-40');
     });
 
     it('expands to 236px with labels (no tooltips needed then), and collapses again', () => {
@@ -251,6 +264,60 @@ describe('Modal — variant="redesign" is opt-in', () => {
     expect(onClose).toHaveBeenCalledTimes(3);
   });
 
+  // Bug fix — a redesigned dialog used to render where it was declared, inside the page; a
+  // stacking layer around the page then kept it and its overlay under the navbar.
+  it('redesign: is drawn on <body>, above the whole layout — not where it is declared', () => {
+    const { container, unmount } = render(
+      <Modal isOpen onClose={vi.fn()} title="نیا کام" variant="redesign">
+        <p>body</p>
+      </Modal>
+    );
+    const dialog = screen.getByRole('dialog', { name: 'نیا کام' });
+    const root = dialog.parentElement;
+
+    expect(container).not.toContainElement(dialog);
+    expect(root.parentElement).toBe(document.body);
+    // Over the navbar (z-30) and the drawers and menus (z-50); toasts stay above it.
+    expect(root).toHaveClass('tk-modal-root', 'fixed', 'inset-0', 'z-[70]');
+    expect(root).not.toHaveClass('z-50');
+
+    unmount();
+    expect(document.querySelector('[data-modal-root]')).toBeNull();
+  });
+
+  it('redesign: the card is bound to the window — the header never shrinks, only the body scrolls, the footer sticks', () => {
+    render(
+      <Modal isOpen onClose={vi.fn()} title="نیا کام" variant="redesign" icon={Icon} subtitle="ذیلی عنوان">
+        <p>body</p>
+        <ModalFooter>
+          <button type="button">محفوظ کریں</button>
+        </ModalFooter>
+      </Modal>
+    );
+    const card = screen.getByRole('dialog', { name: 'نیا کام' }).firstElementChild;
+
+    // The height limit itself is in styles/tokens.css (.tk-modal-panel: the window less 16px
+    // above and the busy strip's room beneath, in dvh with a vh fallback).
+    expect(card).toHaveClass('tk-modal-panel', 'flex', 'flex-col', 'overflow-hidden');
+    expect(card).not.toHaveClass('max-h-[90vh]');
+    expect(card.querySelector('[data-modal-header]')).toHaveClass('shrink-0');
+    expect(card.querySelector('[data-modal-body]')).toHaveClass('min-h-0', 'flex-1', 'overflow-y-auto');
+    expect(card.querySelector('[data-modal-footer]')).toHaveClass('sticky', 'bottom-0');
+    expect(card.querySelector('[data-modal-footer]')).toContainElement(screen.getByRole('button', { name: 'محفوظ کریں' }));
+  });
+
+  it('classic: is still drawn in place, exactly where it is declared', () => {
+    const { container } = render(
+      <Modal isOpen onClose={vi.fn()} title="کام کی تفصیل">
+        <p>body</p>
+      </Modal>
+    );
+    const dialog = screen.getByRole('dialog', { name: 'کام کی تفصیل' });
+    expect(container).toContainElement(dialog);
+    expect(dialog.parentElement.className).toBe('fixed inset-0 z-50 flex items-center justify-center p-4 max-md:items-end max-md:p-0');
+    expect(document.querySelector('[data-modal-root]')).toBeNull();
+  });
+
   it('renders nothing while closed, in either variant', () => {
     const { container } = render(
       <Modal isOpen={false} onClose={vi.fn()} title="x" variant="redesign">
@@ -258,5 +325,37 @@ describe('Modal — variant="redesign" is opt-in', () => {
       </Modal>
     );
     expect(container).toBeEmptyDOMElement();
+  });
+});
+
+// The two rules of styles/tokens.css this fix rests on. jsdom applies no stylesheet and lays
+// nothing out, so they are checked as text: enough to stop either being undone by accident.
+describe('styles/tokens.css — what the dialogs rely on', () => {
+  // Read from disk, relative to the project root the tests run in (Vitest hands back an empty
+  // string for an imported stylesheet).
+  const css = fs.readFileSync('src/styles/tokens.css', 'utf8').replace(/\r\n/g, '\n');
+  const rule = (selector) => {
+    const at = css.indexOf(`${selector} {`);
+    return at === -1 ? '' : css.slice(at, css.indexOf('}', at));
+  };
+
+  it('the page fade and the dialog entrance have NO fill-mode (a filled animation stays in effect and keeps a stacking layer)', () => {
+    for (const selector of ['.tk-fade-in', '.tk-modal-enter']) {
+      const animation = /animation:\s*([^;]+);/.exec(rule(selector))?.[1];
+      expect(animation, selector).toBeTruthy();
+      expect(animation, selector).not.toMatch(/\b(both|forwards)\b/);
+    }
+  });
+
+  it('the dialog card is never taller than the window: a vh limit first, the dvh one after it', () => {
+    const panel = rule('.tk-modal-panel');
+    const vh = panel.indexOf('max-height: calc(100vh');
+    const dvh = panel.indexOf('max-height: calc(100dvh');
+    expect(vh).toBeGreaterThan(-1);
+    expect(dvh).toBeGreaterThan(vh);
+    // ...and as a bottom sheet (below 768px): 88% of the window, again vh then dvh.
+    const sheet = css.slice(css.indexOf('@media (max-width: 767.98px)', css.indexOf('.tk-modal-panel {')));
+    expect(sheet.indexOf('max-height: 88vh;')).toBeGreaterThan(-1);
+    expect(sheet.indexOf('max-height: 88dvh;')).toBeGreaterThan(sheet.indexOf('max-height: 88vh;'));
   });
 });
