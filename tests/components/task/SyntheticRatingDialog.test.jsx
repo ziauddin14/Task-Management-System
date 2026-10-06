@@ -179,6 +179,28 @@ describe('SyntheticRatingDialog (admin: change a synthetic rating)', () => {
     expect(editSyntheticRating).not.toHaveBeenCalled();
   });
 
+  // Redesign: the shared Modal's opt-in look. Amber icon chip (an estimate is amber everywhere),
+  // and the three actions in the dialog's footer: save (primary), cancel (ghost), remove (danger).
+  it('uses the redesigned dialog: amber icon chip, and save / cancel / remove in the footer', () => {
+    renderDialog();
+    const dialog = screen.getByRole('dialog', { name: 'تخمینی درجہ بندی تبدیل کریں' });
+    expect(dialog).toHaveAttribute('data-modal-variant', 'redesign');
+    expect(dialog.querySelector('[data-modal-icon]')).toHaveClass('bg-tk-amber-bg', 'text-tk-amber-text');
+
+    expect(saveButton()).toHaveClass('bg-tk-green-700');
+    expect(saveButton()).toHaveAttribute('type', 'submit');
+    expect(within(dialog).getByRole('button', { name: 'منسوخ کریں' })).toHaveClass('border-tk-line-btn');
+    expect(within(dialog).getByRole('button', { name: 'ہٹائیں' })).toHaveClass('bg-tk-danger-bg', 'text-tk-danger');
+  });
+
+  it('the removal confirmation is the danger one', () => {
+    renderDialog();
+    fireEvent.click(screen.getByRole('button', { name: 'ہٹائیں' }));
+
+    const confirm = screen.getByRole('dialog', { name: 'تخمینی درجہ بندی ہٹائیں' });
+    expect(confirm.querySelector('[data-modal-icon]')).toHaveClass('bg-tk-danger-bg');
+    expect(within(confirm).getByRole('button', { name: 'ہاں، ہٹائیں' })).toHaveClass('bg-tk-danger-bg', 'text-tk-danger');
+  });
   describe('"ہٹائیں" — remove the synthetic rating', () => {
     it('asks for confirmation first, and removes nothing until confirmed', () => {
       renderDialog();

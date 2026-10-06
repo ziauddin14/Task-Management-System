@@ -185,6 +185,7 @@ function LookupListPanel() {
         message="اس ویلیو کو بند کرنے کے بعد اسے دوبارہ ایکٹیو کرنا فی الحال اس اسکرین سے ممکن نہیں (صرف ایکٹیو ویلیوز یہاں دکھائی دیتی ہیں)۔ واقعی بند کرنا چاہتے ہیں؟"
         confirmLabel="ہاں، بند کریں"
         cancelLabel="منسوخ کریں"
+        tone="danger"
         isLoading={updateValue.isPending}
         onConfirm={handleConfirmDeactivate}
         onCancel={() => setDeactivatingEntry(null)}

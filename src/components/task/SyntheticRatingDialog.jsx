@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react'; // explicit import — see src/App.jsx's comment for why
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
-import Modal from '../common/Modal.jsx';
+import { Gauge } from 'lucide-react';
+import Modal, { ModalFooter } from '../common/Modal.jsx';
 import ConfirmDialog from '../common/ConfirmDialog.jsx';
 import BusyButton from '../common/BusyButton.jsx';
 import { useEditSyntheticRating, useRemoveSyntheticRating } from '../../hooks/useSyntheticRatingMutations.js';
 import { formatDateTime } from '../../utils/formatDate.js';
 import { getPerformanceMeta, ratingForPercent, SYNTHETIC_LABEL } from '../../utils/taskDisplay.js';
+import { getRatingTone } from '../../utils/mobileTheme.js';
+import { BUTTON_DANGER, BUTTON_GHOST, BUTTON_PRIMARY, FIELD_LABEL, FIELD_TEXTAREA } from '../../utils/uiClasses.js';
 
 const NOTE_MAX_LENGTH = 500;
 
@@ -19,7 +22,11 @@ function parsePercent(text) {
 
 function RatingBadge({ rating }) {
   const meta = getPerformanceMeta(rating);
-  return <span className={clsx('rounded-full px-2 py-0.5 text-xs font-medium', meta.badgeClass)}>{meta.label}</span>;
+  return (
+    <span className={clsx('inline-block whitespace-nowrap rounded-tk-pill px-[10px] text-[12px] font-normal leading-[2.3]', getRatingTone(rating)?.chip || 'bg-tk-surface text-tk-muted')}>
+      {meta.label}
+    </span>
+  );
 }
 
 // Admin-only — "تخمینی درجہ بندی تبدیل کریں". Changes the ASSUMED percentage behind a task's
@@ -77,23 +84,34 @@ function SyntheticRatingDialog({ isOpen, onClose, task }) {
 
   return (
     <>
-      <Modal isOpen={isOpen && !confirmingRemove} onClose={onClose} title={`${SYNTHETIC_LABEL} درجہ بندی تبدیل کریں`}>
-        <form onSubmit={handleSave} className="flex flex-col gap-3">
-          <div className="rounded-lg bg-gray-50 p-2 text-sm text-gray-600">
-            <span className="font-mono">{task.codeNumber}</span> — <span>{task.title}</span>
+      {/* The redesigned look (the approved dialog style): an amber icon chip — amber is how an
+          estimate is marked everywhere in the app — the task as a banner, tinted tiles and fields,
+          and the buttons in a footer that stays in reach. Fields, labels and handlers unchanged. */}
+      <Modal
+        isOpen={isOpen && !confirmingRemove}
+        onClose={onClose}
+        title={`${SYNTHETIC_LABEL} درجہ بندی تبدیل کریں`}
+        variant="redesign"
+        icon={Gauge}
+        iconTone="amber"
+        maxWidthClassName="max-w-[560px]"
+      >
+        <form onSubmit={handleSave} className="flex flex-col gap-4">
+          <div className="rounded-tk-tile bg-tk-hover px-[14px] py-[6px] text-[14px] leading-tk-label text-tk-ink">
+            <span className="font-mono font-semibold text-tk-green-900">{task.codeNumber}</span> — <span>{task.title}</span>
           </div>
 
           {/* What is real and what is assumed, side by side — the real figure is shown, never edited. */}
-          <dl className="grid grid-cols-2 gap-2 text-sm">
-            <div className="rounded-lg border border-gray-200 p-2">
-              <dt className="text-xs text-gray-500">اصل تکمیل فیصد</dt>
-              <dd className="font-semibold text-gray-900" dir="ltr">
+          <dl className="grid grid-cols-2 gap-3 text-[14px] leading-tk-label">
+            <div className="rounded-tk-tile border border-transparent bg-tk-surface px-[14px] py-[8px]">
+              <dt className="text-[12px] text-tk-muted">اصل تکمیل فیصد</dt>
+              <dd className="text-[16px] font-semibold text-tk-ink" dir="ltr">
                 {task.completionPercent}%
               </dd>
             </div>
-            <div className="rounded-lg border border-dashed border-amber-400 bg-amber-50 p-2">
-              <dt className="text-xs text-amber-800">موجودہ {SYNTHETIC_LABEL} درجہ بندی</dt>
-              <dd className="flex flex-wrap items-center gap-1.5 font-semibold text-gray-900">
+            <div className="rounded-tk-tile border border-dashed border-tk-amber-line bg-tk-amber-bg px-[14px] py-[8px]">
+              <dt className="text-[12px] text-tk-amber-text">موجودہ {SYNTHETIC_LABEL} درجہ بندی</dt>
+              <dd className="flex flex-wrap items-center gap-2 text-[16px] font-semibold text-tk-ink">
                 <RatingBadge rating={task.performanceRating} />
                 <span dir="ltr">{currentPercent}%</span>
               </dd>
@@ -101,10 +119,10 @@ function SyntheticRatingDialog({ isOpen, onClose, task }) {
           </dl>
 
           <div>
-            <label htmlFor="synthetic-percent" className="mb-1 block text-sm font-medium text-gray-700">
+            <label htmlFor="synthetic-percent" className={FIELD_LABEL}>
               نیا فرض کردہ فیصد (0 تا 100)
             </label>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-3">
               <input
                 id="synthetic-percent"
                 type="number"
@@ -117,12 +135,12 @@ function SyntheticRatingDialog({ isOpen, onClose, task }) {
                 onChange={(event) => setPercentText(event.target.value)}
                 aria-invalid={percent === null}
                 aria-describedby="synthetic-percent-preview"
-                className="h-10 w-28 rounded-lg border border-gray-300 px-2 text-center"
+                className="h-[48px] w-[112px] shrink-0 rounded-tk-input border-[1.5px] border-transparent bg-tk-surface px-2 text-center text-[16px] font-semibold text-tk-ink transition-colors focus:border-tk-green-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-tk-green-700/25 aria-[invalid=true]:border-tk-danger-line"
               />
               {/* Live preview: the band this percentage gives (no late downgrade — same as the server). */}
-              <p id="synthetic-percent-preview" aria-live="polite" className="flex items-center gap-1.5 text-sm text-gray-600">
+              <p id="synthetic-percent-preview" aria-live="polite" className="flex min-w-0 items-center gap-2 text-[14px] leading-tk-label text-tk-ink-soft">
                 {percent === null ? (
-                  <span className="text-red-600">0 سے 100 کے درمیان فیصد درج کریں</span>
+                  <span className="text-[13px] text-tk-danger">0 سے 100 کے درمیان فیصد درج کریں</span>
                 ) : (
                   <>
                     <span>نتیجہ:</span>
@@ -134,7 +152,7 @@ function SyntheticRatingDialog({ isOpen, onClose, task }) {
           </div>
 
           <div>
-            <label htmlFor="synthetic-note" className="mb-1 block text-sm font-medium text-gray-700">
+            <label htmlFor="synthetic-note" className={FIELD_LABEL}>
               نوٹ (اختیاری)
             </label>
             <textarea
@@ -143,17 +161,17 @@ function SyntheticRatingDialog({ isOpen, onClose, task }) {
               onChange={(event) => setNote(event.target.value)}
               rows={2}
               maxLength={NOTE_MAX_LENGTH}
-              className="w-full rounded-lg border border-gray-300 p-2 text-sm"
+              className={FIELD_TEXTAREA}
             />
           </div>
 
           {history.length > 0 && (
-            <details className="rounded-lg border border-gray-200 p-2 text-xs text-gray-600">
-              <summary className="cursor-pointer text-sm text-gray-700">تبدیلیوں کی سرگزشت ({history.length})</summary>
-              <ul className="mt-1.5 flex flex-col gap-1">
+            <details className="rounded-tk-input border border-tk-line px-[14px] py-[6px] text-[12px] leading-tk-label text-tk-ink-soft">
+              <summary className="cursor-pointer text-[13px] text-tk-ink">تبدیلیوں کی سرگزشت ({history.length})</summary>
+              <ul className="mt-1 flex flex-col gap-1">
                 {[...history].reverse().map((entry, index) => (
                   // eslint-disable-next-line react/no-array-index-key -- append-only log, no stable id
-                  <li key={index} className="flex flex-wrap items-center gap-x-2 gap-y-0.5 border-t border-gray-100 pt-1 first:border-t-0 first:pt-0">
+                  <li key={index} className="flex flex-wrap items-center gap-x-3 gap-y-0.5 border-t border-tk-line-soft pt-1 first:border-t-0 first:pt-0">
                     <span dir="ltr">{formatDateTime(entry.at)}</span>
                     <span dir="ltr">
                       {entry.fromPercent ?? '—'}% → {entry.toPercent ?? '—'}%
@@ -161,35 +179,30 @@ function SyntheticRatingDialog({ isOpen, onClose, task }) {
                     <span>
                       {getPerformanceMeta(entry.fromRating).label} ← {getPerformanceMeta(entry.toRating).label}
                     </span>
-                    {entry.note && <span className="text-gray-500">{entry.note}</span>}
+                    {entry.note && <span className="text-tk-muted">{entry.note}</span>}
                   </li>
                 ))}
               </ul>
             </details>
           )}
 
-          <div className="mt-1 grid grid-cols-3 gap-2">
-            <button type="button" onClick={onClose} className="h-11 min-w-0 rounded-lg px-1 text-sm font-semibold text-gray-700 hover:bg-gray-100">
-              منسوخ کریں
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfirmingRemove(true)}
-              disabled={isBusy}
-              className="h-11 min-w-0 rounded-lg border border-red-300 px-1 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
-            >
-              ہٹائیں
-            </button>
+          <ModalFooter>
             <BusyButton
               type="submit"
               busy={editMutation.isPending}
               busyLabel="محفوظ ہو رہا ہے…"
               disabled={!isValid || removeMutation.isPending}
-              className="h-11 min-w-0 rounded-lg bg-brand px-1 text-sm font-semibold text-white hover:bg-brand/90 disabled:opacity-50"
+              className={`${BUTTON_PRIMARY} min-w-[120px] flex-1`}
             >
               محفوظ کریں
             </BusyButton>
-          </div>
+            <button type="button" onClick={onClose} className={BUTTON_GHOST}>
+              منسوخ کریں
+            </button>
+            <button type="button" onClick={() => setConfirmingRemove(true)} disabled={isBusy} className={BUTTON_DANGER}>
+              ہٹائیں
+            </button>
+          </ModalFooter>
         </form>
       </Modal>
 
@@ -199,6 +212,7 @@ function SyntheticRatingDialog({ isOpen, onClose, task }) {
         message={`کام ${task.codeNumber} کی ${SYNTHETIC_LABEL} درجہ بندی ہٹانے کے بعد یہ کام دوبارہ بغیر درجہ بندی کے ہو جائے گا۔ اصل تکمیل فیصد اور کیفیت میں کوئی تبدیلی نہیں ہوگی۔ کیا واقعی ہٹانا چاہتے ہیں؟`}
         confirmLabel="ہاں، ہٹائیں"
         cancelLabel="منسوخ کریں"
+        tone="danger"
         onConfirm={handleRemove}
         onCancel={() => setConfirmingRemove(false)}
         isLoading={removeMutation.isPending}
