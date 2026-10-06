@@ -10,6 +10,16 @@ import { useFloatingMenu } from '../../hooks/useFloatingMenu.js';
 import { COLUMN_DEFINITIONS } from '../../utils/dashboardColumns.js';
 import { formatDateShortYear, formatTimeStatusLabel, getTimeStatusColorClass } from '../../utils/formatDate.js';
 import { getStatusMeta, getPerformanceMeta, isSyntheticRating, SYNTHETIC_LABEL } from '../../utils/taskDisplay.js';
+import { getRatingTone, getStatusTone } from '../../utils/mobileTheme.js';
+import { progressFillClass } from '../../utils/dashboardTheme.js';
+
+// Desktop redesign — the look only: a rounded card, a tinted sticky header row, taller rows that
+// highlight under the pointer, status and rating as tinted chips, and a completion bar coloured by
+// how far the task really is. Every column, the sorting, the paging and the row actions are what
+// they were.
+const TH_CLASS = 'whitespace-nowrap px-3 py-3 text-start text-[13px] font-semibold';
+const TD_CLASS = 'whitespace-nowrap px-3 py-[14px]';
+const CHIP_CLASS = 'inline-block whitespace-nowrap rounded-tk-pill px-[10px] text-[12px] leading-[2.3]';
 
 // Prompt — variant="menuItem" (TMS Dashboard row ایکشن menu) renders the same icon + label +
 // onClick/disabled as a full-width menu row instead of a standalone square icon button; no
@@ -23,7 +33,7 @@ function IconActionButton({ icon: Icon, label, onClick, disabled, variant = 'sta
         disabled={disabled}
         title={label}
         aria-label={label}
-        className="flex h-10 w-full items-center gap-2 whitespace-nowrap rounded-md px-2 text-start text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-brand disabled:opacity-40"
+        className="flex h-10 w-full items-center gap-2 whitespace-nowrap rounded-tk-chip px-2 text-start text-sm text-tk-ink transition-colors hover:bg-tk-hover hover:text-tk-green-900 disabled:opacity-40"
       >
         <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
         <span>{label}</span>
@@ -38,7 +48,7 @@ function IconActionButton({ icon: Icon, label, onClick, disabled, variant = 'sta
       disabled={disabled}
       title={label}
       aria-label={label}
-      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-gray-300 text-gray-600 transition-colors hover:bg-gray-50 hover:text-brand disabled:opacity-40"
+      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-tk-chip border border-tk-line-btn text-tk-green-900 transition-colors hover:bg-tk-hover disabled:opacity-40"
     >
       <Icon className="h-4 w-4" aria-hidden="true" />
     </button>
@@ -64,10 +74,10 @@ function RowActionsMenu({ children }) {
         aria-expanded={open}
         title="اقدامات"
         aria-label="اقدامات"
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-gray-300 text-gray-600 transition-colors hover:bg-gray-50 hover:text-brand"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-tk-chip bg-tk-hover text-tk-green-900 transition-colors hover:bg-tk-green-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tk-green-700"
         {...getReferenceProps()}
       >
-        <MoreVertical className="h-4 w-4" aria-hidden="true" />
+        <MoreVertical className="h-[18px] w-[18px]" aria-hidden="true" />
       </button>
 
       {open && (
@@ -79,7 +89,7 @@ function RowActionsMenu({ children }) {
             ref={refs.setFloating}
             style={floatingStyles}
             onClick={() => setOpen(false)}
-            className="z-50 w-max min-w-[11rem] max-w-[calc(100vw-1rem)] rounded-lg border border-gray-200 bg-white p-1.5 shadow-lg"
+            className="z-50 w-max min-w-[11rem] max-w-[calc(100vw-1rem)] rounded-tk-tile border border-tk-line bg-white p-1.5 shadow-tk-lift"
             {...getFloatingProps()}
           >
             {children}
@@ -101,11 +111,11 @@ function AssigneeChips({ assignees }) {
   return (
     <div className="flex flex-wrap items-center gap-1">
       {visible.map((person) => (
-        <span key={person.id} className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700">
+        <span key={person.id} className="whitespace-nowrap rounded-tk-pill bg-tk-surface px-[10px] text-[12px] leading-[2.3] text-tk-ink-soft">
           {person.name}
         </span>
       ))}
-      {extra > 0 && <span className="text-xs text-gray-500">+{extra} more</span>}
+      {extra > 0 && <span className="text-xs text-tk-muted">+{extra} more</span>}
     </div>
   );
 }
@@ -134,7 +144,7 @@ function ColumnHeader({ column, sortBy, sortOrder, onSort, className }) {
       <button
         type="button"
         onClick={() => onSort(sortField)}
-        className="flex h-10 items-center gap-1 font-medium hover:text-gray-900"
+        className="flex h-10 items-center gap-1 font-semibold hover:text-tk-green-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-tk-green-700"
       >
         <span>{column.label}</span>
         {isActive ? (
@@ -144,7 +154,7 @@ function ColumnHeader({ column, sortBy, sortOrder, onSort, className }) {
             <ChevronDown className="h-3 w-3" aria-hidden="true" />
           )
         ) : (
-          <ChevronsUpDown className="h-3 w-3 text-gray-300" aria-hidden="true" />
+          <ChevronsUpDown className="h-3 w-3 opacity-40" aria-hidden="true" />
         )}
       </button>
     </th>
@@ -199,7 +209,7 @@ function TaskTable({
     // adjustment. The control itself moved to the Navbar's PageActions bar (DashboardPage.jsx),
     // next to Print View/Export — columnVisibility.isVisible below still gates which columns
     // render here exactly as before.
-    <div className="rounded-lg border border-gray-200 bg-white">
+    <div className="tk-rise tk-d4 overflow-hidden rounded-tk-panel bg-tk-card shadow-tk-card">
       {isLoading && <LoadingPhrase label="کام لوڈ ہو رہے ہیں…" />}
 
       {!isLoading && isError && <EmptyState message="کام لوڈ نہیں ہو سکے۔ دوبارہ کوشش کریں۔" />}
@@ -210,52 +220,52 @@ function TaskTable({
 
       {!isLoading && !isError && tasks.length > 0 && (
         <div className="max-h-[70vh] overflow-auto">
-          <table className="w-full text-start text-sm">
-            <thead className="sticky top-0 z-[1] bg-gray-50 text-gray-600">
+          <table className="w-full text-start text-[13px]">
+            <thead className="sticky top-0 z-[1] bg-tk-thead-bg text-tk-thead-ink">
               <tr>
                 <ColumnHeader
                   column={codeNumberCol}
                   sortBy={sortBy}
                   sortOrder={sortOrder}
                   onSort={handleSort}
-                  className="whitespace-nowrap px-3 py-2 font-medium"
+                  className={TH_CLASS}
                 />
                 <ColumnHeader
                   column={titleCol}
                   sortBy={sortBy}
                   sortOrder={sortOrder}
                   onSort={handleSort}
-                  className="whitespace-nowrap px-3 py-2 font-medium"
+                  className={TH_CLASS}
                 />
-                {isVisible('assignees') && <th className="whitespace-nowrap px-3 py-2 font-medium">ذمہ دار</th>}
-                {isVisible('responsibility') && <th className="whitespace-nowrap px-3 py-2 font-medium">ذمہ داری</th>}
+                {isVisible('assignees') && <th className={TH_CLASS}>ذمہ دار</th>}
+                {isVisible('responsibility') && <th className={TH_CLASS}>ذمہ داری</th>}
                 {isVisible('deadline') && (
                   <ColumnHeader
                     column={{ key: 'deadline', label: 'آخری تاریخ' }}
                     sortBy={sortBy}
                     sortOrder={sortOrder}
                     onSort={handleSort}
-                    className="whitespace-nowrap px-3 py-2 font-medium"
+                    className={TH_CLASS}
                   />
                 )}
-                {isVisible('lastUpdate') && <th className="whitespace-nowrap px-3 py-2 font-medium">آخری اپڈیٹ</th>}
+                {isVisible('lastUpdate') && <th className={TH_CLASS}>آخری اپڈیٹ</th>}
                 {isVisible('status') && (
                   <ColumnHeader
                     column={{ key: 'status', label: 'کیفیت' }}
                     sortBy={sortBy}
                     sortOrder={sortOrder}
                     onSort={handleSort}
-                    className="whitespace-nowrap px-3 py-2 font-medium"
+                    className={TH_CLASS}
                   />
                 )}
-                {isVisible('timeStatus') && <th className="whitespace-nowrap px-3 py-2 font-medium">وقتی صورتحال</th>}
+                {isVisible('timeStatus') && <th className={TH_CLASS}>وقتی صورتحال</th>}
                 {isVisible('completionPercent') && (
                   <ColumnHeader
                     column={{ key: 'completionPercent', label: 'تکمیل فیصد' }}
                     sortBy={sortBy}
                     sortOrder={sortOrder}
                     onSort={handleSort}
-                    className="whitespace-nowrap px-3 py-2 font-medium"
+                    className={TH_CLASS}
                   />
                 )}
                 {isVisible('performance') && (
@@ -264,10 +274,10 @@ function TaskTable({
                     sortBy={sortBy}
                     sortOrder={sortOrder}
                     onSort={handleSort}
-                    className="whitespace-nowrap px-3 py-2 font-medium"
+                    className={TH_CLASS}
                   />
                 )}
-                <th className="no-print whitespace-nowrap px-3 py-2 font-medium">ایکشن</th>
+                <th className={`no-print ${TH_CLASS}`}>ایکشن</th>
               </tr>
             </thead>
             <tbody>
@@ -277,56 +287,62 @@ function TaskTable({
                 const isClosed = task.status === 'closed';
                 const isSynthetic = isSyntheticRating(task);
                 return (
-                  <tr key={task.id} className="border-t border-gray-100 hover:bg-brand-light/40">
-                    <td className="whitespace-nowrap px-3 py-2 font-mono">{task.codeNumber}</td>
-                    <td className="max-w-[220px] truncate px-3 py-2" title={task.title}>
-                      {task.title}
+                  <tr key={task.id} className="border-t border-tk-line-row transition-colors hover:bg-tk-hover motion-reduce:transition-none">
+                    <td className={`${TD_CLASS} font-mono text-tk-muted`}>{task.codeNumber}</td>
+                    <td className="min-w-[200px] max-w-[340px] px-3 py-[14px] text-[14px] font-semibold leading-tk-label" title={task.title}>
+                      <span className="line-clamp-2">{task.title}</span>
                     </td>
                     {isVisible('assignees') && (
-                      <td className="px-3 py-2">
+                      <td className="px-3 py-[14px]">
                         <AssigneeChips assignees={task.assignees || []} />
                       </td>
                     )}
-                    {isVisible('responsibility') && <td className="whitespace-nowrap px-3 py-2">{task.responsibility}</td>}
-                    {isVisible('deadline') && <td className="whitespace-nowrap px-3 py-2">{formatDateShortYear(task.deadline)}</td>}
-                    {isVisible('lastUpdate') && <td className="whitespace-nowrap px-3 py-2">{formatDateShortYear(task.lastUpdateAt)}</td>}
+                    {isVisible('responsibility') && <td className={`${TD_CLASS} text-tk-ink-soft`}>{task.responsibility}</td>}
+                    {isVisible('deadline') && <td className={TD_CLASS}>{formatDateShortYear(task.deadline)}</td>}
+                    {isVisible('lastUpdate') && <td className={`${TD_CLASS} text-tk-muted`}>{formatDateShortYear(task.lastUpdateAt)}</td>}
                     {isVisible('status') && (
-                      <td className="whitespace-nowrap px-3 py-2">
-                        <span className={clsx('rounded-full px-2 py-0.5 text-xs font-medium', statusMeta.badgeClass)}>
-                          {statusMeta.label}
-                        </span>
+                      <td className={TD_CLASS}>
+                        <span className={clsx(CHIP_CLASS, getStatusTone(task.status).chip)}>{statusMeta.label}</span>
                       </td>
                     )}
                     {isVisible('timeStatus') && (
-                      <td className={clsx('whitespace-nowrap px-3 py-2', getTimeStatusColorClass(task.timeStatus))}>
+                      <td className={clsx(TD_CLASS, 'text-[12px]', getTimeStatusColorClass(task.timeStatus))}>
                         {formatTimeStatusLabel(task.timeStatus)}
                       </td>
                     )}
                     {isVisible('completionPercent') && (
-                      <td className="whitespace-nowrap px-3 py-2">
+                      <td className={TD_CLASS}>
+                        {/* Always the task's REAL completion percent — never the percent a synthetic
+                            rating assumed. Red under 30%, amber to 69%, green from 70%. */}
                         <div className="flex items-center gap-2">
-                          <div className="h-2 w-16 overflow-hidden rounded-full bg-gray-200">
-                            <div className="h-full bg-brand" style={{ width: `${task.completionPercent}%` }} />
+                          <div className="h-2 w-14 overflow-hidden rounded-tk-pill bg-tk-track">
+                            <div
+                              data-progress-fill
+                              className={clsx('tk-prog-wipe h-full rounded-tk-pill', progressFillClass(task.completionPercent))}
+                              style={{ width: `${task.completionPercent}%` }}
+                            />
                           </div>
-                          <span className="text-xs text-gray-600">{task.completionPercent}%</span>
+                          <span className="min-w-[28px] text-xs text-tk-muted">{task.completionPercent}%</span>
                         </div>
                       </td>
                     )}
                     {isVisible('performance') && (
-                      <td className="whitespace-nowrap px-3 py-2">
+                      <td className={TD_CLASS}>
                         {/* A developer-assigned rating is marked "تخمینی" right beside it. The
                             completion-percent column to the side is untouched — it always shows
                             the task's REAL percent, so a closed task at 0% rated "بہتر" reads
                             exactly as that: a real 0%, and an assumed rating. */}
                         <div className="flex items-center gap-1">
-                          <span className={clsx('rounded-full px-2 py-0.5 text-xs font-medium', performanceMeta.badgeClass)}>
+                          <span
+                            className={clsx(CHIP_CLASS, getRatingTone(task.performanceRating)?.chip || 'bg-tk-surface text-tk-muted', getRatingTone(task.performanceRating) && 'font-semibold')}
+                          >
                             {performanceMeta.label}
                           </span>
                           {isSynthetic && <SyntheticBadge assumedPercent={task.syntheticRating.assumedPercent} />}
                         </div>
                       </td>
                     )}
-                    <td className="no-print whitespace-nowrap px-3 py-2">
+                    <td className={`no-print ${TD_CLASS}`}>
                       <RowActionsMenu>
                         <IconActionButton
                           icon={Upload}
@@ -383,7 +399,7 @@ function TaskTable({
         </div>
       )}
 
-      <div className="no-print px-3">
+      <div className="no-print border-t border-tk-line-row px-4">
         <Pagination
           page={page}
           totalPages={meta?.totalPages || 1}

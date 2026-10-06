@@ -11,8 +11,9 @@ import { useCloseTask } from '../hooks/useCloseTask.js';
 import { useColumnVisibility } from '../hooks/useColumnVisibility.js';
 import { useExportReport } from '../hooks/useExportReport.js';
 import { useTriggerReminders } from '../hooks/useTriggerReminders.js';
-import KpiCard from '../components/dashboard/KpiCard.jsx';
-import RatingKpiGroup from '../components/dashboard/RatingKpiGroup.jsx';
+import QualityHero from '../components/dashboard/QualityHero.jsx';
+import StatusDonut from '../components/dashboard/StatusDonut.jsx';
+import StatusTileRow from '../components/dashboard/StatusTileRow.jsx';
 import FilterBar from '../components/dashboard/FilterBar.jsx';
 import TaskTable from '../components/dashboard/TaskTable.jsx';
 import ActionsMenu from '../components/dashboard/ActionsMenu.jsx';
@@ -31,10 +32,9 @@ import BusyRegion from '../components/common/BusyRegion.jsx';
 import PushPermissionBanner from '../components/common/PushPermissionBanner.jsx';
 import { PageActions } from '../contexts/PageActionsPortal.jsx';
 import { useDismissPageActions } from '../contexts/PageActionsDismissContext.js';
-import { STATUS_META, getStatusMeta } from '../utils/taskDisplay.js';
+import { PAGE_BUTTON_GHOST, PAGE_BUTTON_PRIMARY, PAGE_SUBTITLE, PAGE_TITLE } from '../utils/uiClasses.js';
 import { COLUMN_DEFINITIONS } from '../utils/dashboardColumns.js';
 
-const STATUS_KEYS = Object.keys(STATUS_META);
 const COLUMN_STORAGE_KEY = 'dashboard.visibleColumns.v1';
 
 // docs/08-ui-ux.md §3 — top to bottom: header (AppLayout, already wired, ایکشن menu portalled
@@ -138,6 +138,7 @@ function DashboardPage({ view = 'dashboard' }) {
           message="اس کام کو بند کرنے کے بعد کوئی نئی اپڈیٹ درج نہیں کی جا سکے گی۔ کیا واقعی بند کرنا چاہتے ہیں؟"
           confirmLabel="ہاں، بند کریں"
           cancelLabel="منسوخ کریں"
+          tone="danger"
           onConfirm={handleCloseConfirm}
           onCancel={() => setClosingTask(null)}
           isLoading={closeTaskMutation.isPending}
@@ -255,131 +256,94 @@ function DashboardPage({ view = 'dashboard' }) {
     );
   }
 
+  // ---- Desktop / tablet (768px and wider) -----------------------------------------------------
+  // Top to bottom: the page header (title, greeting, the Admin's three buttons), the hero
+  // ("مجموعی کیفیت") beside the status donut, the four status tiles, the filter card and the task
+  // table. Only the look and the arrangement are new: every card is fed by the same two summary
+  // requests as before (each group asked without its OWN filter), and every click does what the
+  // old KPI cards did — toggleKpiFilter on `status` / `performanceRating`.
+  // The dialogs are siblings of the page content, not children of it: the content sets the new
+  // ink colour for everything in it, and a dialog that keeps its classic look (Task Details) must
+  // not inherit that.
   return (
-    <div className="flex min-w-0 flex-col gap-3">
-      {/* Web Push addition — deliberately outside the sticky header block below: this banner
-          appears once (if at all) and disappears for good once dismissed/decided, so it should
-          never be pinned like the KPI/filter block is. */}
-      <PushPermissionBanner />
+    <>
+      <div className="flex min-w-0 flex-col gap-5 text-tk-ink">
+        {/* Web Push addition — appears once (if at all) and disappears for good once dismissed. */}
+        <PushPermissionBanner />
 
-      {/* Prompt — Navbar + this whole block (heading, KPI cards, filter bar) together read as one
-          sticky unit: top-16 seats it flush against AppLayout's own sticky h-16 header, so between
-          the two there's never a gap the table can show through while scrolling. A solid
-          background is required here — without one, the table's own rows would show through as
-          they scroll underneath this block.
-
-          Responsive fix — sticky only from `xl` (1280px) up, the width at which the two KPI
-          groups fit side by side (see the grid below). Below that the groups are stacked and the
-          cards reflow, which makes this whole block tall: kept sticky there, it would pin itself
-          across most of the screen and the task table below it could barely (on a phone, never)
-          scroll into view. Unstuck, it just scrolls away normally like the rest of the page — no
-          functionality lost, since "stays visible while scrolling the table" was never achievable
-          on a screen shorter than the block itself. (It used to switch at `md`/768px, where the
-          side-by-side groups left each card about 40px wide once the sidebar took its share.) */}
-      <div className="no-print z-20 -mx-4 flex flex-col gap-3 bg-gray-50 px-4 pb-3 pt-4 md:-mx-6 md:px-6 xl:sticky xl:top-16">
         {/* BusyRegion: while "یاد دہانیاں بھیجیں" is in flight, the loading phrase shows on its own
             line under this header row (lineClassName cancels the column's own gap above it). */}
-        <BusyRegion lineClassName="-mt-2">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-brand/10 pb-3">
-            <h1 className="text-3xl font-bold text-gray-900">ڈیش بورڈ</h1>
-            <div className="flex flex-wrap items-center gap-2">
-              {isAdmin && (
-                <BusyButton
-                  onClick={() => triggerRemindersMutation.mutate()}
-                  busy={triggerRemindersMutation.isPending}
-                  busyLabel="یاد دہانیاں بھیجی جا رہی ہیں…"
-                  title="یاد دہانیاں فوراً بھیجیں (روزانہ خودکار بھیجے جانے کا دستی ٹرگر)"
-                  className="flex h-10 items-center gap-1 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 hover:border-brand/40 hover:bg-brand-light disabled:opacity-50"
-                >
-                  <BellRing className="h-4 w-4" aria-hidden="true" />
-                  یاد دہانیاں بھیجیں
-                </BusyButton>
-              )}
-              {isAdmin && (
-                <button
-                  type="button"
-                  onClick={() => setSendNotificationState({ task: null })}
-                  title="نئی اطلاع بھیجیں"
-                  className="flex h-10 items-center gap-1 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 hover:border-brand/40 hover:bg-brand-light"
-                >
-                  <Send className="h-4 w-4" aria-hidden="true" />
-                  نئی اطلاع بھیجیں
-                </button>
-              )}
-              {isAdmin && (
-                <button
-                  type="button"
-                  onClick={() => setFormModal({ mode: 'create' })}
-                  className="flex h-10 items-center gap-1 rounded-lg bg-brand px-4 text-white hover:bg-brand/90"
-                >
-                  <Plus className="h-4 w-4" aria-hidden="true" />
-                  نیا کام
-                </button>
-              )}
+        <BusyRegion lineClassName="-mt-3">
+          <div className="tk-rise flex flex-wrap items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <h1 className={PAGE_TITLE}>ڈیش بورڈ</h1>
+              <p className={PAGE_SUBTITLE}>
+                السلام علیکم{user?.name ? `، ${user.name}` : ''} — آج کی کارکردگی ایک نظر میں
+              </p>
             </div>
+            {isAdmin && (
+              <BusyButton
+                onClick={() => triggerRemindersMutation.mutate()}
+                busy={triggerRemindersMutation.isPending}
+                busyLabel="یاد دہانیاں بھیجی جا رہی ہیں…"
+                title="یاد دہانیاں فوراً بھیجیں (روزانہ خودکار بھیجے جانے کا دستی ٹرگر)"
+                className={PAGE_BUTTON_GHOST}
+              >
+                <BellRing className="h-[18px] w-[18px]" aria-hidden="true" />
+                یاد دہانیاں بھیجیں
+              </BusyButton>
+            )}
+            {isAdmin && (
+              <button type="button" onClick={() => setSendNotificationState({ task: null })} title="نئی اطلاع بھیجیں" className={PAGE_BUTTON_GHOST}>
+                <Send className="h-[18px] w-[18px]" aria-hidden="true" />
+                نئی اطلاع بھیجیں
+              </button>
+            )}
+            {isAdmin && (
+              <button type="button" onClick={() => setFormModal({ mode: 'create' })} className={PAGE_BUTTON_PRIMARY}>
+                <Plus className="h-[18px] w-[18px]" strokeWidth={2.4} aria-hidden="true" />
+                نیا کام
+              </button>
+            )}
           </div>
         </BusyRegion>
 
         {isSummaryLoading && <LoadingPhrase label="خلاصہ لوڈ ہو رہا ہے۔۔۔" />}
 
         {statusSummary && ratingSummary && (
-          <div className="flex flex-col gap-2">
-            {/* Prompt — a subtle brand-colored divider (xl:divide-x) separates the two groups;
-                each group's own label is centered above its cards (was start-aligned with a side
-                accent bar before). Side by side only from `xl`: any narrower and ten cards in one
-                row are too thin to hold a count and a percentage — the groups stack instead, each
-                with its own full-width row of five from `md`. */}
-            <div className="grid grid-cols-1 gap-3 xl:grid-cols-2 xl:divide-x xl:divide-brand/25">
-              <div className="xl:pe-4">
-                <p className="mb-1.5 text-center text-sm font-semibold text-gray-700">کام کی کیفیت</p>
-                {/* Responsive fix — was a bare grid-cols-5, which crushed 5 Urdu-labeled cards into
-                    unreadable slivers below ~480px; reflows 2-up on mobile, 3-up on tablet, and
-                    keeps the original one-row-of-5 from `md` (768px) up unchanged. */}
-                <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 md:grid-cols-5" aria-busy={statusSummaryQuery.isPlaceholderData || undefined}>
-                  {STATUS_KEYS.map((key) => {
-                    // From the summary asked for WITHOUT the status filter: the four cards always
-                    // show the whole status distribution of the tasks the other filters leave.
-                    const entry = statusSummary.byStatus[key] || { count: 0, percent: 0 };
-                    return (
-                      <KpiCard
-                        key={key}
-                        label={getStatusMeta(key).label}
-                        count={entry.count}
-                        percent={entry.percent}
-                        active={params.status === key}
-                        onClick={() => handleKpiClick('status', key)}
-                      />
-                    );
-                  })}
-                  {/* Prompt 2C item 5 — a 5th "Total" card: every task regardless of status, from
-                      the summary's own top-level total (not a byStatus bucket, so there's no
-                      single status value to toggle active/inactive on) — clicking it clears both
-                      KPI filters, the same "see everything" action as the Clear filter link below.
-                      Like the four cards beside it, it is not narrowed by the status filter. */}
-                  <KpiCard
-                    label="مجموعی"
-                    count={statusSummary.total}
-                    active={false}
-                    onClick={() => setFilters({ status: undefined, performanceRating: undefined })}
-                  />
-                </div>
-              </div>
-
-              <div className="xl:ps-4">
-                <p className="mb-1.5 text-center text-sm font-semibold text-gray-700">کارکردگی</p>
-                {/* KPI redesign — four band cards (count + share of the RATED tasks) and a real
-                    overall-quality card, replacing the old fifth card that showed the number of
-                    UNRATED tasks under the label "مجموعی کیفیت". Same component for an Admin (all
-                    tasks) and a normal user (their own): the scope is the server's. */}
-                <RatingKpiGroup
-                  ratings={ratingSummary.ratings}
-                  activeRating={params.performanceRating}
-                  onToggleRating={(rating) => handleKpiClick('performanceRating', rating)}
-                  // One "updating" line for the whole KPI block, whichever group is being refetched.
-                  isRefreshing={isSummaryRefreshing}
-                />
-              </div>
+          <>
+            {/* Hero beside the donut from 1024px up (the hero first: it lands on the right in this
+                right-to-left layout); stacked below that. */}
+            <div data-dashboard-top className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
+              <QualityHero
+                className="tk-rise tk-d1"
+                ratings={ratingSummary.ratings}
+                activeRating={params.performanceRating}
+                onToggleRating={(rating) => handleKpiClick('performanceRating', rating)}
+                // One "updating" line for the whole KPI block, whichever group is being refetched.
+                isRefreshing={isSummaryRefreshing}
+              />
+              {/* From the summary asked for WITHOUT the status filter: the donut and the tiles always
+                  show the whole status distribution of the tasks the other filters leave. Its centre
+                  is the old "مجموعی" card: every task regardless of status, and pressing it clears
+                  both KPI filters. */}
+              <StatusDonut
+                className="tk-rise tk-d2"
+                byStatus={statusSummary.byStatus}
+                total={statusSummary.total}
+                activeStatus={params.status}
+                onToggleStatus={(status) => handleKpiClick('status', status)}
+                onClearKpiFilters={() => setFilters({ status: undefined, performanceRating: undefined })}
+                isRefreshing={statusSummaryQuery.isPlaceholderData}
+              />
             </div>
+
+            <StatusTileRow
+              byStatus={statusSummary.byStatus}
+              activeStatus={params.status}
+              onToggleStatus={(status) => handleKpiClick('status', status)}
+              isRefreshing={statusSummaryQuery.isPlaceholderData}
+            />
 
             {(params.status || params.performanceRating) && (
               <button
@@ -388,31 +352,28 @@ function DashboardPage({ view = 'dashboard' }) {
                 // setFilters for why two separate toggleKpiFilter() calls here would silently
                 // clobber each other instead of clearing both.
                 onClick={() => setFilters({ status: undefined, performanceRating: undefined })}
-                className="flex h-10 w-fit items-center text-sm text-brand hover:underline"
+                className="-my-2 flex h-10 w-fit items-center rounded-tk-chip px-2 text-[13px] text-tk-green-700 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-tk-green-700"
               >
                 × Clear filter
               </button>
             )}
-          </div>
+          </>
         )}
 
         <FilterBar filtersHook={filtersHook} isAdmin={isAdmin} />
-      </div>
 
-      {/* Prompt — TMS Dashboard header cleanup: a single "ایکشن" trigger (rendered into the
-          Navbar via the <PageActions> portal below) holds کالمز (column visibility) + Export +
-          WhatsApp Share — the standalone Columns button doesn't exist anywhere else on the page. */}
-      <PageActions>
-        <ActionsMenu
-          onExport={handleDashboardExport}
-          isLoading={exportReportHook.isLoading}
-          columns={COLUMN_DEFINITIONS}
-          isColumnVisible={columnVisibility.isVisible}
-          onToggleColumn={columnVisibility.toggleColumn}
-        />
-      </PageActions>
+        {/* A single "ایکشن" trigger, rendered into the Navbar via the <PageActions> portal, holds
+            کالمز (column visibility) + Export + WhatsApp Share. */}
+        <PageActions>
+          <ActionsMenu
+            onExport={handleDashboardExport}
+            isLoading={exportReportHook.isLoading}
+            columns={COLUMN_DEFINITIONS}
+            isColumnVisible={columnVisibility.isVisible}
+            onToggleColumn={columnVisibility.toggleColumn}
+          />
+        </PageActions>
 
-      <div>
         <TaskTable
           tasks={tasksQuery.data?.items || []}
           meta={tasksQuery.data?.meta}
@@ -433,10 +394,11 @@ function DashboardPage({ view = 'dashboard' }) {
           sortOrder={sortOrder}
           onSortChange={setSort}
         />
+
       </div>
 
       {dialogs}
-    </div>
+    </>
   );
 }
 

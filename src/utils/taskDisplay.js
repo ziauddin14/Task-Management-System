@@ -10,7 +10,7 @@
 // The "-" (not-applicable) entry keeps its bare-dash label — correct for a single TASK row that
 // has no rating. The KPI group no longer has a card for that bucket at all: its fifth card is the
 // real overall quality (an average), and unrated tasks are a plain count under the cards
-// (components/dashboard/RatingKpiGroup.jsx).
+// (components/dashboard/QualityHero.jsx).
 export const STATUS_META = {
   ongoing: { label: 'جاری', badgeClass: 'bg-blue-100 text-blue-800' },
   pending: { label: 'پینڈنگ', badgeClass: 'bg-orange-100 text-orange-800' },

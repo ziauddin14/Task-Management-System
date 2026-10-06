@@ -73,6 +73,7 @@ describe('FilterBar (docs/08-ui-ux.md §5, docs/09-frontend-features.md §5)', (
     renderFilterBar();
     expect(screen.queryByText('تمام فلٹرز صاف کریں')).not.toBeInTheDocument();
 
+    fireEvent.click(screen.getByRole('button', { name: 'تاریخ' })); // the custom-range inputs sit behind this button
     fireEvent.change(screen.getByLabelText('از تاریخ'), { target: { value: '2026-08-01' } });
     expect(screen.getByText('تمام فلٹرز صاف کریں')).toBeInTheDocument();
 

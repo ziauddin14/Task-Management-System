@@ -3,11 +3,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
-import Modal from '../common/Modal.jsx';
+import { UserPlus, UserRoundPen } from 'lucide-react';
+import Modal, { ModalFooter } from '../common/Modal.jsx';
 import ConfirmDialog from '../common/ConfirmDialog.jsx';
 import BusyButton from '../common/BusyButton.jsx';
 import { useCreateUser } from '../../hooks/useCreateUser.js';
 import { useUpdateUser } from '../../hooks/useUpdateUser.js';
+import { BUTTON_GHOST, BUTTON_PRIMARY, FIELD, FIELD_ERROR, FIELD_LABEL } from '../../utils/uiClasses.js';
 
 // docs/09-frontend-features.md §10 — mirrors backend/src/validators/user.validator.js field-for-
 // field (verified directly, not just the doc's own field list — see Phase 10.5 report §F): name
@@ -87,99 +89,95 @@ function UserFormModal({ isOpen, onClose, mode, user }) {
     return submit(values);
   }
 
+  // Desktop redesign (approved mockup "6 — نیا صارف") — the look only: the same four fields (and, in
+  // edit mode, the "فعال" switch) in the shared field style; the email is typed left-to-right.
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? 'صارف میں ترمیم کریں' : 'نیا صارف'}>
-        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-3">
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title={isEdit ? 'صارف میں ترمیم کریں' : 'نیا صارف'}
+        variant="redesign"
+        icon={isEdit ? UserRoundPen : UserPlus}
+        subtitle={isEdit ? 'صارف کی تفصیل میں تبدیلی کریں' : 'نئے صارف کی تفصیل درج کریں'}
+        maxWidthClassName="max-w-[560px]"
+      >
+        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-[10px]">
           <div>
-            <label htmlFor="user-name" className="mb-1 block text-sm font-medium text-gray-700">
+            <label htmlFor="user-name" className={FIELD_LABEL}>
               نام
             </label>
-            <input id="user-name" type="text" {...register('name')} className="h-10 w-full rounded-lg border border-gray-300 px-2" />
+            <input id="user-name" type="text" {...register('name')} className={FIELD} />
             {errors.name && (
-              <p role="alert" className="mt-1 text-sm text-red-600">
+              <p role="alert" className={FIELD_ERROR}>
                 {errors.name.message}
               </p>
             )}
           </div>
 
           <div>
-            <label htmlFor="user-email" className="mb-1 block text-sm font-medium text-gray-700">
+            <label htmlFor="user-email" className={FIELD_LABEL}>
               ای میل
             </label>
-            <input
-              id="user-email"
-              type="email"
-              {...register('email')}
-              disabled={isEdit}
-              className="h-10 w-full rounded-lg border border-gray-300 px-2 disabled:bg-gray-100 disabled:text-gray-500"
-            />
+            <input id="user-email" type="email" dir="ltr" {...register('email')} disabled={isEdit} className={`${FIELD} text-right`} />
             {errors.email && (
-              <p role="alert" className="mt-1 text-sm text-red-600">
+              <p role="alert" className={FIELD_ERROR}>
                 {errors.email.message}
               </p>
             )}
           </div>
 
           <div>
-            <label htmlFor="user-responsibility" className="mb-1 block text-sm font-medium text-gray-700">
+            <label htmlFor="user-responsibility" className={FIELD_LABEL}>
               ذمہ داری
             </label>
-            {/* Prompt 3C's consequence: this was a LookupList-backed <select>, but with the
-                Lookup List panel removed (Prompt 3D) there would be no way left to ever enter a
-                responsibility value that doesn't already exist — the Task form's dropdown now
-                derives its options FROM this field, so this field is the actual entry point for
-                new values and must accept free text. */}
-            <input
-              id="user-responsibility"
-              type="text"
-              {...register('responsibility')}
-              className="h-10 w-full rounded-lg border border-gray-300 px-2"
-            />
+            {/* Free text on purpose: the Task form's ذمہ داری dropdown derives its options FROM this
+                field, so this is the entry point for a new responsibility value. */}
+            <input id="user-responsibility" type="text" {...register('responsibility')} className={FIELD} />
             {errors.responsibility && (
-              <p role="alert" className="mt-1 text-sm text-red-600">
+              <p role="alert" className={FIELD_ERROR}>
                 {errors.responsibility.message}
               </p>
             )}
           </div>
 
           <div>
-            <label htmlFor="user-role" className="mb-1 block text-sm font-medium text-gray-700">
+            <label htmlFor="user-role" className={FIELD_LABEL}>
               کردار
             </label>
-            <select id="user-role" {...register('role')} className="h-10 w-full rounded-lg border border-gray-300 px-2">
+            <select id="user-role" {...register('role')} className={FIELD}>
               <option value="user">User</option>
               <option value="admin">Admin</option>
             </select>
             {errors.role && (
-              <p role="alert" className="mt-1 text-sm text-red-600">
+              <p role="alert" className={FIELD_ERROR}>
                 {errors.role.message}
               </p>
             )}
           </div>
 
           {isEdit && (
-            <label className="flex h-10 items-center gap-2 text-sm text-gray-700">
-              <input type="checkbox" {...register('isActive')} className="h-4 w-4" />
+            <label className="flex h-[48px] cursor-pointer items-center gap-3 rounded-tk-input bg-tk-surface px-[14px] text-[14px] text-tk-ink">
+              <input type="checkbox" {...register('isActive')} className="h-5 w-5 accent-tk-green-700" />
               فعال
             </label>
           )}
 
-          <div className="mt-2 flex justify-end gap-2">
-            <button type="button" onClick={onClose} className="h-10 min-w-[40px] rounded-lg px-4 text-gray-700 hover:bg-gray-100">
-              منسوخ کریں
-            </button>
+          <ModalFooter>
             <BusyButton
               type="submit"
               // mutation.isPending covers the save that follows the deactivation confirmation: by
               // then the form's own submit has already returned, so isSubmitting alone would miss it.
               busy={isSubmitting || mutation.isPending}
               busyLabel="محفوظ ہو رہا ہے…"
-              className="h-10 min-w-[40px] rounded-lg bg-brand px-4 text-white hover:bg-brand/90 disabled:opacity-50"
+              className={`${BUTTON_PRIMARY} flex-1`}
             >
               محفوظ کریں
             </BusyButton>
-          </div>
+            <button type="button" onClick={onClose} className={BUTTON_GHOST}>
+              منسوخ کریں
+            </button>
+          </ModalFooter>
         </form>
       </Modal>
 
@@ -189,6 +187,7 @@ function UserFormModal({ isOpen, onClose, mode, user }) {
         message="اس صارف کو بند کرنے سے وہ اب لاگ ان نہیں کر سکیں گے۔ کیا جاری رکھیں؟"
         confirmLabel="ہاں، جاری رکھیں"
         cancelLabel="منسوخ کریں"
+        tone="danger"
         isLoading={mutation.isPending}
         onConfirm={() => {
           const values = pendingValues;

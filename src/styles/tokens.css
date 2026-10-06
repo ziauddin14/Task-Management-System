@@ -87,6 +87,234 @@
   --tk-lh-label: 2.1;
   --tk-lh-title: 2;
   --tk-lh-number: 1.5;
+
+  /* ---- Desktop / tablet layout and the redesigned dialogs (added; nothing above is changed) ---- */
+
+  /* Shell */
+  --tk-sidebar: #123f26; /* the navigation rail */
+  --tk-sidebar-ink: #dcebe1;
+  --tk-sidebar-muted: #bcd6c5;
+  --tk-sidebar-danger: #ffd3cc; /* logout, on the dark rail */
+  --tk-surface: #f1f6f2; /* desktop page background, and the fill of a form field */
+  --tk-hover: #eef6f0; /* row hover, soft icon buttons */
+  --tk-line-soft: #e6eee8; /* dividers inside a dialog */
+  --tk-line-row: #edf2ee; /* between table rows */
+  --tk-line-btn: #cfdcd3; /* outline of a ghost button */
+  --tk-thead-bg: #e9f2ec;
+  --tk-thead-ink: #274a36;
+  --tk-overlay: rgba(14, 40, 26, 0.55); /* behind a redesigned dialog */
+
+  /* Status tiles: a tint, a deeper chip of the same hue, and a label ink (the number keeps the
+     status text colour above). Fills are the donut's segments. */
+  --tk-pending-tint: #fff4de;
+  --tk-pending-chip: #ffe2a8;
+  --tk-pending-ink: #5a3a00;
+  --tk-pending-fill: #d99a1f;
+  --tk-ongoing-tint: #e4eefb;
+  --tk-ongoing-chip: #bfd8f6;
+  --tk-ongoing-ink: #174a7e;
+  --tk-ongoing-fill: #2f7fd1;
+  --tk-closed-tint: #e3f3e9;
+  --tk-closed-chip: #b9e0c7;
+  --tk-closed-ink: #155a31;
+  --tk-closed-fill: #1f8a4c;
+  --tk-complete-tint: #ddf1f1;
+  --tk-complete-chip: #aedcdc;
+  --tk-complete-ink: #0b5252;
+  --tk-complete-fill: #17a2a2;
+
+  /* Rating band tiles */
+  --tk-excellent-tint: #f2edfb;
+  --tk-excellent-ink: #4a3585;
+  --tk-good-tint: #e6f4ec;
+  --tk-good-ink: #155a31;
+  --tk-fair-tint: #fff0dc;
+  --tk-fair-ink: #7a4600;
+  --tk-weak-tint: #fdeaea;
+  --tk-weak-ink: #8a1f26;
+
+  /* Button variants of the redesigned dialogs */
+  --tk-danger-line: #e8a3a6;
+  --tk-amber-bg: #fff4de;
+  --tk-amber-text: #7a4a00;
+  --tk-amber-line: #e6b85c;
+
+  --tk-radius-panel: 24px; /* large cards: hero, donut, table */
+  --tk-radius-modal: 28px;
+  --tk-radius-btn: 16px;
+
+  --tk-shadow-card: 0 2px 12px rgba(20, 60, 38, 0.08);
+  --tk-shadow-lift: 0 12px 26px rgba(20, 60, 38, 0.14);
+  --tk-shadow-primary: 0 6px 14px rgba(20, 82, 46, 0.28);
+  --tk-shadow-modal: 0 30px 80px rgba(0, 0, 0, 0.35);
+
+  --tk-navbar-h: 84px;
+  --tk-rail-w: 84px; /* sidebar, collapsed */
+  --tk-rail-w-open: 236px; /* sidebar, expanded */
+  --tk-content-max: 1320px; /* page content on screens of 1600px and wider */
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Motion. Every animation below exists only for people who have NOT asked their device to reduce
+   motion; with that setting on, nothing moves and every value is shown at once. Only transform,
+   opacity, clip-path and SVG stroke properties are animated — nothing that triggers layout.
+   ------------------------------------------------------------------------------------------------ */
+@media (prefers-reduced-motion: no-preference) {
+  /* Cards rise in on first load, a little after one another (tk-d1 … tk-d5). */
+  .tk-rise {
+    /* backwards, not both: once it has played, the card is back under its ordinary rules, so the
+       hover lift below still applies. */
+    animation: tk-rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  }
+  .tk-d1 { animation-delay: 0.05s; }
+  .tk-d2 { animation-delay: 0.15s; }
+  .tk-d3 { animation-delay: 0.25s; }
+  .tk-d4 { animation-delay: 0.35s; }
+  .tk-d5 { animation-delay: 0.45s; }
+
+  /* The quality ring and the donut's segments draw themselves in. `--tk-arc-c` is the circle's
+     circumference, set inline on the element. */
+  .tk-arc-draw {
+    animation: tk-arc-draw 1.3s cubic-bezier(0.2, 0.7, 0.2, 1) 0.3s both;
+  }
+
+  /* Bars are wiped in from the start edge (the right, in this right-to-left layout). */
+  .tk-bar-wipe {
+    animation: tk-wipe 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) 0.45s both;
+  }
+  .tk-prog-wipe {
+    animation: tk-wipe 0.9s ease 0.5s both;
+  }
+
+  /* A card lifts slightly under the pointer. */
+  .tk-lift {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .tk-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--tk-shadow-lift);
+  }
+
+  /* A redesigned dialog opens in 180ms. */
+  .tk-modal-enter {
+    animation: tk-modal-in 0.18s ease-out both;
+  }
+
+  .tk-fade-in {
+    animation: tk-fade-in 0.25s ease-out both;
+  }
+}
+
+@keyframes tk-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes tk-arc-draw {
+  from {
+    stroke-dasharray: 0 var(--tk-arc-c, 400);
+  }
+}
+
+@keyframes tk-wipe {
+  from {
+    clip-path: inset(0 0 0 100%);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes tk-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* A name shown beside an icon-only sidebar link while it is hovered or focused. Drawn from the
+   link's own data-tooltip attribute, so the name is not repeated as text in the page. */
+.tk-tooltip {
+  position: relative;
+}
+.tk-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  inset-inline-start: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 60;
+  white-space: nowrap;
+  border-radius: 10px;
+  background: var(--tk-sidebar);
+  padding: 0 14px;
+  font-size: 13px;
+  line-height: 2.6;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.tk-tooltip:hover::after,
+.tk-tooltip:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* The completion slider of the update dialog: an 8px track filled up to the value (`--tk-range`,
+   a percentage set inline) and a 24px thumb. The page is right-to-left, so the range runs from the
+   right and the fill is painted from that side. */
+.tk-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 44px; /* the touch target; the visible track is the 8px gradient below */
+  background: transparent;
+  cursor: pointer;
+}
+.tk-range::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(to left, var(--tk-green-700) var(--tk-range, 0%), #d6e6dc var(--tk-range, 0%));
+}
+.tk-range::-moz-range-track {
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(to left, var(--tk-green-700) var(--tk-range, 0%), #d6e6dc var(--tk-range, 0%));
+}
+.tk-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  margin-top: -8px;
+  height: 24px;
+  width: 24px;
+  border-radius: 50%;
+  border: 3px solid var(--tk-green-700);
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+.tk-range::-moz-range-thumb {
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  border: 3px solid var(--tk-green-700);
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+.tk-range:focus-visible {
+  outline: 2px solid var(--tk-green-700);
+  outline-offset: 2px;
+  border-radius: 999px;
 }
 
 /* A bottom sheet slides up and its backdrop fades in — only for people who have not asked their
@@ -129,4 +357,10 @@
 
 .tk-no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+/* A person's initial inside an avatar circle, drawn from data-initial. Kept out of the page's text
+   on purpose: beside a name it would otherwise be read (and matched) as part of that name. */
+.tk-initial::before {
+  content: attr(data-initial);
 }

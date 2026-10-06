@@ -23,10 +23,10 @@ function ActionsMenu({ onExport, isLoading, columns, isColumnVisible, onToggleCo
         type="button"
         aria-expanded={open}
         title="ایکشن"
-        className="flex h-10 items-center gap-1.5 rounded-lg border border-gray-300 px-2.5 text-sm text-gray-700 hover:bg-gray-50"
+        className="flex h-[46px] items-center gap-2 rounded-tk-input border border-tk-line-btn bg-white px-4 text-[14px] leading-tk-label text-tk-green-900 transition-colors hover:bg-tk-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tk-green-700"
         {...getReferenceProps()}
       >
-        <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+        <SlidersHorizontal className="h-[18px] w-[18px]" aria-hidden="true" />
         <span>ایکشن</span>
       </button>
 
@@ -35,7 +35,7 @@ function ActionsMenu({ onExport, isLoading, columns, isColumnVisible, onToggleCo
           <div
             ref={refs.setFloating}
             style={floatingStyles}
-            className="z-50 w-56 rounded-lg border border-gray-200 bg-white p-2 shadow-lg"
+            className="z-50 w-56 rounded-tk-tile border border-tk-line bg-white p-2 shadow-tk-lift"
             {...getFloatingProps()}
           >
             {columns && <ColumnToggle columns={columns} isVisible={isColumnVisible} onToggle={onToggleColumn} variant="menuItem" />}

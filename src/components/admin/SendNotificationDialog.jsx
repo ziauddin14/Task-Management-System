@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react'; // explicit import — see src/App.jsx's comment for why
 import { useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import Modal from '../common/Modal.jsx';
+import clsx from 'clsx';
+import { Bell, SquareCheckBig, UserRound, Users } from 'lucide-react';
+import Modal, { ModalFooter } from '../common/Modal.jsx';
 import LoadingPhrase from '../common/LoadingPhrase.jsx';
 import BusyButton from '../common/BusyButton.jsx';
 import NotificationHistoryPanel from './NotificationHistoryPanel.jsx';
@@ -11,6 +13,15 @@ import { useAdminSendNotification } from '../../hooks/useAdminSendNotification.j
 import { useAdminSendTaskReminder } from '../../hooks/useAdminSendTaskReminder.js';
 import { getTasks } from '../../services/tasks.api.js';
 import { NOTIFICATION_TEMPLATES } from '../../utils/notificationTemplates.js';
+import { BUTTON_GHOST, BUTTON_PRIMARY, FIELD, FIELD_LABEL, FIELD_TEXTAREA } from '../../utils/uiClasses.js';
+
+// The three recipient choices, as they have always been (value + label); the icon and the one-line
+// hint are what the card adds.
+const RECIPIENT_OPTIONS = [
+  { value: 'all', label: 'تمام ذمہ داران', hint: 'تمام فعال ذمہ داران کو', icon: Users },
+  { value: 'user', label: 'مخصوص ذمہ دار', hint: 'ایک منتخب ذمہ دار کو', icon: UserRound },
+  { value: 'task', label: 'مخصوص Task', hint: 'ایک کام کے ذمہ داران کو', icon: SquareCheckBig },
+];
 
 // Locked blueprint §Phase 2/§8-9 — the one manual-notification composer backing all three flows.
 // `task` (optional): when supplied (the TaskTable row's "یاددہانی بھیجیں" action), the dialog opens
@@ -83,65 +94,87 @@ function SendNotificationDialog({ isOpen, onClose, task }) {
     onClose();
   }
 
+  // Desktop redesign (approved mockup "2 — نئی اطلاع بھیجیں") — the look only. The three recipient
+  // choices are selectable cards, and each is still a real radio input: the input is visually
+  // hidden, the card is its <label>, so the keyboard (arrow keys within the group), the form and a
+  // screen reader see exactly the three radios they always did. The chosen card has a green
+  // border, a tint and a filled dot. The card's one-line hint sits outside the label (tied to the
+  // radio by aria-describedby), so each radio keeps its exact name.
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={task ? 'یاددہانی بھیجیں' : 'نئی اطلاع بھیجیں'} maxWidthClassName="max-w-xl">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={task ? 'یاددہانی بھیجیں' : 'نئی اطلاع بھیجیں'}
+      variant="redesign"
+      icon={Bell}
+      subtitle={task ? 'اس کام کے ذمہ داران کو یاددہانی بھیجیں' : 'ذمہ داران کو یاددہانی یا پیغام بھیجیں'}
+      maxWidthClassName="max-w-[720px]"
+    >
+      <form onSubmit={handleSubmit} className="flex flex-col gap-[14px]">
         {task ? (
-          <div className="rounded-lg bg-gray-50 p-2 text-sm text-gray-600">
-            <span className="font-medium text-gray-700">کام:</span> <span className="font-mono">{task.codeNumber}</span> —{' '}
-            <span>{task.title}</span>
+          <div className="flex items-center gap-[10px] rounded-tk-tile bg-tk-hover px-[14px] py-[6px] text-[14px] leading-tk-label">
+            <span className="font-medium text-tk-ink-soft">کام:</span>
+            <span className="shrink-0 rounded-tk-pill bg-tk-green-700 px-3 font-mono text-[13px] leading-[2.3] text-white">{task.codeNumber}</span>
+            <span aria-hidden="true">—</span>
+            <span className="min-w-0 flex-1">{task.title}</span>
           </div>
         ) : (
-          <fieldset>
-            <legend className="mb-1 block text-sm font-medium text-gray-700">وصول کنندہ</legend>
-            <div className="flex flex-col gap-1.5">
-              <label className="flex h-10 items-center gap-2 text-sm">
-                <input
-                  type="radio"
-                  name="recipientType"
-                  checked={recipientType === 'all'}
-                  onChange={() => setRecipientType('all')}
-                />
-                تمام ذمہ داران
-              </label>
-              <label className="flex h-10 items-center gap-2 text-sm">
-                <input
-                  type="radio"
-                  name="recipientType"
-                  checked={recipientType === 'user'}
-                  onChange={() => setRecipientType('user')}
-                />
-                مخصوص ذمہ دار
-              </label>
-              <label className="flex h-10 items-center gap-2 text-sm">
-                <input
-                  type="radio"
-                  name="recipientType"
-                  checked={recipientType === 'task'}
-                  onChange={() => setRecipientType('task')}
-                />
-                مخصوص Task
-              </label>
+          <fieldset className="min-w-0">
+            <legend className={FIELD_LABEL}>وصول کنندہ</legend>
+            <div className="flex gap-3 max-md:flex-col">
+              {RECIPIENT_OPTIONS.map((option) => {
+                const selected = recipientType === option.value;
+                return (
+                  <div key={option.value} className="relative min-w-0 flex-1">
+                    <input
+                      type="radio"
+                      id={`recipient-${option.value}`}
+                      name="recipientType"
+                      checked={selected}
+                      onChange={() => setRecipientType(option.value)}
+                      aria-describedby={`recipient-${option.value}-hint`}
+                      className="peer sr-only"
+                    />
+                    <label
+                      htmlFor={`recipient-${option.value}`}
+                      data-recipient-card={option.value}
+                      data-selected={selected || undefined}
+                      className={clsx(
+                        'flex h-full min-h-[104px] cursor-pointer flex-col gap-[2px] rounded-[18px] border-2 px-[14px] pb-[34px] pt-3 transition-colors peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-tk-green-700',
+                        selected ? 'border-tk-green-700 bg-tk-hover' : 'border-tk-line bg-white hover:bg-tk-surface'
+                      )}
+                    >
+                      <span aria-hidden="true" className="flex items-center justify-between">
+                        <span className="flex h-[38px] w-[38px] items-center justify-center rounded-tk-chip bg-tk-closed-tint text-tk-green-700">
+                          <option.icon className="h-5 w-5" strokeWidth={2.2} />
+                        </span>
+                        <span className={clsx('flex h-[22px] w-[22px] items-center justify-center rounded-full border-2', selected ? 'border-tk-green-700' : 'border-tk-line-btn')}>
+                          {selected && <span data-recipient-dot className="h-[10px] w-[10px] rounded-full bg-tk-green-700" />}
+                        </span>
+                      </span>
+                      <span className="text-[15px] font-semibold leading-tk-title">{option.label}</span>
+                    </label>
+                    <p id={`recipient-${option.value}-hint`} className="pointer-events-none absolute inset-x-4 bottom-[10px] truncate text-[12px] leading-[1.9] text-tk-muted">
+                      {option.hint}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           </fieldset>
         )}
 
         {!task && recipientType === 'user' && (
           <div>
-            <label htmlFor="notification-user-select" className="mb-1 block text-sm font-medium text-gray-700">
+            <label htmlFor="notification-user-select" className={FIELD_LABEL}>
               ذمہ دار منتخب کریں
             </label>
             {usersLoading ? (
-              <div className="rounded-lg border border-gray-200 px-1 py-1">
+              <div className="rounded-tk-input border border-tk-line px-1 py-1">
                 <LoadingPhrase size="compact" />
               </div>
             ) : (
-              <select
-                id="notification-user-select"
-                value={selectedUserId}
-                onChange={(event) => setSelectedUserId(event.target.value)}
-                className="h-10 w-full rounded-lg border border-gray-300 px-2 text-sm"
-              >
+              <select id="notification-user-select" value={selectedUserId} onChange={(event) => setSelectedUserId(event.target.value)} className={FIELD}>
                 <option value="">انتخاب کریں</option>
                 {(users?.items || []).map((user) => (
                   <option key={user.id} value={user.id}>
@@ -155,15 +188,15 @@ function SendNotificationDialog({ isOpen, onClose, task }) {
 
         {!task && recipientType === 'task' && (
           <div>
-            <label htmlFor="notification-task-search" className="mb-1 block text-sm font-medium text-gray-700">
+            <label htmlFor="notification-task-search" className={FIELD_LABEL}>
               کام تلاش کریں
             </label>
             {selectedTask ? (
-              <div className="flex items-center justify-between rounded-lg border border-brand/30 bg-brand-light/40 px-2 py-2 text-sm">
+              <div className="flex min-h-[48px] items-center justify-between gap-2 rounded-tk-input border-[1.5px] border-tk-green-700/30 bg-tk-hover px-[14px] py-1 text-[14px] leading-tk-label">
                 <span className="truncate">
                   <span className="font-mono">{selectedTask.codeNumber}</span> — {selectedTask.title}
                 </span>
-                <button type="button" onClick={() => setSelectedTask(null)} className="shrink-0 text-xs text-brand hover:underline">
+                <button type="button" onClick={() => setSelectedTask(null)} className="flex min-h-[40px] shrink-0 items-center text-[13px] font-semibold text-tk-green-700 underline-offset-4 hover:underline">
                   تبدیل کریں
                 </button>
               </div>
@@ -175,26 +208,26 @@ function SendNotificationDialog({ isOpen, onClose, task }) {
                   value={taskSearchInput}
                   onChange={(event) => setTaskSearchInput(event.target.value)}
                   placeholder="کام کا عنوان یا کوڈ نمبر…"
-                  className="mb-1 h-10 w-full rounded-lg border border-gray-300 px-2 text-sm"
+                  className={FIELD}
                 />
                 {debouncedTaskSearch.trim().length > 0 && (
-                  <div className="max-h-32 overflow-y-auto rounded-lg border border-gray-200">
+                  <div className="mt-[6px] max-h-[176px] overflow-y-auto rounded-tk-input border border-tk-line">
                     {taskSearchQuery.isLoading ? (
                       <div className="px-1 py-1">
                         <LoadingPhrase size="compact" />
                       </div>
                     ) : (taskSearchQuery.data?.items || []).length === 0 ? (
-                      <p className="px-2 py-3 text-center text-xs text-gray-500">کوئی کام نہیں ملا</p>
+                      <p className="px-3 py-3 text-center text-[12px] text-tk-muted">کوئی کام نہیں ملا</p>
                     ) : (
                       taskSearchQuery.data.items.map((foundTask) => (
                         <button
                           key={foundTask.id}
                           type="button"
                           onClick={() => setSelectedTask(foundTask)}
-                          className="flex h-10 w-full items-center justify-between gap-2 px-2 text-start text-sm hover:bg-gray-50"
+                          className="flex h-[44px] w-full items-center justify-between gap-2 border-b border-tk-line-row px-3 text-start text-[14px] last:border-b-0 hover:bg-tk-hover"
                         >
                           <span className="truncate">{foundTask.title}</span>
-                          <span className="shrink-0 font-mono text-xs text-gray-500">{foundTask.codeNumber}</span>
+                          <span className="shrink-0 font-mono text-[12px] text-tk-muted">{foundTask.codeNumber}</span>
                         </button>
                       ))
                     )}
@@ -206,21 +239,16 @@ function SendNotificationDialog({ isOpen, onClose, task }) {
         )}
 
         {recipientType === 'task' && effectiveTask && (
-          <p className="rounded-lg bg-brand-light/40 px-2 py-2 text-xs text-brand">
+          <p className="rounded-tk-chip bg-tk-hover px-3 py-[6px] text-[12px] leading-tk-label text-tk-green-900">
             یہ اطلاع اس کام کے تمام فعال ذمہ داران کو بھیجی جائے گی۔
           </p>
         )}
 
         <div>
-          <label htmlFor="notification-template" className="mb-1 block text-sm font-medium text-gray-700">
+          <label htmlFor="notification-template" className={FIELD_LABEL}>
             پیغام کا ٹیمپلیٹ
           </label>
-          <select
-            id="notification-template"
-            value={templateKey}
-            onChange={(event) => setTemplateKey(event.target.value)}
-            className="h-10 w-full rounded-lg border border-gray-300 px-2 text-sm"
-          >
+          <select id="notification-template" value={templateKey} onChange={(event) => setTemplateKey(event.target.value)} className={FIELD}>
             <option value="">کوئی ٹیمپلیٹ منتخب نہیں</option>
             {NOTIFICATION_TEMPLATES.map((template) => (
               <option key={template.key} value={template.key}>
@@ -231,36 +259,17 @@ function SendNotificationDialog({ isOpen, onClose, task }) {
         </div>
 
         <div>
-          <label htmlFor="notification-custom-message" className="mb-1 block text-sm font-medium text-gray-700">
+          <label htmlFor="notification-custom-message" className={FIELD_LABEL}>
             اپنا پیغام لکھیں
           </label>
           <textarea
             id="notification-custom-message"
             value={customMessage}
             onChange={(event) => setCustomMessage(event.target.value)}
-            rows={3}
+            rows={4}
             placeholder="اختیاری — یہاں لکھا پیغام منتخب کردہ ٹیمپلیٹ کی بجائے استعمال ہوگا"
-            className="w-full rounded-lg border border-gray-300 p-2 text-sm"
+            className={`${FIELD_TEXTAREA} resize-none`}
           />
-        </div>
-
-        <div className="mt-1 grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="h-12 rounded-lg text-base font-semibold text-gray-700 hover:bg-gray-100"
-          >
-            منسوخ کریں
-          </button>
-          <BusyButton
-            type="submit"
-            busy={isPending}
-            busyLabel="بھیجا جا رہا ہے۔۔۔"
-            disabled={!canSubmit}
-            className="h-12 rounded-lg bg-brand text-base font-semibold text-white hover:bg-brand/90 disabled:opacity-50"
-          >
-            اطلاع بھیجیں
-          </BusyButton>
         </div>
 
         {!task && (
@@ -268,13 +277,24 @@ function SendNotificationDialog({ isOpen, onClose, task }) {
             <button
               type="button"
               onClick={() => setShowHistory((prev) => !prev)}
-              className="flex h-10 w-fit items-center text-sm text-brand hover:underline"
+              className="flex h-10 w-fit items-center text-[13px] font-semibold text-tk-green-700 underline underline-offset-4"
             >
               {showHistory ? 'بھیجنے کی سرگزشت چھپائیں' : 'بھیجنے کی سرگزشت دیکھیں'}
             </button>
             {showHistory && <NotificationHistoryPanel />}
           </>
         )}
+
+        {/* The send button keeps its rule (canSubmit) and its busy state; it is dimmed while it
+            cannot be used. */}
+        <ModalFooter>
+          <BusyButton type="submit" busy={isPending} busyLabel="بھیجا جا رہا ہے۔۔۔" disabled={!canSubmit} className={`${BUTTON_PRIMARY} flex-1`}>
+            اطلاع بھیجیں
+          </BusyButton>
+          <button type="button" onClick={onClose} className={BUTTON_GHOST}>
+            منسوخ کریں
+          </button>
+        </ModalFooter>
       </form>
     </Modal>
   );
