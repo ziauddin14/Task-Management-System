@@ -128,7 +128,7 @@ afterEach(() => {
   resetViewport();
 });
 
-describe('DashboardPage at 768px and wider — the desktop layout, unchanged (regression)', () => {
+describe('DashboardPage at 768px and wider — the desktop layout (regression: still the table, on one page)', () => {
   it.each([[768], [1024], [1280]])('%ipx: "/" renders the task TABLE, with the KPI cards and the filter bar on the same page', async (width) => {
     setViewportWidth(width);
     const { container } = renderApp('/');
@@ -141,10 +141,12 @@ describe('DashboardPage at 768px and wider — the desktop layout, unchanged (re
     expect(screen.getByRole('heading', { name: 'ڈیش بورڈ' })).toBeVisible();
     expect(screen.getByRole('group', { name: 'مجموعی کیفیت' })).toHaveTextContent('62.4%');
     expect(screen.getByLabelText('Rating source filter')).toBeInTheDocument();
-    // ...and none of the mobile screen's parts.
+    expect(container.querySelector('[data-donut-segment]')).not.toBeNull(); // the desktop status donut
+    expect(container.querySelector('[data-status-tiles]')).not.toBeNull();
+    // ...and none of the mobile screen's parts: no task cards, no 2x2 mobile tiles, no delay banner.
     expect(cards()).toHaveLength(0);
-    expect(tilesRegion()).not.toBeInTheDocument();
-    expect(container.querySelector('[data-ring-arc]')).toBeNull();
+    expect(container.querySelector('section[aria-labelledby="status-tiles-heading"]')).toBeNull();
+    expect(screen.queryByRole('link', { name: /تاخیر کا شکار/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^فلٹر/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: 'صفحات' })).not.toBeInTheDocument();
     // Both the list and the summary are fetched, as before.

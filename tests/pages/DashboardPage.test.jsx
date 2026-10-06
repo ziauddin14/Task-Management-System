@@ -152,6 +152,8 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
   });
 
   function findKpiCardButton(label) {
+    // The total ("مجموعی") is the button at the centre of the status donut, named by aria-label.
+    if (label === 'مجموعی') return screen.getByRole('button', { name: /^مجموعی:/ });
     const match = screen.getAllByText(label).map((el) => el.closest('button')).find(Boolean);
     if (!match) throw new Error(`No KPI card button found for label "${label}"`);
     return match;
@@ -354,10 +356,10 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
   it('the heading is rendered at the larger size', async () => {
     renderDashboard('admin');
     await screen.findByText('260801');
-    expect(screen.getByRole('heading', { name: 'ڈیش بورڈ' })).toHaveClass('text-3xl');
+    expect(screen.getByRole('heading', { name: 'ڈیش بورڈ' })).toHaveClass('text-[30px]');
   });
 
-  it('a 5th "مجموعی" (Total) status card shows the summary\'s overall total, and clicking it clears both KPI filters', async () => {
+  it('the total ("مجموعی", now the centre of the status donut) shows the summary\'s overall total, and clicking it clears both KPI filters', async () => {
     renderDashboard('admin');
     await screen.findByText('260801');
 
@@ -455,6 +457,7 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
 
       fireEvent.change(screen.getByLabelText('Assignee filter'), { target: { value: 'u1' } });
       fireEvent.change(screen.getByLabelText('Rating source filter'), { target: { value: 'synthetic' } });
+      fireEvent.click(screen.getByRole('button', { name: 'تاریخ' })); // the custom-range inputs sit behind this button
       fireEvent.change(screen.getByLabelText('از تاریخ'), { target: { value: '2026-01-01' } });
 
       await waitFor(() => expect(lastSummaryFilters()).toEqual({ assigneeId: 'u1', ratingSource: 'synthetic', deadlineFrom: '2026-01-01' }));
@@ -710,38 +713,35 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
     });
   });
 
-  it('the status and performance KPI groups sit in a 2-column grid on desktop', async () => {
-    renderDashboard('admin');
+  // Desktop redesign — the hero ("مجموعی کیفیت") and the status donut share the top row from
+  // 1024px up (the hero first, so it lands on the right in this RTL layout) and stack below that.
+  it('the quality hero and the status donut sit in a 2-column row from lg up', async () => {
+    const { container } = renderDashboard('admin');
     await screen.findByText('260801');
 
-    const statusHeading = screen.getByText('کام کی کیفیت');
-    const gridContainer = statusHeading.parentElement.parentElement;
-    expect(gridContainer).toHaveClass('xl:grid-cols-2');
+    const topRow = container.querySelector('[data-dashboard-top]');
+    expect(topRow).toHaveClass('grid', 'grid-cols-1', 'lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]');
+    expect(topRow.children).toHaveLength(2);
+    expect(topRow.children[0]).toContainElement(screen.getByRole('group', { name: 'مجموعی کیفیت' }));
+    expect(topRow.children[1]).toBe(screen.getByRole('region', { name: 'کاموں کی صورتحال' }));
   });
 
-  // Prompt — TMS Dashboard responsive fix: each group's own 5 cards use a CSS Grid (a grid
-  // track's minmax(0,1fr) genuinely has a zero min-width floor, unlike a flex item's
-  // min-width:auto), so they never wrap via a layout bug — but the column COUNT itself is now
-  // responsive on purpose (2-up on a phone, 3-up on a tablet, the original one-row-of-5 from
-  // `md`/768px up unchanged) rather than "grid-cols-5 regardless of viewport width", which
-  // crushed 5 Urdu-labeled cards into unreadable slivers below ~480px — see browser-verified
-  // screenshots at 375/768/1366/1920px for the actual rendered proof.
-  it('each KPI group renders its 5 cards in a responsive grid (2-up mobile, 3-up tablet, 5-up desktop)', async () => {
-    renderDashboard('admin');
+  // Desktop redesign — four tinted status tiles (2-up, then one row of four from lg) and four
+  // tinted band tiles inside the hero (2-up, then four from sm). Each is a real toggle button.
+  it('the four status tiles and the four band tiles render in responsive grids', async () => {
+    const { container } = renderDashboard('admin');
     await screen.findByText('260801');
 
-    const statusHeading = screen.getByText('کام کی کیفیت');
-    const statusCardsContainer = statusHeading.nextElementSibling;
-    expect(statusCardsContainer).toHaveClass('grid', 'grid-cols-2', 'sm:grid-cols-3', 'md:grid-cols-5');
-    expect(statusCardsContainer.children).toHaveLength(5);
+    const statusTiles = container.querySelector('[data-status-tiles]');
+    expect(statusTiles).toHaveClass('grid', 'grid-cols-2', 'lg:grid-cols-4');
+    expect([...statusTiles.children].map((tile) => tile.tagName)).toEqual(['BUTTON', 'BUTTON', 'BUTTON', 'BUTTON']);
+    // The mockup's order: پینڈنگ، جاری، کلوز، مکمل — with the counts from the summary.
+    expect([...statusTiles.children].map((tile) => tile.textContent)).toEqual(['پینڈنگ3' + '12%', 'جاری8' + '32%', 'کلوز4' + '16%', 'مکمل10' + '40%']);
+    statusTiles.querySelectorAll('button').forEach((tile) => expect(tile).toHaveAttribute('aria-pressed', 'false'));
 
-    // "کارکردگی" also labels the table's Performance column header — scope to the <p> group label.
-    const performanceHeading = screen.getAllByText('کارکردگی').find((el) => el.tagName === 'P');
-    // Four band cards + the overall-quality card (the grid is the group's first child; the
-    // synthetic / unrated line sits under it).
-    const performanceCardsContainer = performanceHeading.nextElementSibling.firstElementChild;
-    expect(performanceCardsContainer).toHaveClass('grid', 'grid-cols-2', 'sm:grid-cols-3', 'md:grid-cols-5');
-    expect(performanceCardsContainer.children).toHaveLength(5);
+    const bandTiles = findKpiCardButton('ممتاز').parentElement;
+    expect(bandTiles).toHaveClass('grid', 'grid-cols-2', 'sm:grid-cols-4');
+    expect(bandTiles.children).toHaveLength(4);
   });
 
   // Phase 2 (locked blueprint §5/§19) — "نئی اطلاع بھیجیں" is a distinct action from the existing

@@ -5,17 +5,17 @@ import { Search } from 'lucide-react';
 // presentational: debounce timing lives in hooks/useDebouncedSearch.js, owned by FilterBar.
 function SearchBar({ value, onChange }) {
   return (
-    <div className="relative flex-1 min-w-[200px]">
-      <Search className="pointer-events-none absolute inset-y-0 start-3 my-auto h-4 w-4 text-gray-400" aria-hidden="true" />
+    <label className="flex h-[46px] min-w-[200px] flex-[1.6_1_0%] items-center gap-2 rounded-tk-input bg-tk-surface px-[14px] focus-within:ring-2 focus-within:ring-tk-green-700">
+      <Search className="h-5 w-5 shrink-0 text-tk-muted" aria-hidden="true" />
       <input
         type="search"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder="کام یا کوڈ نمبر تلاش کریں..."
         aria-label="کام یا کوڈ نمبر تلاش کریں"
-        className="h-10 w-full rounded-lg border border-gray-300 ps-9 pe-3 focus:border-brand focus:outline-none"
+        className="h-full min-w-0 flex-1 border-0 bg-transparent text-[14px] text-tk-ink placeholder:text-tk-muted focus:outline-none"
       />
-    </div>
+    </label>
   );
 }
 

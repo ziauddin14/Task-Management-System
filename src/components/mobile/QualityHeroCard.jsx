@@ -2,42 +2,11 @@ import React from 'react'; // explicit import — see src/App.jsx's comment for 
 import clsx from 'clsx';
 import { Link } from 'react-router-dom';
 import LoadingPhrase from '../common/LoadingPhrase.jsx';
-import { PERFORMANCE_BAND_KEYS, SYNTHETIC_LABEL, getPerformanceMeta } from '../../utils/taskDisplay.js';
+import QualityRing from '../dashboard/QualityRing.jsx';
+import { SYNTHETIC_LABEL } from '../../utils/taskDisplay.js';
 import { RATING_TONE } from '../../utils/mobileTheme.js';
 import { UNRATED_LABEL } from '../../utils/taskFilters.js';
-
-const RING_SIZE = 92;
-const RING_RADIUS = 38;
-const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
-
-// The average as a ring: the filled arc is the average percent, in the band's colour. The figure
-// itself is written in the middle, so the ring is never the only way to read it.
-function QualityRing({ percent, band }) {
-  const filled = (Math.min(Math.max(percent, 0), 100) / 100) * RING_CIRCUMFERENCE;
-
-  return (
-    <div className="relative shrink-0" style={{ width: RING_SIZE, height: RING_SIZE }} role="img" aria-label={`اوسط ${percent} فیصد`}>
-      <svg viewBox={`0 0 ${RING_SIZE} ${RING_SIZE}`} width={RING_SIZE} height={RING_SIZE} aria-hidden="true">
-        <circle cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RING_RADIUS} fill="none" strokeWidth="10" className="stroke-tk-track" />
-        <circle
-          data-ring-arc
-          cx={RING_SIZE / 2}
-          cy={RING_SIZE / 2}
-          r={RING_RADIUS}
-          fill="none"
-          strokeWidth="10"
-          strokeLinecap="round"
-          strokeDasharray={`${filled} ${RING_CIRCUMFERENCE}`}
-          transform={`rotate(-90 ${RING_SIZE / 2} ${RING_SIZE / 2})`}
-          className={RATING_TONE[band]?.stroke}
-        />
-      </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-[17px] font-semibold text-tk-ink" dir="ltr" aria-hidden="true">
-        {percent}%
-      </span>
-    </div>
-  );
-}
+import { summarizeRatings } from '../../utils/ratingSummary.js';
 
 // The dashboard's hero card, "مجموعی کیفیت": the overall band and average, how many rated tasks
 // that is based on, each band's share of them (one stacked bar + a four-column legend with the
@@ -56,10 +25,8 @@ function QualityRing({ percent, band }) {
 function QualityHeroCard({ ratings, activeRating, hrefForRating, isRefreshing = false }) {
   if (!ratings) return null;
 
-  const { bands, ratedCount, unratedCount, syntheticCount, overallQuality } = ratings;
-  const realCount = ratedCount - syntheticCount;
-  const quality = overallQuality ? { ...overallQuality, meta: getPerformanceMeta(overallQuality.band), tone: RATING_TONE[overallQuality.band] } : null;
-  const shares = PERFORMANCE_BAND_KEYS.map((key) => ({ key, label: getPerformanceMeta(key).label, ...(bands[key] || { count: 0, percent: 0 }) }));
+  // The ring and these figures are shared with the desktop hero (utils/ratingSummary.js).
+  const { ratedCount, unratedCount, syntheticCount, realCount, quality, shares } = summarizeRatings(ratings);
 
   return (
     <section
