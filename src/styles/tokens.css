@@ -197,11 +197,16 @@
 
   /* A redesigned dialog opens in 180ms. */
   .tk-modal-enter {
-    animation: tk-modal-in 0.18s ease-out both;
+    animation: tk-modal-in 0.18s ease-out;
   }
 
+  /* A page fades in on navigation. NO fill-mode on either of these two, on purpose: with
+     `forwards` or `both` a finished animation stays "in effect" for good, and the browser then
+     keeps the element as a stacking layer of its own (as if it had will-change). On the page
+     wrapper that put every dialog and its overlay UNDER the navbar. Neither animation has a
+     delay and both end on the element's natural state, so there is nothing for a fill to hold. */
   .tk-fade-in {
-    animation: tk-fade-in 0.25s ease-out both;
+    animation: tk-fade-in 0.25s ease-out;
   }
 }
 
@@ -250,7 +255,10 @@
 .tk-tooltip::after {
   content: attr(data-tooltip);
   position: absolute;
-  inset-inline-start: calc(100% + 10px);
+  /* Beside the rail, not over it: its near edge sits 8px outside the rail's own edge, whatever
+     the width of the icon it belongs to (the icons are centred in the rail). The page is
+     right-to-left and the rail is on the right, so that is to the LEFT of the rail. */
+  inset-inline-start: calc(50% + var(--tk-rail-w) / 2 + 8px);
   top: 50%;
   transform: translateY(-50%);
   z-index: 60;
@@ -270,6 +278,117 @@
 .tk-tooltip:focus-visible::after {
   opacity: 1;
   visibility: visible;
+}
+
+/* ------------------------------------------------------------------------------------------------
+   The redesigned dialog (components/common/Modal.jsx, variant="redesign") and the window.
+
+   The overlay fills the window. On a desktop it is a three-row grid — space, the dialog, space —
+   so the dialog is centred whenever there is room, and when there is not the two spaces stop at
+   their minimums: 16px above the card, and beneath it the room the busy strip needs (the loading
+   phrase hangs under the card, up to 5vh tall), never less than 16px. The card's own max-height
+   is the window less those two. Heights are in dvh where the browser has it (the part of the
+   window really visible, which on a phone excludes the browser's own bars); the vh line before
+   each is the fallback for a browser that does not.
+   ------------------------------------------------------------------------------------------------ */
+.tk-modal-root {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(16px, 1fr) auto minmax(max(16px, 5vh), 1fr);
+  grid-template-rows: minmax(16px, 1fr) auto minmax(max(16px, 5dvh), 1fr);
+  justify-items: center;
+  padding-inline: 16px;
+}
+.tk-modal-root > [role='dialog'] {
+  grid-row: 2;
+}
+.tk-modal-panel {
+  max-height: calc(100vh - 16px - max(16px, 5vh));
+  max-height: calc(100dvh - 16px - max(16px, 5dvh));
+}
+
+/* Below 768px the dialog is a bottom sheet: docked to the bottom edge at full width, at most 88%
+   of the visible window, which leaves the busy strip its room above. */
+@media (max-width: 767.98px) {
+  .tk-modal-root {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-inline: 0;
+  }
+  .tk-modal-panel {
+    max-height: 88vh;
+    max-height: 88dvh;
+  }
+}
+
+/* A short desktop window (a laptop with the browser's bars and the taskbar taking their share):
+   the dialog gives up padding, not content, so more of the form and the buttons are in view at
+   once. Fields go from 48px to 44px, text areas to about two lines, footer buttons from 50px to
+   44px. The body still scrolls when the form is longer than the window. */
+@media (min-width: 768px) and (max-height: 700px) {
+  .tk-modal-panel [data-modal-header] {
+    padding-block: 8px;
+  }
+  .tk-modal-panel [data-modal-body] {
+    padding-block: 10px;
+  }
+  .tk-modal-panel [data-modal-footer] {
+    margin-top: 10px;
+    margin-bottom: -10px;
+    padding-block: 10px;
+  }
+  .tk-modal-panel [data-modal-body] form {
+    row-gap: 6px;
+  }
+  .tk-modal-panel .tk-field:not(textarea) {
+    height: 44px;
+  }
+  .tk-modal-panel textarea.tk-field {
+    height: 78px;
+  }
+  .tk-modal-panel .tk-btn {
+    height: 44px;
+  }
+}
+
+/* Shorter still (about 560px and under): the subtitle moves onto the title's line, and the header
+   and footer take the least they can. */
+@media (min-width: 768px) and (max-height: 560px) {
+  .tk-modal-panel [data-modal-header] {
+    padding-block: 4px;
+  }
+  .tk-modal-panel [data-modal-icon] {
+    height: 38px;
+    width: 38px;
+  }
+  .tk-modal-panel [data-modal-heading] {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .tk-modal-panel [data-modal-heading] > h2 {
+    flex: none;
+    max-width: 100%;
+  }
+  .tk-modal-panel [data-modal-heading] > p {
+    min-width: 0;
+    flex: 1;
+  }
+  .tk-modal-panel [data-modal-body] {
+    padding-block: 10px 8px;
+  }
+  .tk-modal-panel [data-modal-footer] {
+    margin-top: 8px;
+    margin-bottom: -8px;
+    padding-block: 8px;
+  }
+  .tk-modal-panel [data-modal-body] form {
+    row-gap: 4px;
+  }
+  .tk-modal-panel textarea.tk-field {
+    height: 64px;
+  }
 }
 
 /* The completion slider of the update dialog: an 8px track filled up to the value (`--tk-range`,

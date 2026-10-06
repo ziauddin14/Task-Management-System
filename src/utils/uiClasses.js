@@ -5,7 +5,9 @@
 const FOCUS_RING = 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tk-green-700';
 
 // ---- Dialog footer buttons: 50px tall, radius 16 -------------------------------------------------
-const DIALOG_BUTTON_BASE = `flex h-[50px] min-w-0 items-center justify-center gap-2 rounded-tk-btn px-6 text-[15px] leading-tk-label transition-colors disabled:cursor-not-allowed ${FOCUS_RING}`;
+// `tk-btn` and `tk-field` carry no style of their own: they are the names a redesigned dialog's
+// short-window rules (styles/tokens.css) know these controls by.
+const DIALOG_BUTTON_BASE = `tk-btn flex h-[50px] min-w-0 items-center justify-center gap-2 rounded-tk-btn px-6 text-[15px] leading-tk-label transition-colors disabled:cursor-not-allowed ${FOCUS_RING}`;
 
 // The one action a dialog is for. `grow` it to fill the footer row. Dimmed, with no shadow, while
 // it cannot be used.
@@ -22,7 +24,7 @@ export const SMALL_BUTTON_GHOST = `flex h-[40px] shrink-0 items-center justify-c
 
 // ---- Form fields: 48px tall, radius 14, tinted fill; a green border and ring on focus -------------
 const FIELD_BASE =
-  'w-full rounded-tk-input border-[1.5px] border-transparent bg-tk-surface px-[14px] text-[14px] text-tk-ink placeholder:text-tk-muted transition-colors focus:border-tk-green-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-tk-green-700/25 disabled:opacity-60';
+  'tk-field w-full rounded-tk-input border-[1.5px] border-transparent bg-tk-surface px-[14px] text-[14px] text-tk-ink placeholder:text-tk-muted transition-colors focus:border-tk-green-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-tk-green-700/25 disabled:opacity-60';
 export const FIELD = `${FIELD_BASE} h-[48px]`;
 export const FIELD_TEXTAREA = `${FIELD_BASE} py-[10px] leading-tk-label`;
 export const FIELD_LABEL = 'mb-[2px] block text-[13px] leading-tk-label text-tk-ink-soft';
