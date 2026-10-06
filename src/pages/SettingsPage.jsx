@@ -6,6 +6,7 @@ import { useUnsubscribeFromPush } from '../hooks/useUnsubscribeFromPush.js';
 import { isPushSupported } from '../utils/pushNotifications.js';
 import BusyButton from '../components/common/BusyButton.jsx';
 import BusyRegion from '../components/common/BusyRegion.jsx';
+import { PAGE_BUTTON_GHOST, PAGE_BUTTON_PRIMARY } from '../utils/uiClasses.js';
 
 // New page (Web Push addition — no Settings/Profile page existed before this). Currently holds
 // only the push on/off toggle; a natural home for any future personal preference, but nothing
@@ -29,14 +30,14 @@ function SettingsPage() {
 
   return (
     <div className="flex max-w-xl min-w-0 flex-col gap-4">
-      <h1 className="text-3xl font-bold text-gray-900">ترتیبات</h1>
+      <h1 className="text-3xl font-bold text-tk-ink">ترتیبات</h1>
 
-      <div className="rounded-lg border border-gray-200 bg-white p-4">
+      <div className="rounded-tk-panel bg-tk-card p-5 shadow-tk-card">
         <BusyRegion>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0">
-              <h2 className="text-base font-semibold text-gray-900">فون/کمپیوٹر نوٹیفیکیشن</h2>
-              <p className="mt-1 text-sm text-gray-600">
+              <h2 className="text-base font-semibold text-tk-ink">فون/کمپیوٹر نوٹیفیکیشن</h2>
+              <p className="mt-1 text-sm text-tk-muted">
                 اس ڈیوائس پر، ایپ بند ہونے کے باوجود، نوٹیفیکیشن ٹرے میں اطلاعات وصول کریں — موجودہ
                 ان-ایپ گھنٹی/ڈرا کے علاوہ۔
               </p>
@@ -47,10 +48,8 @@ function SettingsPage() {
                 busy={isBusy}
                 disabled={statusQuery.isLoading}
                 className={
-                  'flex h-10 shrink-0 items-center gap-2 rounded-lg px-4 text-sm font-medium disabled:opacity-50 ' +
-                  (isSubscribed
-                    ? 'border border-gray-300 text-gray-700 hover:bg-gray-50'
-                    : 'bg-brand text-white hover:bg-brand/90')
+                  // The shared page-button styles (utils/uiClasses.js): ghost to switch it off, primary to switch it on.
+                  isSubscribed ? PAGE_BUTTON_GHOST : PAGE_BUTTON_PRIMARY
                 }
               >
                 {isSubscribed ? (
@@ -65,14 +64,14 @@ function SettingsPage() {
         </BusyRegion>
 
         {!supported && (
-          <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          <p className="mt-3 rounded-tk-chip bg-tk-amber-bg px-3 py-2 text-sm text-tk-amber-text">
             یہ براؤزر/ڈیوائس پش نوٹیفیکیشن سپورٹ نہیں کرتا۔ آئی فون/آئی پیڈ پر سفاری میں یہ فیچر
-            تب ہی کام کرتا ہے جب ایپ کو ہوم سکرین پر شامل ("Add to Home Screen") کیا گیا ہو۔
+            تب ہی کام کرتا ہے جب ایپ کو ہوم سکرین پر شامل (&quot;Add to Home Screen&quot;) کیا گیا ہو۔
           </p>
         )}
 
         {supported && (
-          <p className="mt-3 text-xs text-gray-400">
+          <p className="mt-3 text-xs text-tk-muted">
             نوٹ: یہ ترتیب صرف اسی ڈیوائس/براؤزر کے لیے ہے — ہر ڈیوائس پر الگ سے فعال کرنا ہوگا۔
           </p>
         )}
