@@ -19,6 +19,15 @@ const TOKEN_COLORS = tokens([
   'fair', 'fair-bg', 'fair-fill', 'weak', 'weak-bg', 'weak-fill',
   'attention-bg', 'attention-chip', 'attention-text', 'attention-icon',
   'danger', 'danger-bg', 'badge', 'bell-dot',
+  // Desktop shell, status tiles / donut, band tiles and the redesigned dialogs.
+  'sidebar', 'sidebar-ink', 'sidebar-muted', 'sidebar-danger', 'surface', 'hover',
+  'line-soft', 'line-row', 'line-btn', 'thead-bg', 'thead-ink', 'overlay',
+  'pending-tint', 'pending-chip', 'pending-ink', 'pending-fill',
+  'ongoing-tint', 'ongoing-chip', 'ongoing-ink', 'ongoing-fill',
+  'closed-tint', 'closed-chip', 'closed-ink', 'closed-fill',
+  'complete-tint', 'complete-chip', 'complete-ink', 'complete-fill',
+  'excellent-tint', 'excellent-ink', 'good-tint', 'good-ink', 'fair-tint', 'fair-ink', 'weak-tint', 'weak-ink',
+  'danger-line', 'amber-bg', 'amber-text', 'amber-line',
 ]);
 
 /** @type {import('tailwindcss').Config} */
@@ -42,12 +51,19 @@ export default {
         'tk-input': token('radius-input'),
         'tk-chip': token('radius-chip'),
         'tk-pill': token('radius-pill'),
+        'tk-panel': token('radius-panel'),
+        'tk-modal': token('radius-modal'),
+        'tk-btn': token('radius-btn'),
       },
       boxShadow: {
         'tk-soft': token('shadow-soft'),
         'tk-hero': token('shadow-hero'),
         'tk-fab': token('shadow-fab'),
         'tk-sheet': token('shadow-sheet'),
+        'tk-card': token('shadow-card'),
+        'tk-lift': token('shadow-lift'),
+        'tk-primary': token('shadow-primary'),
+        'tk-modal': token('shadow-modal'),
       },
       spacing: {
         'tk-page': token('space-page'),
@@ -57,6 +73,12 @@ export default {
         'tk-appbar': token('appbar-h'),
         'tk-tabbar': token('tabbar-h'),
         'tk-touch': token('touch'),
+        'tk-navbar': token('navbar-h'),
+        'tk-rail': token('rail-w'),
+        'tk-rail-open': token('rail-w-open'),
+      },
+      maxWidth: {
+        'tk-content': token('content-max'),
       },
       lineHeight: {
         'tk-label': token('lh-label'),
