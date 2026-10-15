@@ -9,6 +9,7 @@ import { useTask } from '../../hooks/useTask.js';
 import { useTaskUpdates } from '../../hooks/useTaskUpdates.js';
 import { formatDateShortYear, formatTime, formatTimeStatusLabel, getTimeStatusColorClass } from '../../utils/formatDate.js';
 import { getPerformanceMeta, isSyntheticRating } from '../../utils/taskDisplay.js';
+import ReceiptDetailRow from './ReceiptDetailRow.jsx';
 
 const TH_CLASS = 'whitespace-nowrap px-3 py-2 text-start font-medium';
 const TD_CLASS = 'whitespace-nowrap px-3 py-2';
@@ -80,6 +81,11 @@ const PreviousUpdatesContent = forwardRef(function PreviousUpdatesContent({ task
               </tbody>
             </table>
           </div>
+
+          {/* Task receipt — who has confirmed (an admin) or one's own state (a user). Rendered only
+              when there is something to show, so a task from before the feature looks exactly as it
+              always did; and marked data-export-exclude, so the exported PNG never contains it. */}
+          <ReceiptDetailRow task={task} />
 
           {/* The task's rating, when it has one — and, if that rating is developer-assigned rather
               than real, the "تخمینی" badge beside it. The completion percent above is always the

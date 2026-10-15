@@ -6,12 +6,15 @@ import LoadingPhrase from '../common/LoadingPhrase.jsx';
 import EmptyState from '../common/EmptyState.jsx';
 import Pagination from '../common/Pagination.jsx';
 import SyntheticBadge from './SyntheticBadge.jsx';
+import ReceiptStatus from '../task/ReceiptStatus.jsx';
+import AcknowledgeButton, { ReceiptDoneChip } from '../task/AcknowledgeButton.jsx';
 import { useFloatingMenu } from '../../hooks/useFloatingMenu.js';
 import { COLUMN_DEFINITIONS } from '../../utils/dashboardColumns.js';
 import { formatDateShortYear, formatTimeStatusLabel, getTimeStatusColorClass } from '../../utils/formatDate.js';
 import { getStatusMeta, getPerformanceMeta, isSyntheticRating, SYNTHETIC_LABEL } from '../../utils/taskDisplay.js';
 import { getRatingTone, getStatusTone } from '../../utils/mobileTheme.js';
 import { progressFillClass } from '../../utils/dashboardTheme.js';
+import { RECEIPT_TEXT, canAcknowledge, isAcknowledged, receiptSummary } from '../../utils/taskReceipt.js';
 
 // Desktop redesign — the look only: a rounded card, a tinted sticky header row, taller rows that
 // highlight under the pointer, status and rating as tinted chips, and a completion bar coloured by
@@ -118,6 +121,18 @@ function AssigneeChips({ assignees }) {
       {extra > 0 && <span className="text-xs text-tk-muted">+{extra} more</span>}
     </div>
   );
+}
+
+// The "وصولی" cell (task receipt). An admin: the status chip, which opens who-has-and-who-has-not.
+// A user: "وصول کر لیا" while their own receipt is open, "✓ وصول شدہ" once confirmed. "-" when there
+// is nothing (a task from before the feature, or a backend that does not send receipts yet).
+function ReceiptCell({ task, isAdmin }) {
+  if (isAdmin) {
+    return receiptSummary(task) ? <ReceiptStatus task={task} withPopover /> : <span className="text-tk-muted">-</span>;
+  }
+  if (canAcknowledge(task)) return <AcknowledgeButton taskId={task.id} />;
+  if (isAcknowledged(task)) return <ReceiptDoneChip />;
+  return <span className="text-tk-muted">-</span>;
 }
 
 // Prompt 2H — only columns the backend's listTasksQuerySchema actually accepts a sortBy value for
@@ -277,6 +292,7 @@ function TaskTable({
                     className={TH_CLASS}
                   />
                 )}
+                {isVisible('receipt') && <th className={TH_CLASS}>{RECEIPT_TEXT.column}</th>}
                 <th className={`no-print ${TH_CLASS}`}>ایکشن</th>
               </tr>
             </thead>
@@ -340,6 +356,11 @@ function TaskTable({
                           </span>
                           {isSynthetic && <SyntheticBadge assumedPercent={task.syntheticRating.assumedPercent} />}
                         </div>
+                      </td>
+                    )}
+                    {isVisible('receipt') && (
+                      <td data-receipt-cell className={TD_CLASS}>
+                        <ReceiptCell task={task} isAdmin={isAdmin} />
                       </td>
                     )}
                     <td className={`no-print ${TD_CLASS}`}>

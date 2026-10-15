@@ -1,4 +1,4 @@
-import { AlertTriangle, Bell, CalendarClock, CalendarDays, Megaphone, UserCheck } from 'lucide-react';
+import { AlertTriangle, Bell, BellRing, CalendarClock, CalendarDays, ClipboardCheck, Megaphone, UserCheck } from 'lucide-react';
 
 // Locked blueprint §3/§Notification Types — frontend mirror of the backend's NOTIFICATION_TYPES
 // registry (utils/dashboardColumns.js's own established pattern: one plain-object lookup table,
@@ -13,6 +13,9 @@ export const NOTIFICATION_TYPES = Object.freeze({
   TASK_DUE_SOON: 'TASK_DUE_SOON',
   TASK_DUE_TOMORROW: 'TASK_DUE_TOMORROW',
   TASK_OVERDUE: 'TASK_OVERDUE',
+  // Task receipt: the notice that a task was given to you, and the reminders to confirm it.
+  TASK_ASSIGNED: 'TASK_ASSIGNED',
+  TASK_RECEIPT_REMINDER: 'TASK_RECEIPT_REMINDER',
 });
 
 const ICON_BY_TYPE = {
@@ -22,6 +25,8 @@ const ICON_BY_TYPE = {
   [NOTIFICATION_TYPES.TASK_DUE_SOON]: CalendarClock,
   [NOTIFICATION_TYPES.TASK_DUE_TOMORROW]: CalendarDays,
   [NOTIFICATION_TYPES.TASK_OVERDUE]: AlertTriangle,
+  [NOTIFICATION_TYPES.TASK_ASSIGNED]: ClipboardCheck,
+  [NOTIFICATION_TYPES.TASK_RECEIPT_REMINDER]: BellRing,
 };
 
 // Falls back to the generic bell for any type not in the table above — including a type Phase 1

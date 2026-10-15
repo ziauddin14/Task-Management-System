@@ -1,6 +1,7 @@
 import { endOfMonth, endOfWeek, format, startOfMonth, startOfWeek } from 'date-fns';
 import { formatDateShortYear } from './formatDate.js';
 import { getPerformanceMeta, getStatusMeta, SYNTHETIC_LABEL } from './taskDisplay.js';
+import { RECEIPT_FILTER_LABELS } from './taskReceipt.js';
 
 // Everything the mobile filter UI (the sheet, the chips under the search field, the quick date
 // chips) needs to know about the dashboard's filters. It adds no filter of its own: every value
@@ -11,7 +12,7 @@ export const RATING_SOURCE_LABELS = { synthetic: SYNTHETIC_LABEL, real: 'اصل'
 export const DATE_TYPE_LABELS = { deadline: 'آخری تاریخ', entry: 'تاریخِ اندراج' };
 
 // The filters the sheet edits. Search is not one of them — it has its own field.
-export const SHEET_FILTER_KEYS = ['status', 'performanceRating', 'ratingSource', 'assigneeId', 'dateType', 'from', 'to'];
+export const SHEET_FILTER_KEYS = ['status', 'performanceRating', 'ratingSource', 'receipt', 'assigneeId', 'dateType', 'from', 'to'];
 
 // What a native <input type="date"> reads and writes, and what the `from`/`to` params hold.
 function toDateParam(date) {
@@ -87,6 +88,9 @@ export function describeActiveFilters(params, { users = [], includeSearch = fals
       label: RATING_SOURCE_LABELS[params.ratingSource] || params.ratingSource,
       clear: { ratingSource: undefined },
     });
+  }
+  if (params.receipt) {
+    chips.push({ key: 'receipt', label: RECEIPT_FILTER_LABELS[params.receipt] || params.receipt, clear: { receipt: undefined } });
   }
   if (params.assigneeId) {
     const person = users.find((user) => user.id === params.assigneeId);

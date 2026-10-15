@@ -4,6 +4,9 @@ import { CalendarDays, UserRound } from 'lucide-react';
 import { formatDateShortYear, formatTimeStatusLabel } from '../../utils/formatDate.js';
 import { assigneeSummary, getPerformanceMeta, getStatusMeta, isSyntheticRating, SYNTHETIC_LABEL } from '../../utils/taskDisplay.js';
 import { getRatingTone, getStatusTone } from '../../utils/mobileTheme.js';
+import { canAcknowledge, isAcknowledged } from '../../utils/taskReceipt.js';
+import ReceiptStatus from '../task/ReceiptStatus.jsx';
+import AcknowledgeButton, { ReceiptDoneChip } from '../task/AcknowledgeButton.jsx';
 
 const CHIP_CLASS = 'whitespace-nowrap rounded-tk-pill px-[10px] text-[12px] leading-[2.3]';
 // One task as a card — the phone's replacement for a row of the desktop table.
@@ -14,10 +17,14 @@ const CHIP_CLASS = 'whitespace-nowrap rounded-tk-pill px-[10px] text-[12px] lead
 //          synthetic rating was derived from (a closed task at a real 0% rated "بہتر • تخمینی"
 //          reads exactly as that)
 //
+//   receipt (task receipt — utils/taskReceipt.js): an admin sees the "وصولی" status chip in row 1;
+//          a user sees "✓ وصول شدہ" there once confirmed, and until then a "وصول کر لیا" button
+//          in a row of its own at the bottom. Nothing on a task from before the feature.
+//
 // The whole card is one touch target: the title is a real <button> stretched over the card, which
-// opens the task's details-and-actions sheet (`onOpen`). Nothing else inside is interactive, so
-// there is never a control hidden under another.
-function TaskCard({ task, onOpen }) {
+// opens the task's details-and-actions sheet (`onOpen`). The one other control — "وصول کر لیا" —
+// is lifted above that stretched button (relative z-[1]), so it is never hidden under it.
+function TaskCard({ task, onOpen, isAdmin = false }) {
   const statusMeta = getStatusMeta(task.status);
   const statusTone = getStatusTone(task.status);
   const ratingMeta = getPerformanceMeta(task.performanceRating);
@@ -41,6 +48,7 @@ function TaskCard({ task, onOpen }) {
             )}
           </span>
         )}
+        {isAdmin ? <ReceiptStatus task={task} /> : isAcknowledged(task) && <ReceiptDoneChip />}
         <span className="min-w-0 flex-1" />
         <span className="shrink-0 text-[12px] text-tk-muted" dir="ltr">
           {task.codeNumber}
@@ -91,6 +99,12 @@ function TaskCard({ task, onOpen }) {
           {percent}%
         </span>
       </div>
+
+      {!isAdmin && canAcknowledge(task) && (
+        <div className="relative z-[1] flex justify-start pt-[2px]">
+          <AcknowledgeButton taskId={task.id} size="card" />
+        </div>
+      )}
     </article>
   );
 }

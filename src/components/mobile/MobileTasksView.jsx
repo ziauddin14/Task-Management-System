@@ -29,6 +29,7 @@ function MobileTasksView({
   onViewUpdates,
   onSendReminder,
   onEditSyntheticRating,
+  showReceiptFilter = false,
 }) {
   const { page, sortBy, sortOrder, setSort, setPage, hasActiveFilters, clearAllFilters } = filtersHook;
   const [openTask, setOpenTask] = useState(null);
@@ -52,7 +53,7 @@ function MobileTasksView({
     <div className="flex min-w-0 flex-col gap-tk-gap">
       <h1 className="sr-only">ٹاسک</h1>
 
-      <MobileFilterBar filtersHook={filtersHook} isAdmin={isAdmin} />
+      <MobileFilterBar filtersHook={filtersHook} isAdmin={isAdmin} showReceiptFilter={showReceiptFilter} />
 
       {showHeader && <TaskListHeader total={isLoading ? undefined : meta?.total} sortBy={sortBy} sortOrder={sortOrder} onSortChange={setSort} />}
 
@@ -86,7 +87,7 @@ function MobileTasksView({
           <ul className="flex flex-col gap-tk-gap">
             {tasks.map((task) => (
               <li key={task.id}>
-                <TaskCard task={task} onOpen={setOpenTask} />
+                <TaskCard task={task} onOpen={setOpenTask} isAdmin={isAdmin} />
               </li>
             ))}
           </ul>

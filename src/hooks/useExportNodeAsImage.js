@@ -14,6 +14,10 @@ import { todayStamp } from '../utils/exportFilename.js';
 // in this sandbox/CI environment is 1, so this is set explicitly rather than relied on.
 // `backgroundColor: '#ffffff'` guards against a transparent PNG if the target node's own
 // background doesn't fully cover it for any reason.
+export function isExcludedFromExport(element) {
+  return Boolean(element?.hasAttribute?.('data-export-exclude'));
+}
+
 export function useExportNodeAsImage() {
   const [isLoading, setIsLoading] = useState(false);
   const [exportedFile, setExportedFile] = useState(null);
@@ -22,7 +26,15 @@ export function useExportNodeAsImage() {
     if (!node) return null;
     setIsLoading(true);
     try {
-      const canvas = await html2canvas(node, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+      // Anything marked data-export-exclude is on screen only and is left out of the image
+      // altogether (html2canvas lays the copy out without it, so no gap is left either) — the Task
+      // Details dialog's receipt row (components/task/ReceiptDetailRow.jsx).
+      const canvas = await html2canvas(node, {
+        scale: 2,
+        backgroundColor: '#ffffff',
+        useCORS: true,
+        ignoreElements: isExcludedFromExport,
+      });
       const blob = await new Promise((resolve, reject) => {
         canvas.toBlob((result) => (result ? resolve(result) : reject(new Error('Canvas is empty'))), 'image/png');
       });
