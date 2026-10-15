@@ -14,5 +14,8 @@ export const COLUMN_DEFINITIONS = [
   { key: 'timeStatus', label: 'وقتی صورتحال', locked: false },
   { key: 'completionPercent', label: 'تکمیل فیصد', locked: false },
   { key: 'performance', label: 'کارکردگی', locked: false },
+  // Task receipt (utils/taskReceipt.js): an admin sees who has confirmed; a user, their own state
+  // and the "وصول کر لیا" button. Empty on a task from before the feature.
+  { key: 'receipt', label: 'وصولی', locked: false },
   { key: 'actions', label: 'اقدامات', locked: true },
 ];

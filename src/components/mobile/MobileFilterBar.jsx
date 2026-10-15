@@ -12,7 +12,7 @@ import { QUICK_RANGES, describeActiveFilters, matchQuickRange, quickRange } from
 //
 // Same state as the desktop FilterBar: everything reads and writes the useDashboardFilters
 // instance passed down, so every change lands in the URL. Search is debounced exactly as there.
-function MobileFilterBar({ filtersHook, isAdmin }) {
+function MobileFilterBar({ filtersHook, isAdmin, showReceiptFilter = false }) {
   const { params, setFilter, setFilters } = filtersHook;
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [searchInput, setSearchInput, debouncedSearch] = useDebouncedSearch(params.search || '');
@@ -88,6 +88,7 @@ function MobileFilterBar({ filtersHook, isAdmin }) {
         onApply={setFilters}
         isAdmin={isAdmin}
         users={users}
+        showReceiptFilter={showReceiptFilter}
       />
     </div>
   );

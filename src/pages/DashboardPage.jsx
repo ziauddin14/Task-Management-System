@@ -34,6 +34,7 @@ import { PageActions } from '../contexts/PageActionsPortal.jsx';
 import { useDismissPageActions } from '../contexts/PageActionsDismissContext.js';
 import { PAGE_BUTTON_GHOST, PAGE_BUTTON_PRIMARY, PAGE_SUBTITLE, PAGE_TITLE } from '../utils/uiClasses.js';
 import { COLUMN_DEFINITIONS } from '../utils/dashboardColumns.js';
+import { receiptsSupported } from '../utils/taskReceipt.js';
 
 const COLUMN_STORAGE_KEY = 'dashboard.visibleColumns.v1';
 
@@ -62,6 +63,9 @@ function DashboardPage({ view = 'dashboard' }) {
     filtersHook;
 
   const tasksQuery = useTasks(apiFilters, { enabled: showsTaskList });
+  // Task receipt: the "وصولی" filter is offered once the backend sends receipts (its tasks carry
+  // the field) — an older backend would reject the parameter — and always while it is in use.
+  const showReceiptFilter = receiptsSupported(tasksQuery.data?.items) || Boolean(filtersHook.params.receipt);
   // The KPI cards follow the dashboard's filters: the same filter state the table uses, minus
   // sort/paging — and each group of cards minus its OWN filter, so the group a card was clicked in
   // keeps showing the whole distribution (see useDashboardFilters). Hence two reads of the same
@@ -203,6 +207,7 @@ function DashboardPage({ view = 'dashboard' }) {
             onViewUpdates={(task) => setViewingUpdatesTask(task)}
             onSendReminder={(task) => setSendNotificationState({ task })}
             onEditSyntheticRating={(task) => setSyntheticRatingTask(task)}
+            showReceiptFilter={showReceiptFilter}
           />
         ) : (
           <MobileDashboardView
@@ -360,7 +365,7 @@ function DashboardPage({ view = 'dashboard' }) {
           </>
         )}
 
-        <FilterBar filtersHook={filtersHook} isAdmin={isAdmin} />
+        <FilterBar filtersHook={filtersHook} isAdmin={isAdmin} showReceiptFilter={showReceiptFilter} />
 
         {/* A single "ایکشن" trigger, rendered into the Navbar via the <PageActions> portal, holds
             کالمز (column visibility) + Export + WhatsApp Share. */}

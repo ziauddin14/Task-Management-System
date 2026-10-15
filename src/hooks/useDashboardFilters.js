@@ -7,13 +7,14 @@ import { useSearchParams } from 'react-router-dom';
 // see hooks/useColumnVisibility.js and hooks/usePageSize.js), so neither is handled here.
 //
 // URL param names used by this dashboard: status, performanceRating, ratingSource ('synthetic' |
-// 'real'), assigneeId, responsibility, search, dateType ('deadline' | 'entry'), from, to, sortBy,
+// 'real'), receipt ('received' | 'not_received' | 'partial' — task receipt, utils/taskReceipt.js),
+// assigneeId, responsibility, search, dateType ('deadline' | 'entry'), from, to, sortBy,
 // sortOrder, page. `dateType`/`from`/`to`
 // are a frontend-only representation of docs/08-ui-ux.md §5's "toggle between Deadline and Entry
 // Date, plus a from/to range" — translated below into the backend's actual query param names
 // (deadlineFrom/deadlineTo or entryFrom/entryTo, docs/05-apis.md §5) so services/tasks.api.js never
 // has to know about the toggle.
-const FILTER_KEYS = ['status', 'performanceRating', 'ratingSource', 'assigneeId', 'responsibility', 'search', 'dateType', 'from', 'to'];
+const FILTER_KEYS = ['status', 'performanceRating', 'ratingSource', 'receipt', 'assigneeId', 'responsibility', 'search', 'dateType', 'from', 'to'];
 // What GET /dashboard/summary must never be sent: sort and paging (it rejects them).
 const NOT_SUMMARY_PARAMS = ['sortBy', 'sortOrder', 'page', 'limit'];
 
@@ -50,6 +51,8 @@ export function useDashboardFilters(pageSize) {
       status: params.status || undefined,
       performanceRating: params.performanceRating || undefined,
       ratingSource: params.ratingSource || undefined,
+      // Like every other filter: the table, the KPI cards and an export all follow it.
+      receipt: params.receipt || undefined,
       assigneeId: params.assigneeId || undefined,
       responsibility: params.responsibility || undefined,
       search: params.search || undefined,

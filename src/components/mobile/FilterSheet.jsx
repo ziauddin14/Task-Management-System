@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import BottomSheet from './BottomSheet.jsx';
 import { PERFORMANCE_BAND_KEYS, getPerformanceMeta, getStatusMeta } from '../../utils/taskDisplay.js';
 import { STATUS_TILE_ORDER } from '../../utils/mobileTheme.js';
+import { RECEIPT_TEXT, receiptFilterOptions } from '../../utils/taskReceipt.js';
 import {
   DATE_TYPE_LABELS,
   QUICK_RANGES,
@@ -75,7 +76,8 @@ function ChoiceChips({ legend, options, value, onChange }) {
 //
 // The two date inputs are the browser's own: they show the date in the device's locale format
 // (mm/dd/yyyy on an English-locale phone), which a page cannot change.
-function FilterSheet({ isOpen, onClose, params, onApply, isAdmin = false, users = [] }) {
+// `showReceiptFilter` — the task-receipt group ("وصولی"), offered once the backend sends receipts.
+function FilterSheet({ isOpen, onClose, params, onApply, isAdmin = false, users = [], showReceiptFilter = false }) {
   const [draft, setDraft] = useState(() => draftFromParams(params));
 
   // A fresh draft every time the sheet opens — never last time's abandoned edits.
@@ -140,6 +142,9 @@ function FilterSheet({ isOpen, onClose, params, onApply, isAdmin = false, users 
         <ChoiceChips legend="کام کی کیفیت" options={STATUS_OPTIONS} value={draft.status} onChange={(value) => set('status', value)} />
         <ChoiceChips legend="کارکردگی" options={RATING_OPTIONS} value={draft.performanceRating} onChange={(value) => set('performanceRating', value)} />
         <ChoiceChips legend="درجہ بندی کی قسم" options={RATING_SOURCE_OPTIONS} value={draft.ratingSource} onChange={(value) => set('ratingSource', value)} />
+        {showReceiptFilter && (
+          <ChoiceChips legend={RECEIPT_TEXT.column} options={receiptFilterOptions(isAdmin)} value={draft.receipt} onChange={(value) => set('receipt', value)} />
+        )}
 
         {isAdmin && (
           <label className="block">

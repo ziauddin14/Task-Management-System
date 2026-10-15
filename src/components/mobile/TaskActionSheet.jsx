@@ -5,14 +5,17 @@ import BottomSheet from './BottomSheet.jsx';
 import { formatDateShortYear, formatTimeStatusLabel } from '../../utils/formatDate.js';
 import { getPerformanceMeta, getStatusMeta, isSyntheticRating, SYNTHETIC_LABEL } from '../../utils/taskDisplay.js';
 import { getRatingTone, getStatusTone } from '../../utils/mobileTheme.js';
+import { RECEIPT_TEXT, canAcknowledge, isAcknowledged, receiptSummary } from '../../utils/taskReceipt.js';
+import ReceiptStatus, { ReceiptPeopleList } from '../task/ReceiptStatus.jsx';
+import AcknowledgeButton, { ReceiptDoneChip } from '../task/AcknowledgeButton.jsx';
 
 const CHIP_CLASS = 'whitespace-nowrap rounded-tk-pill px-[10px] text-[12px] leading-[2.3]';
 const ACTION_CLASS =
   'flex min-h-[48px] w-full items-center gap-tk-gap rounded-tk-input px-tk-card text-start text-[15px] leading-tk-label focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tk-green-700 disabled:opacity-45';
 
-function Fact({ label, children }) {
+function Fact({ label, children, className }) {
   return (
-    <div className="min-w-0">
+    <div className={clsx('min-w-0', className)}>
       <dt className="text-[12px] leading-tk-label text-tk-muted">{label}</dt>
       <dd className="break-words text-[14px] leading-tk-label text-tk-ink">{children}</dd>
     </div>
@@ -96,9 +99,27 @@ function TaskActionSheet({ task, onClose, isAdmin, onUpdate, onViewUpdates, onEd
               <span dir="ltr">{percent}%</span>
             </span>
           </Fact>
+          {/* Task receipt: an admin sees who has and who has not confirmed; a user, their own state.
+              Not shown on a task from before the feature. */}
+          {isAdmin && receiptSummary(task) && (
+            <Fact label={RECEIPT_TEXT.column} className="col-span-2">
+              <span className="flex flex-col items-start gap-[6px] pt-[2px]">
+                <ReceiptStatus task={task} />
+                <ReceiptPeopleList people={receiptSummary(task).people} />
+              </span>
+            </Fact>
+          )}
+          {!isAdmin && task.myReceipt && (
+            <Fact label={RECEIPT_TEXT.column}>
+              {isAcknowledged(task) ? <ReceiptDoneChip /> : RECEIPT_TEXT.pending}
+            </Fact>
+          )}
         </dl>
 
         <div className="flex flex-col gap-tk-gap-sm border-t border-tk-line pt-tk-gap">
+          {/* "وصول کر لیا" — the first action while the person's own receipt is open. It does not
+              close the sheet: it turns into "✓ وصول شدہ" in place. */}
+          {!isAdmin && canAcknowledge(task) && <AcknowledgeButton taskId={task.id} size="sheet" />}
           <Action icon={Upload} label="اپڈیٹ کریں" onClick={run(onUpdate)} disabled={isClosed} primary />
           {isClosed && <p className="text-[12px] leading-tk-label text-tk-muted">یہ کام بند ہو چکا ہے، اس میں نئی اپڈیٹ درج نہیں ہو سکتی۔</p>}
           <Action icon={History} label="کام کی تفصیل اور پرانی اپڈیٹس" onClick={run(onViewUpdates)} />

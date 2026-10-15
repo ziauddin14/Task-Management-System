@@ -6,6 +6,7 @@ import FilterChips from '../mobile/FilterChips.jsx';
 import { useAssignableUsers } from '../../hooks/useAssignableUsers.js';
 import { useDebouncedSearch } from '../../hooks/useDebouncedSearch.js';
 import { QUICK_RANGES, describeActiveFilters, matchQuickRange, quickRange } from '../../utils/taskFilters.js';
+import { RECEIPT_TEXT, receiptFilterOptions } from '../../utils/taskReceipt.js';
 
 const SELECT_CLASS =
   'h-[46px] max-w-full rounded-tk-input border-0 bg-tk-surface px-3 text-[13px] text-tk-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-tk-green-700';
@@ -28,7 +29,8 @@ const PILL_ACTIVE = 'bg-tk-green-900 font-semibold text-white';
 //   - the date field and the two native date inputs sit behind the "تاریخ" button, for a custom
 //     range. They are shown from the start when the URL already carries one;
 //   - the filters in force are listed underneath as chips, each removing its own filter.
-function FilterBar({ filtersHook, isAdmin }) {
+//   - task receipt ("وصولی") — offered once the backend sends receipts (`showReceiptFilter`).
+function FilterBar({ filtersHook, isAdmin, showReceiptFilter = false }) {
   const { params, setFilter, setFilters, clearAllFilters, hasActiveFilters } = filtersHook;
   const [searchInput, setSearchInput, debouncedSearch] = useDebouncedSearch(params.search || '');
 
@@ -87,6 +89,22 @@ function FilterBar({ filtersHook, isAdmin }) {
           <option value="synthetic">تخمینی</option>
           <option value="real">اصل</option>
         </select>
+
+        {showReceiptFilter && (
+          <select
+            value={params.receipt || ''}
+            onChange={(event) => setFilter('receipt', event.target.value || undefined)}
+            aria-label="Receipt filter"
+            className={SELECT_CLASS}
+          >
+            <option value="">{RECEIPT_TEXT.column}</option>
+            {receiptFilterOptions(isAdmin).map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        )}
 
         <div role="group" aria-label="تاریخ کی حد" className="flex flex-wrap items-center gap-2">
           {QUICK_RANGES.map((range) => {
