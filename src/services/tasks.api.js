@@ -37,6 +37,13 @@ export async function closeTask(taskId) {
 
 // PATCH /tasks/:id/synthetic-rating — Admin only. { assumedPercent (0-100), note? }; 409 unless the
 // task's rating is a synthetic one. Returns the updated task.
+// Task receipt — the signed-in person confirms their own receipt ("وصول کر لیا"). No body: the
+// server only ever confirms the caller's own. Returns the task as they may see it.
+export async function acknowledgeTask(taskId) {
+  const response = await apiClient.post(`/tasks/${taskId}/acknowledge`);
+  return response.data.data;
+}
+
 export async function editSyntheticRating(taskId, payload) {
   const response = await apiClient.patch(`/tasks/${taskId}/synthetic-rating`, payload);
   return response.data.data;
