@@ -114,6 +114,8 @@ vi.mock('../../src/services/notifications.api.js', () => ({
   sendTaskReminder: vi.fn(),
   getAdminNotificationHistory: vi.fn().mockResolvedValue({ items: [], meta: { page: 1, limit: 20, total: 0, totalPages: 1 } }),
 }));
+// The Admin dashboard's inactivity alert (tests/pages/DashboardPage.activity.test.jsx) — nobody inactive here.
+vi.mock('../../src/services/activity.api.js', () => ({ getActivitySummary: vi.fn().mockResolvedValue({ inactiveCount: 0, inactivityDays: 7 }) }));
 vi.mock('file-saver', () => ({ saveAs: vi.fn() }));
 
 import { closeTask, getTasks, editSyntheticRating } from '../../src/services/tasks.api.js';

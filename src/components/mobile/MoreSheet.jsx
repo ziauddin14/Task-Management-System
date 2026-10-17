@@ -1,7 +1,7 @@
 import React from 'react'; // explicit import — see src/App.jsx's comment for why
 import clsx from 'clsx';
 import { NavLink } from 'react-router-dom';
-import { LogOut, Settings, Users } from 'lucide-react';
+import { Activity, LogOut, Settings, Users } from 'lucide-react';
 import BottomSheet from './BottomSheet.jsx';
 
 const ROW_CLASS =
@@ -49,6 +49,12 @@ function MoreSheet({ isOpen, onClose, user, isAdmin, onLogout, pageActionsRef })
             <NavLink to="/users" className={navRowClass} onClick={onClose}>
               <Users className="h-[20px] w-[20px] shrink-0" aria-hidden="true" />
               تمام یوزرز
+            </NavLink>
+          )}
+          {isAdmin && (
+            <NavLink to="/activity" className={navRowClass} onClick={onClose}>
+              <Activity className="h-[20px] w-[20px] shrink-0" aria-hidden="true" />
+              ایکٹیویٹی لاگ
             </NavLink>
           )}
         </nav>

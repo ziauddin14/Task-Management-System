@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import clsx from 'clsx';
-import { LayoutDashboard, Settings, Users, FileText, LogOut, X, Menu, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Settings, Users, FileText, Activity, LogOut, X, Menu, ChevronRight } from 'lucide-react';
 
 // Matches Tailwind's default `md` breakpoint (768px) — the same one the CSS classes below use to
 // switch the sidebar from an off-canvas drawer to an always-visible desktop panel.
@@ -64,6 +64,7 @@ function Sidebar({ isOpen, onClose, isAdmin, onLogout, collapsed, onToggleCollap
     { to: '/settings', label: 'ترتیبات', icon: Settings, end: false },
     ...(isAdmin ? [{ to: '/users', label: 'تمام یوزرز', icon: Users, end: false }] : []),
     ...(isAdmin ? [{ to: '/reports/user-summary', label: 'یوزر سمری رپورٹ', icon: FileText, end: false }] : []),
+    ...(isAdmin ? [{ to: '/activity', label: 'ایکٹیویٹی لاگ', icon: Activity, end: false }] : []),
   ];
 
   return (

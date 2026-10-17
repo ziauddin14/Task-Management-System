@@ -14,3 +14,20 @@ export async function getCurrentUser() {
   const response = await apiClient.get('/auth/me');
   return response.data.data;
 }
+
+// POST /auth/logout — only tells the server the person signed out (for the Admin's activity log);
+// the session ends on this device whatever happens to it. Fire-and-forget: never awaited, never
+// throws, never delays or blocks the logout. The token is passed in because the caller clears the
+// store straight after calling this, before the request interceptor would read it.
+// `skipSessionRedirect`: a 401 here (an already expired session) must not send the browser to
+// /login a second time — the logout is already taking the person there.
+export function notifyLogout(token) {
+  if (!token) return;
+  try {
+    apiClient
+      .post('/auth/logout', null, { headers: { Authorization: `Bearer ${token}` }, skipSessionRedirect: true })
+      .catch(() => {});
+  } catch {
+    // Never let the logout itself fail.
+  }
+}

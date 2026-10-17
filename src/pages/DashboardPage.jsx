@@ -30,6 +30,7 @@ import LoadingPhrase from '../components/common/LoadingPhrase.jsx';
 import BusyButton from '../components/common/BusyButton.jsx';
 import BusyRegion from '../components/common/BusyRegion.jsx';
 import PushPermissionBanner from '../components/common/PushPermissionBanner.jsx';
+import InactiveUsersAlert from '../components/activity/InactiveUsersAlert.jsx';
 import { PageActions } from '../contexts/PageActionsPortal.jsx';
 import { useDismissPageActions } from '../contexts/PageActionsDismissContext.js';
 import { PAGE_BUTTON_GHOST, PAGE_BUTTON_PRIMARY, PAGE_SUBTITLE, PAGE_TITLE } from '../utils/uiClasses.js';
@@ -312,6 +313,9 @@ function DashboardPage({ view = 'dashboard' }) {
             )}
           </div>
         </BusyRegion>
+
+        {/* Activity log — Admins only; renders nothing unless someone is inactive. */}
+        <InactiveUsersAlert isAdmin={isAdmin} />
 
         {isSummaryLoading && <LoadingPhrase label="خلاصہ لوڈ ہو رہا ہے۔۔۔" />}
 

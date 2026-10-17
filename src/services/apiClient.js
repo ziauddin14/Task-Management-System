@@ -36,10 +36,13 @@ export class ApiError extends Error {
 // full navigation is the standard, correct way to redirect from here. The store-clearing side
 // effect is what the Phase 10.1 tests verify directly, per its own suggested approach, since a
 // real browser navigation isn't practical to assert in a unit test.
+//
+// A request sent with `skipSessionRedirect: true` (only the fire-and-forget logout notice,
+// auth.api.js) is left out of that redirect: its 401 is just rejected like any other error.
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && !error.config?.skipSessionRedirect) {
       useAuthStore.getState().logout();
       if (typeof window !== 'undefined') {
         window.location.href = '/login';
