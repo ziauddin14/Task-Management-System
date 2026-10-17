@@ -94,4 +94,17 @@ describe('apiClient response interceptor', () => {
 
     expect(useAuthStore.getState().isAuthenticated).toBe(true);
   });
+
+  // Only the fire-and-forget logout notice (auth.api.js notifyLogout) sends this flag: the logout is
+  // already taking the person to /login, so its 401 must not redirect a second time.
+  it('a 401 on a request sent with skipSessionRedirect: rejected, but no store clearing and no redirect', async () => {
+    useAuthStore.getState().login({ id: '1', name: 'Om', role: 'user' }, 'jwt-abc');
+    const responseRejected = apiClient.interceptors.response.handlers[0].rejected;
+    const fakeError = { config: { skipSessionRedirect: true }, response: { status: 401, data: { message: 'Expired', code: 'UNAUTHORIZED' } } };
+
+    await expect(responseRejected(fakeError)).rejects.toBeInstanceOf(ApiError);
+
+    expect(useAuthStore.getState().isAuthenticated).toBe(true);
+    expect(window.location.href).toBe('');
+  });
 });

@@ -72,6 +72,24 @@ describe('AppRoutes (docs/07-frontend-foundation.md §5)', () => {
     expect(screen.getByRole('heading', { name: 'User Summary Report' })).toBeInTheDocument();
   });
 
+  it('/activity renders the activity log for an admin', () => {
+    useAuthStore.getState().login({ id: '1', name: 'Admin', role: 'admin' }, 'jwt');
+    renderAt('/activity');
+    expect(screen.getByRole('heading', { name: 'ایکٹیویٹی لاگ' })).toBeInTheDocument();
+  });
+
+  it('/activity redirects a non-admin User to /unauthorized', () => {
+    useAuthStore.getState().login({ id: '1', name: 'Om', role: 'user' }, 'jwt');
+    renderAt('/activity');
+    expect(screen.getByRole('heading', { name: 'Unauthorized' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'ایکٹیویٹی لاگ' })).not.toBeInTheDocument();
+  });
+
+  it('/activity redirects an unauthenticated visitor to /login', () => {
+    renderAt('/activity');
+    expect(screen.getByRole('heading', { name: 'ٹاسک مینیجمینٹ سسٹم' })).toBeInTheDocument();
+  });
+
   it('/unauthorized renders UnauthorizedPage directly (public)', () => {
     renderAt('/unauthorized');
     expect(screen.getByRole('heading', { name: 'Unauthorized' })).toBeInTheDocument();

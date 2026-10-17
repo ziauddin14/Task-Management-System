@@ -4,6 +4,7 @@ import EmptyState from '../common/EmptyState.jsx';
 import PushPermissionBanner from '../common/PushPermissionBanner.jsx';
 import QualityHeroCard from './QualityHeroCard.jsx';
 import AttentionBanner from './AttentionBanner.jsx';
+import InactiveUsersAlert from '../activity/InactiveUsersAlert.jsx';
 import StatusTiles from './StatusTiles.jsx';
 import FilterChips from './FilterChips.jsx';
 import NewTaskFab from './NewTaskFab.jsx';
@@ -50,6 +51,9 @@ function MobileDashboardView({ statusSummary, ratingSummary, isLoading, isError,
       )}
 
       {statusSummary && <AttentionBanner count={pendingCount} to={tasksHref({ status: 'pending' })} />}
+
+      {/* Activity log — Admins only; renders nothing unless someone is inactive. */}
+      <InactiveUsersAlert isAdmin={isAdmin} />
 
       {statusSummary && (
         <StatusTiles

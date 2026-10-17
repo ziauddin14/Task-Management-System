@@ -9,6 +9,7 @@ import DashboardPage from '../pages/DashboardPage.jsx';
 import SettingsPage from '../pages/SettingsPage.jsx';
 import UsersPage from '../pages/UsersPage.jsx';
 import UserSummaryReportPage from '../pages/UserSummaryReportPage.jsx';
+import ActivityLogPage from '../pages/ActivityLogPage.jsx';
 import UnauthorizedPage from '../pages/UnauthorizedPage.jsx';
 import NotFoundPage from '../pages/NotFoundPage.jsx';
 
@@ -44,6 +45,7 @@ function AppRoutes() {
           <Route element={<RoleGuard role="admin" />}>
             <Route path="/users" element={<UsersPage />} />
             <Route path="/reports/user-summary" element={<UserSummaryReportPage />} />
+            <Route path="/activity" element={<ActivityLogPage />} />
           </Route>
         </Route>
       </Route>

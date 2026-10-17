@@ -6,12 +6,15 @@ import { useUnsubscribeFromPush } from '../hooks/useUnsubscribeFromPush.js';
 import { isPushSupported } from '../utils/pushNotifications.js';
 import BusyButton from '../components/common/BusyButton.jsx';
 import BusyRegion from '../components/common/BusyRegion.jsx';
+import ActivitySettingsCard from '../components/activity/ActivitySettingsCard.jsx';
+import { useAuthStore } from '../store/authStore.js';
 import { PAGE_BUTTON_GHOST, PAGE_BUTTON_PRIMARY } from '../utils/uiClasses.js';
 
-// New page (Web Push addition — no Settings/Profile page existed before this). Currently holds
-// only the push on/off toggle; a natural home for any future personal preference, but nothing
-// beyond push is in scope here.
+// New page (Web Push addition — no Settings/Profile page existed before this). Holds the push
+// on/off toggle for everyone and, for an Admin only, the activity log's inactivity limit
+// (components/activity/ActivitySettingsCard.jsx) under it.
 function SettingsPage() {
+  const isAdmin = useAuthStore((state) => state.user?.role === 'admin');
   const supported = isPushSupported();
   const statusQuery = usePushSubscriptionStatus();
   const subscribeMutation = useSubscribeToPush();
@@ -76,6 +79,8 @@ function SettingsPage() {
           </p>
         )}
       </div>
+
+      {isAdmin && <ActivitySettingsCard />}
     </div>
   );
 }

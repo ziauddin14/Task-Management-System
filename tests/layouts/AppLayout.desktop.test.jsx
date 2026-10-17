@@ -102,7 +102,7 @@ describe('AppLayout — desktop shell', () => {
       expect(sidebar()).not.toHaveClass('w-tk-rail-open');
       expect(screen.queryByText('ڈیش بورڈ')).not.toBeInTheDocument();
       const links = navLinks();
-      expect(links.map((link) => link.getAttribute('aria-label'))).toEqual(['ڈیش بورڈ', 'ترتیبات', 'تمام یوزرز', 'یوزر سمری رپورٹ']);
+      expect(links.map((link) => link.getAttribute('aria-label'))).toEqual(['ڈیش بورڈ', 'ترتیبات', 'تمام یوزرز', 'یوزر سمری رپورٹ', 'ایکٹیویٹی لاگ']);
       // The tooltip is the link's own name, shown on hover and on keyboard focus (styles/tokens.css).
       links.forEach((link) => {
         expect(link).toHaveClass('tk-tooltip');
@@ -129,7 +129,7 @@ describe('AppLayout — desktop shell', () => {
       fireEvent.click(screen.getByRole('button', { name: 'سائیڈبار پھیلائیں' }));
 
       expect(sidebar()).toHaveClass('w-tk-rail-open');
-      expect(navLinks().map((link) => link.textContent)).toEqual(['ڈیش بورڈ', 'ترتیبات', 'تمام یوزرز', 'یوزر سمری رپورٹ']);
+      expect(navLinks().map((link) => link.textContent)).toEqual(['ڈیش بورڈ', 'ترتیبات', 'تمام یوزرز', 'یوزر سمری رپورٹ', 'ایکٹیویٹی لاگ']);
       navLinks().forEach((link) => expect(link).not.toHaveAttribute('data-tooltip'));
       expect(screen.getByRole('button', { name: 'لاگ آؤٹ' })).toHaveTextContent('لاگ آؤٹ');
       expect(screen.getByRole('button', { name: 'سائیڈبار سکیڑیں' })).toHaveAttribute('aria-expanded', 'true');

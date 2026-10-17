@@ -6,6 +6,7 @@ import { useAuthStore } from '../store/authStore.js';
 import { useSidebarCollapsed } from '../hooks/useSidebarCollapsed.js';
 import { useIsMobile } from '../hooks/useIsMobile.js';
 import { useUnreadNotificationCount } from '../hooks/useUnreadNotificationCount.js';
+import { notifyLogout } from '../services/auth.api.js';
 import Sidebar from '../components/common/Sidebar.jsx';
 import LogoMark from '../components/common/LogoMark.jsx';
 import NotificationBell from '../components/common/NotificationBell.jsx';
@@ -124,8 +125,11 @@ function AppLayout() {
     setIsSidebarOpen(false);
   }, [location.pathname]);
 
-  // docs/11-auth.md §5, all four steps, in order.
+  // docs/11-auth.md §5, all four steps, in order — preceded by a fire-and-forget notice to the
+  // server (POST /auth/logout, for the Admin's activity log). It is never awaited and can never
+  // fail or delay the logout; the token goes with it because step 1 clears the store.
   function handleLogout() {
+    notifyLogout(useAuthStore.getState().token);
     logout();
     queryClient.clear();
     if (typeof window !== 'undefined' && window.google?.accounts?.id?.disableAutoSelect) {
