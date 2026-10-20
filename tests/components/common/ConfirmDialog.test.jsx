@@ -85,4 +85,15 @@ describe('ConfirmDialog', () => {
     const { container } = renderDialog({ isOpen: false });
     expect(container).toBeEmptyDOMElement();
   });
+
+  // tone="amber" — making something final (an estimate): the warning icon in amber, the amber button.
+  it('tone="amber": an amber warning icon chip and the amber confirm button; the busy state is the same', () => {
+    renderDialog({ tone: 'amber', isLoading: true });
+    expect(dialog().querySelector('[data-modal-icon]')).toHaveClass('bg-tk-amber-bg', 'text-tk-amber-text');
+    const confirm = within(dialog()).getByRole('button', { name: 'ہاں، بند کریں' });
+    expect(confirm).toHaveClass('bg-tk-amber-bg', 'text-tk-amber-text', 'flex-1', 'font-semibold');
+    expect(confirm).not.toHaveClass('bg-tk-danger-bg');
+    expect(confirm).toHaveAttribute('aria-busy', 'true');
+    expect(document.querySelector('[data-busy-strip] [data-phrase-line]')).not.toBeNull();
+  });
 });

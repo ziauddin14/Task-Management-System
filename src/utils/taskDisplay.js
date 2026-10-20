@@ -33,9 +33,23 @@ export const PERFORMANCE_BAND_KEYS = ['excellent', 'good', 'fair', 'weak'];
 // so it is never read as a real one (backend: Task.syntheticRating, docs/02-db-design.md §7).
 export const SYNTHETIC_LABEL = 'تخمینی';
 
+// The server sends `isSynthetic` meaning the rating is STILL AN ESTIMATE: false once an admin has
+// changed it (backend utils/syntheticRating.js), so the badge disappears by itself.
 export function isSyntheticRating(task) {
   return task?.syntheticRating?.isSynthetic === true;
 }
+
+// An admin changed this estimate, which made it FINAL: shown and counted as a real rating, and it
+// can no longer be changed or removed. An older backend never sends `isFinal`, so this is false
+// there and everything behaves as before.
+export function isFinalRating(task) {
+  return task?.syntheticRating?.isFinal === true;
+}
+
+// The owner-approved wording for a final rating.
+export const FINAL_RATING_NOTE = 'یہ درجہ بندی حتمی ہو چکی ہے، اب تبدیل نہیں ہو سکتی۔';
+export const FINAL_RATING_SAVED = 'درجہ بندی حتمی کر دی گئی';
+export const FINALIZE_CONFIRM_LABEL = 'ہاں، حتمی کریں';
 
 // "تخمینی 80%" — the badge's tooltip / expanded text, and what print and exports show outright.
 export function syntheticDetail(assumedPercent) {

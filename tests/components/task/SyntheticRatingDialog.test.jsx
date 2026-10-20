@@ -43,6 +43,12 @@ function renderDialog(props = {}) {
 const percentInput = () => screen.getByLabelText(/نیا فرض کردہ فیصد/);
 const saveButton = () => screen.getByRole('button', { name: 'محفوظ کریں' });
 const preview = () => document.getElementById('synthetic-percent-preview');
+// Saving makes the rating final, so "محفوظ کریں" asks first; this answers "ہاں، حتمی کریں".
+const confirmFinalButton = () => screen.getByRole('button', { name: 'ہاں، حتمی کریں' });
+function saveAndConfirm() {
+  fireEvent.click(saveButton());
+  fireEvent.click(confirmFinalButton());
+}
 
 describe('SyntheticRatingDialog (admin: change a synthetic rating)', () => {
   beforeEach(() => {
@@ -108,11 +114,11 @@ describe('SyntheticRatingDialog (admin: change a synthetic rating)', () => {
 
     fireEvent.change(percentInput(), { target: { value: '92' } });
     fireEvent.change(screen.getByLabelText('نوٹ (اختیاری)'), { target: { value: '  جائزے کے بعد  ' } });
-    fireEvent.click(saveButton());
+    saveAndConfirm();
 
     await waitFor(() => expect(editSyntheticRating).toHaveBeenCalledWith('t2', { assumedPercent: 92, note: 'جائزے کے بعد' }));
     await waitFor(() => expect(onClose).toHaveBeenCalled());
-    expect(toast.success).toHaveBeenCalledWith('تخمینی درجہ بندی تبدیل کر دی گئی');
+    expect(toast.success).toHaveBeenCalledWith('درجہ بندی حتمی کر دی گئی');
     expect(removeSyntheticRating).not.toHaveBeenCalled();
   });
 
@@ -121,7 +127,7 @@ describe('SyntheticRatingDialog (admin: change a synthetic rating)', () => {
     renderDialog();
 
     fireEvent.change(percentInput(), { target: { value: '55' } });
-    fireEvent.click(saveButton());
+    saveAndConfirm();
 
     await waitFor(() => expect(editSyntheticRating).toHaveBeenCalledWith('t2', { assumedPercent: 55, note: undefined }));
   });
@@ -131,27 +137,28 @@ describe('SyntheticRatingDialog (admin: change a synthetic rating)', () => {
     const { invalidate, queryClient } = renderDialog();
 
     fireEvent.change(percentInput(), { target: { value: '60' } });
-    fireEvent.click(saveButton());
+    saveAndConfirm();
 
     await waitFor(() => expect(invalidate).toHaveBeenCalledWith({ queryKey: ['dashboardSummary'] }));
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ['tasks'] });
     expect(queryClient.getQueryData(['task', 't2'])).toEqual(task);
   });
 
-  it('while saving: the button keeps its label, is busy and disabled, and the shared loading phrase shows', async () => {
+  // The save is now sent from the confirmation ("ہاں، حتمی کریں"), so that is the busy button.
+  it('while saving: the confirm button keeps its label, is busy and disabled, and the shared loading phrase shows', async () => {
     let resolveSave;
     editSyntheticRating.mockReturnValue(new Promise((resolve) => { resolveSave = resolve; }));
     const { container } = renderDialog();
 
     fireEvent.change(percentInput(), { target: { value: '85' } });
-    fireEvent.click(saveButton());
+    saveAndConfirm();
 
-    await waitFor(() => expect(saveButton()).toHaveAttribute('aria-busy', 'true'));
-    expect(saveButton()).toBeDisabled();
-    expect(saveButton()).toHaveTextContent('محفوظ کریں');
+    await waitFor(() => expect(confirmFinalButton()).toHaveAttribute('aria-busy', 'true'));
+    expect(confirmFinalButton()).toBeDisabled();
+    expect(confirmFinalButton()).toHaveTextContent('ہاں، حتمی کریں');
     expect(container.ownerDocument.querySelector('[data-busy-strip] [data-phrase-line]')).not.toBeNull();
-    expect(screen.getByRole('button', { name: 'ہٹائیں' })).toBeDisabled();
-    fireEvent.click(saveButton());
+    expect(screen.getByRole('button', { name: 'منسوخ کریں' })).toBeDisabled();
+    fireEvent.click(confirmFinalButton());
     expect(editSyntheticRating).toHaveBeenCalledTimes(1);
 
     resolveSave(task);
@@ -162,7 +169,7 @@ describe('SyntheticRatingDialog (admin: change a synthetic rating)', () => {
     const { onClose } = renderDialog();
 
     fireEvent.change(percentInput(), { target: { value: '33' } });
-    fireEvent.click(saveButton());
+    saveAndConfirm();
 
     await waitFor(() => expect(editSyntheticRating).toHaveBeenCalled());
     await waitFor(() => expect(saveButton()).not.toHaveAttribute('aria-busy'));
