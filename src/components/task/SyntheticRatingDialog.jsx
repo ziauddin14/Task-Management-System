@@ -7,7 +7,7 @@ import ConfirmDialog from '../common/ConfirmDialog.jsx';
 import BusyButton from '../common/BusyButton.jsx';
 import { useEditSyntheticRating, useRemoveSyntheticRating } from '../../hooks/useSyntheticRatingMutations.js';
 import { formatDateTime } from '../../utils/formatDate.js';
-import { getPerformanceMeta, ratingForPercent, SYNTHETIC_LABEL } from '../../utils/taskDisplay.js';
+import { FINALIZE_CONFIRM_LABEL, FINAL_RATING_SAVED, getPerformanceMeta, ratingForPercent, SYNTHETIC_LABEL } from '../../utils/taskDisplay.js';
 import { getRatingTone } from '../../utils/mobileTheme.js';
 import { BUTTON_DANGER, BUTTON_GHOST, BUTTON_PRIMARY, FIELD_LABEL, FIELD_TEXTAREA } from '../../utils/uiClasses.js';
 
@@ -40,6 +40,9 @@ function SyntheticRatingDialog({ isOpen, onClose, task }) {
   const [percentText, setPercentText] = useState('');
   const [note, setNote] = useState('');
   const [confirmingRemove, setConfirmingRemove] = useState(false);
+  // Saving makes the rating FINAL (no longer an estimate; it cannot be changed or removed again),
+  // so "محفوظ کریں" first asks for that to be confirmed.
+  const [confirmingFinal, setConfirmingFinal] = useState(false);
   const editMutation = useEditSyntheticRating(taskId);
   const removeMutation = useRemoveSyntheticRating(taskId);
 
@@ -48,6 +51,7 @@ function SyntheticRatingDialog({ isOpen, onClose, task }) {
     setPercentText(currentPercent === undefined || currentPercent === null ? '' : String(currentPercent));
     setNote('');
     setConfirmingRemove(false);
+    setConfirmingFinal(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reset only when (re)opened for a task
   }, [isOpen, taskId]);
 
@@ -58,23 +62,33 @@ function SyntheticRatingDialog({ isOpen, onClose, task }) {
   const isBusy = editMutation.isPending || removeMutation.isPending;
   const history = task.syntheticRating?.history || [];
 
-  async function handleSave(event) {
+  function handleSave(event) {
     event.preventDefault();
     if (!isValid || isBusy) return;
+    setConfirmingFinal(true);
+  }
+
+  async function handleConfirmFinal() {
     try {
       await editMutation.mutateAsync({ assumedPercent: percent, note: note.trim() || undefined });
-    } catch {
-      return; // global mutations.onError (App.jsx) already toasted the error; keep the dialog open.
+    } catch (err) {
+      // The hook already toasted the error. Back to the dialog with what was typed — unless the
+      // rating turned out to be final already, when there is nothing left to edit here.
+      setConfirmingFinal(false);
+      if (err?.code === 'SYNTHETIC_RATING_FINAL') onClose();
+      return;
     }
-    toast.success('تخمینی درجہ بندی تبدیل کر دی گئی');
+    toast.success(FINAL_RATING_SAVED);
+    setConfirmingFinal(false);
     onClose();
   }
 
   async function handleRemove() {
     try {
       await removeMutation.mutateAsync({ note: note.trim() || undefined });
-    } catch {
+    } catch (err) {
       setConfirmingRemove(false);
+      if (err?.code === 'SYNTHETIC_RATING_FINAL') onClose();
       return;
     }
     toast.success('تخمینی درجہ بندی ہٹا دی گئی');
@@ -88,7 +102,7 @@ function SyntheticRatingDialog({ isOpen, onClose, task }) {
           estimate is marked everywhere in the app — the task as a banner, tinted tiles and fields,
           and the buttons in a footer that stays in reach. Fields, labels and handlers unchanged. */}
       <Modal
-        isOpen={isOpen && !confirmingRemove}
+        isOpen={isOpen && !confirmingRemove && !confirmingFinal}
         onClose={onClose}
         title={`${SYNTHETIC_LABEL} درجہ بندی تبدیل کریں`}
         variant="redesign"
@@ -205,6 +219,29 @@ function SyntheticRatingDialog({ isOpen, onClose, task }) {
           </ModalFooter>
         </form>
       </Modal>
+
+      {/* The new value is final: confirmed first, in the amber tone of an estimate. Cancelling
+          returns to the dialog with what was typed. */}
+      <ConfirmDialog
+        isOpen={isOpen && confirmingFinal}
+        title={`${SYNTHETIC_LABEL} درجہ بندی تبدیل کریں`}
+        message={
+          percent === null ? null : (
+            // The approved sentence. The code and the percentage are kept left-to-right so the
+            // bidi rules never draw "95%" as "%95" next to Urdu words.
+            <>
+              کام <span dir="ltr">{task.codeNumber}</span> کی درجہ بندی {getPerformanceMeta(ratingForPercent(percent)).label} (<span dir="ltr">{percent}%</span>) حتمی ہو
+              جائے گی۔ اس کے بعد یہ تخمینی نہیں رہے گی اور اسے دوبارہ تبدیل یا ہٹایا نہیں جا سکے گا۔ کیا جاری رکھیں؟
+            </>
+          )
+        }
+        confirmLabel={FINALIZE_CONFIRM_LABEL}
+        cancelLabel="منسوخ کریں"
+        tone="amber"
+        onConfirm={handleConfirmFinal}
+        onCancel={() => setConfirmingFinal(false)}
+        isLoading={editMutation.isPending}
+      />
 
       <ConfirmDialog
         isOpen={isOpen && confirmingRemove}

@@ -2,7 +2,7 @@ import React from 'react'; // explicit import — see src/App.jsx's comment for 
 import { CircleHelp, TriangleAlert } from 'lucide-react';
 import Modal, { ModalFooter } from './Modal.jsx';
 import BusyButton from './BusyButton.jsx';
-import { BUTTON_DANGER, BUTTON_GHOST, BUTTON_PRIMARY } from '../../utils/uiClasses.js';
+import { BUTTON_AMBER, BUTTON_DANGER, BUTTON_GHOST, BUTTON_PRIMARY } from '../../utils/uiClasses.js';
 
 // docs/09-frontend-features.md §2 — the Close action's "distinct, clearly-separated
 // button/confirmation" (and reused by the Deactivate-user confirmation, §9, in a later sub-phase).
@@ -11,21 +11,28 @@ import { BUTTON_DANGER, BUTTON_GHOST, BUTTON_PRIMARY } from '../../utils/uiClass
 // a task, switching a user or a list value off, removing an estimate) gets the warning icon and the
 // red button; without it the dialog is the plain green one. Labels, handlers and the busy state
 // are the same either way.
+// "amber" — a confirmation that makes something final, such as an estimate (amber is how an
+// estimate is marked everywhere in the app): the warning icon in amber and the amber button.
 function ConfirmDialog({ isOpen, title, message, confirmLabel = 'ہاں', cancelLabel = 'منسوخ کریں', onConfirm, onCancel, isLoading, tone }) {
   const isDanger = tone === 'danger';
+  const isAmber = tone === 'amber';
+  const isWarning = isDanger || isAmber;
+  let confirmClass = BUTTON_PRIMARY;
+  if (isDanger) confirmClass = BUTTON_DANGER;
+  else if (isAmber) confirmClass = BUTTON_AMBER;
   return (
     <Modal
       isOpen={isOpen}
       onClose={onCancel}
       title={title}
       variant="redesign"
-      icon={isDanger ? TriangleAlert : CircleHelp}
-      iconTone={isDanger ? 'danger' : undefined}
+      icon={isWarning ? TriangleAlert : CircleHelp}
+      iconTone={isWarning ? tone : undefined}
       maxWidthClassName="max-w-[480px]"
     >
       <p className="pb-2 text-[15px] leading-tk-label text-tk-ink-soft">{message}</p>
       <ModalFooter>
-        <BusyButton onClick={onConfirm} busy={Boolean(isLoading)} className={`${isDanger ? BUTTON_DANGER : BUTTON_PRIMARY} flex-1 font-semibold`}>
+        <BusyButton onClick={onConfirm} busy={Boolean(isLoading)} className={`${confirmClass} flex-1 font-semibold`}>
           {confirmLabel}
         </BusyButton>
         <button type="button" onClick={onCancel} disabled={isLoading} className={BUTTON_GHOST}>

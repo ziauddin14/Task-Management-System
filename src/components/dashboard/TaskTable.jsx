@@ -11,7 +11,7 @@ import AcknowledgeButton, { ReceiptDoneChip } from '../task/AcknowledgeButton.js
 import { useFloatingMenu } from '../../hooks/useFloatingMenu.js';
 import { COLUMN_DEFINITIONS } from '../../utils/dashboardColumns.js';
 import { formatDateShortYear, formatTimeStatusLabel, getTimeStatusColorClass } from '../../utils/formatDate.js';
-import { getStatusMeta, getPerformanceMeta, isSyntheticRating, SYNTHETIC_LABEL } from '../../utils/taskDisplay.js';
+import { getStatusMeta, getPerformanceMeta, isSyntheticRating, isFinalRating, FINAL_RATING_NOTE, SYNTHETIC_LABEL } from '../../utils/taskDisplay.js';
 import { getRatingTone, getStatusTone } from '../../utils/mobileTheme.js';
 import { progressFillClass } from '../../utils/dashboardTheme.js';
 import { RECEIPT_TEXT, canAcknowledge, isAcknowledged, receiptSummary } from '../../utils/taskReceipt.js';
@@ -27,14 +27,15 @@ const CHIP_CLASS = 'inline-block whitespace-nowrap rounded-tk-pill px-[10px] tex
 // Prompt — variant="menuItem" (TMS Dashboard row ایکشن menu) renders the same icon + label +
 // onClick/disabled as a full-width menu row instead of a standalone square icon button; no
 // handler or gating logic changes between variants.
-function IconActionButton({ icon: Icon, label, onClick, disabled, variant = 'standalone' }) {
+// `title` — the tooltip, when it should say more than the label (why the action is unavailable).
+function IconActionButton({ icon: Icon, label, onClick, disabled, title, variant = 'standalone' }) {
   if (variant === 'menuItem') {
     return (
       <button
         type="button"
         onClick={onClick}
         disabled={disabled}
-        title={label}
+        title={title || label}
         aria-label={label}
         className="flex h-10 w-full items-center gap-2 whitespace-nowrap rounded-tk-chip px-2 text-start text-sm text-tk-ink transition-colors hover:bg-tk-hover hover:text-tk-green-900 disabled:opacity-40"
       >
@@ -302,6 +303,7 @@ function TaskTable({
                 const performanceMeta = getPerformanceMeta(task.performanceRating);
                 const isClosed = task.status === 'closed';
                 const isSynthetic = isSyntheticRating(task);
+                const isFinal = isFinalRating(task);
                 return (
                   <tr key={task.id} className="border-t border-tk-line-row transition-colors hover:bg-tk-hover motion-reduce:transition-none">
                     <td className={`${TD_CLASS} font-mono text-tk-muted`}>{task.codeNumber}</td>
@@ -401,12 +403,16 @@ function TaskTable({
                         )}
                         {/* Admin-only, and only on a task whose rating is synthetic — there is
                             nothing to change on a real rating or an unrated task (the backend
-                            refuses those with 409). Works on closed tasks too. */}
-                        {isAdmin && isSynthetic && (
+                            refuses those with 409). Works on closed tasks too. Once an admin has
+                            changed it the rating is FINAL: the action stays in the menu, disabled
+                            like its neighbours, and its tooltip says why. */}
+                        {isAdmin && (isSynthetic || isFinal) && (
                           <IconActionButton
                             icon={Gauge}
                             label={`${SYNTHETIC_LABEL} درجہ بندی تبدیل کریں`}
                             onClick={() => onEditSyntheticRating(task)}
+                            disabled={isFinal}
+                            title={isFinal ? FINAL_RATING_NOTE : undefined}
                             variant="menuItem"
                           />
                         )}

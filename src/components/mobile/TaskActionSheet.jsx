@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import { Bell, Gauge, History, Pencil, Upload } from 'lucide-react';
 import BottomSheet from './BottomSheet.jsx';
 import { formatDateShortYear, formatTimeStatusLabel } from '../../utils/formatDate.js';
-import { getPerformanceMeta, getStatusMeta, isSyntheticRating, SYNTHETIC_LABEL } from '../../utils/taskDisplay.js';
+import { getPerformanceMeta, getStatusMeta, isSyntheticRating, isFinalRating, FINAL_RATING_NOTE, SYNTHETIC_LABEL } from '../../utils/taskDisplay.js';
 import { getRatingTone, getStatusTone } from '../../utils/mobileTheme.js';
 import { RECEIPT_TEXT, canAcknowledge, isAcknowledged, receiptSummary } from '../../utils/taskReceipt.js';
 import ReceiptStatus, { ReceiptPeopleList } from '../task/ReceiptStatus.jsx';
@@ -52,6 +52,7 @@ function TaskActionSheet({ task, onClose, isAdmin, onUpdate, onViewUpdates, onEd
   const ratingMeta = getPerformanceMeta(task.performanceRating);
   const ratingTone = getRatingTone(task.performanceRating);
   const isSynthetic = isSyntheticRating(task);
+  const isFinal = isFinalRating(task);
   const isClosed = task.status === 'closed';
   const percent = task.completionPercent ?? 0;
 
@@ -125,7 +126,12 @@ function TaskActionSheet({ task, onClose, isAdmin, onUpdate, onViewUpdates, onEd
           <Action icon={History} label="کام کی تفصیل اور پرانی اپڈیٹس" onClick={run(onViewUpdates)} />
           {isAdmin && <Action icon={Pencil} label="ترمیم کریں" onClick={run(onEdit)} disabled={isClosed} />}
           {isAdmin && <Action icon={Bell} label="یاددہانی بھیجیں" onClick={run(onSendReminder)} />}
-          {isAdmin && isSynthetic && <Action icon={Gauge} label={`${SYNTHETIC_LABEL} درجہ بندی تبدیل کریں`} onClick={run(onEditSyntheticRating)} />}
+          {/* Once an admin has changed the estimate the rating is FINAL: the action stays,
+              disabled like "اپڈیٹ کریں" on a closed task, with the reason under it. */}
+          {isAdmin && (isSynthetic || isFinal) && (
+            <Action icon={Gauge} label={`${SYNTHETIC_LABEL} درجہ بندی تبدیل کریں`} onClick={run(onEditSyntheticRating)} disabled={isFinal} />
+          )}
+          {isAdmin && isFinal && <p className="text-[12px] leading-tk-label text-tk-muted">{FINAL_RATING_NOTE}</p>}
         </div>
       </div>
     </BottomSheet>
