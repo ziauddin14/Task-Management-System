@@ -7,7 +7,15 @@ import ConfirmDialog from '../common/ConfirmDialog.jsx';
 import BusyButton from '../common/BusyButton.jsx';
 import { useEditSyntheticRating, useRemoveSyntheticRating } from '../../hooks/useSyntheticRatingMutations.js';
 import { formatDateTime } from '../../utils/formatDate.js';
-import { FINALIZE_CONFIRM_LABEL, FINAL_RATING_SAVED, getPerformanceMeta, ratingForPercent, SYNTHETIC_LABEL } from '../../utils/taskDisplay.js';
+import {
+  FINALIZE_CONFIRM_LABEL,
+  FINAL_RATING_SAVED,
+  LATE_DOWNGRADE_HINT,
+  LATE_DOWNGRADE_SENTENCE,
+  finalRatingFor,
+  getPerformanceMeta,
+  SYNTHETIC_LABEL,
+} from '../../utils/taskDisplay.js';
 import { getRatingTone } from '../../utils/mobileTheme.js';
 import { BUTTON_DANGER, BUTTON_GHOST, BUTTON_PRIMARY, FIELD_LABEL, FIELD_TEXTAREA } from '../../utils/uiClasses.js';
 
@@ -58,6 +66,9 @@ function SyntheticRatingDialog({ isOpen, onClose, task }) {
   if (!task) return null;
 
   const percent = parsePercent(percentText);
+  // The band this edit will save: saving makes the rating final, and a final rating drops one level
+  // when the task was completed late (utils/taskDisplay.js finalRatingFor — the server's own rule).
+  const finalRating = percent === null ? null : finalRatingFor(percent, task);
   const isValid = percent !== null && note.length <= NOTE_MAX_LENGTH;
   const isBusy = editMutation.isPending || removeMutation.isPending;
   const history = task.syntheticRating?.history || [];
@@ -151,14 +162,20 @@ function SyntheticRatingDialog({ isOpen, onClose, task }) {
                 aria-describedby="synthetic-percent-preview"
                 className="h-[48px] w-[112px] shrink-0 rounded-tk-input border-[1.5px] border-transparent bg-tk-surface px-2 text-center text-[16px] font-semibold text-tk-ink transition-colors focus:border-tk-green-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-tk-green-700/25 aria-[invalid=true]:border-tk-danger-line"
               />
-              {/* Live preview: the band this percentage gives (no late downgrade — same as the server). */}
+              {/* Live preview: the band this percentage will be saved with — one level down when the
+                  task was completed late, with the approved hint then; the plain band otherwise. */}
               <p id="synthetic-percent-preview" aria-live="polite" className="flex min-w-0 items-center gap-2 text-[14px] leading-tk-label text-tk-ink-soft">
                 {percent === null ? (
                   <span className="text-[13px] text-tk-danger">0 سے 100 کے درمیان فیصد درج کریں</span>
                 ) : (
                   <>
                     <span>نتیجہ:</span>
-                    <RatingBadge rating={ratingForPercent(percent)} />
+                    <RatingBadge rating={finalRating.band} />
+                    {finalRating.downgraded && (
+                      <span data-late-downgrade-hint className="text-[12px] leading-tk-label text-tk-muted">
+                        {LATE_DOWNGRADE_HINT}
+                      </span>
+                    )}
                   </>
                 )}
               </p>
@@ -227,11 +244,14 @@ function SyntheticRatingDialog({ isOpen, onClose, task }) {
         title={`${SYNTHETIC_LABEL} درجہ بندی تبدیل کریں`}
         message={
           percent === null ? null : (
-            // The approved sentence. The code and the percentage are kept left-to-right so the
-            // bidi rules never draw "95%" as "%95" next to Urdu words.
+            // The approved sentence, with the band that will be saved. The code and the percentage
+            // are kept left-to-right so the bidi rules never draw "95%" as "%95" next to Urdu words.
+            // When the task was completed late (and that lowered the band) the approved sentence
+            // saying so comes before the question. The rest is ONE string, so it renders as one
+            // text run exactly as before when there is nothing to add.
             <>
-              کام <span dir="ltr">{task.codeNumber}</span> کی درجہ بندی {getPerformanceMeta(ratingForPercent(percent)).label} (<span dir="ltr">{percent}%</span>) حتمی ہو
-              جائے گی۔ اس کے بعد یہ تخمینی نہیں رہے گی اور اسے دوبارہ تبدیل یا ہٹایا نہیں جا سکے گا۔ کیا جاری رکھیں؟
+              کام <span dir="ltr">{task.codeNumber}</span> کی درجہ بندی {getPerformanceMeta(finalRating.band).label} (<span dir="ltr">{percent}%</span>
+              {`) حتمی ہو جائے گی۔ اس کے بعد یہ تخمینی نہیں رہے گی اور اسے دوبارہ تبدیل یا ہٹایا نہیں جا سکے گا۔ ${finalRating.downgraded ? `${LATE_DOWNGRADE_SENTENCE} ` : ''}کیا جاری رکھیں؟`}
             </>
           )
         }
