@@ -66,6 +66,24 @@ export function ratingForPercent(percent) {
   return 'weak';
 }
 
+// The band an admin's edit will SAVE — a mirror of the backend's computeFinalRating, used ONLY for
+// the estimate dialog's preview and its confirmation: an edit makes the rating final, and a final
+// rating is rated like a real one with the percent entered — ONE level down when the task was
+// completed late (ممتاز→بہتر, بہتر→مناسب, مناسب→کمزور; کمزور stays). While the task is open there
+// is no downgrade. `downgraded` is true only when that actually lowered the band.
+export function finalRatingFor(percent, task) {
+  const plain = ratingForPercent(percent);
+  const completedLate = ['complete', 'closed'].includes(task?.status) && task?.timeStatus?.type === 'late';
+  if (!completedLate) return { band: plain, downgraded: false };
+  const band = PERFORMANCE_BAND_KEYS[Math.min(PERFORMANCE_BAND_KEYS.indexOf(plain) + 1, PERFORMANCE_BAND_KEYS.length - 1)];
+  return { band, downgraded: band !== plain };
+}
+
+// The owner-approved wording for that downgrade: the hint beside the preview, and the sentence
+// added to the confirmation — each shown only when the band was actually lowered.
+export const LATE_DOWNGRADE_HINT = 'تاخیر کی وجہ سے ایک درجہ کم';
+export const LATE_DOWNGRADE_SENTENCE = 'کام تاخیر سے مکمل ہوا تھا، اس لیے درجہ بندی ایک درجہ کم رکھی گئی ہے۔';
+
 export function getStatusMeta(status) {
   return STATUS_META[status] || { label: status || '-', badgeClass: 'bg-gray-100 text-gray-600' };
 }
