@@ -252,10 +252,12 @@ function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
                   onChange={(event) => setValue('completionPercent', Number(event.target.value), { shouldValidate: true })}
                   disabled={percentFixedAt100}
                   aria-label="Completion % slider"
-                  className="tk-range min-w-0 flex-1"
+                  className="tk-range min-w-0 flex-1 disabled:cursor-not-allowed disabled:opacity-45"
                   style={{ '--tk-range': `${sliderPercent}%` }}
                 />
-                {/* readOnly, not disabled: a disabled field would be left out of the submitted values. */}
+                {/* readOnly, not disabled: a disabled field would be left out of the submitted values.
+                    Both controls look inactive while the percent is fixed (dimmed, not-allowed cursor),
+                    like a disabled button. */}
                 <input
                   id="update-percent"
                   type="number"
@@ -263,7 +265,7 @@ function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
                   max={100}
                   readOnly={percentFixedAt100}
                   {...register('completionPercent', { valueAsNumber: true })}
-                  className="h-[44px] w-[76px] shrink-0 rounded-tk-input border-[1.5px] border-transparent bg-tk-surface px-1 text-center text-[16px] font-semibold text-tk-ink focus:border-tk-green-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-tk-green-700/25"
+                  className="h-[44px] w-[76px] shrink-0 rounded-tk-input border-[1.5px] border-transparent bg-tk-surface px-1 text-center text-[16px] font-semibold text-tk-ink focus:border-tk-green-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-tk-green-700/25 read-only:cursor-not-allowed read-only:opacity-45"
                 />
               </div>
               {task?.status === 'complete' && (

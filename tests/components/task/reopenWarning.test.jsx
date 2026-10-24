@@ -89,6 +89,10 @@ describe('the update form while a task is complete', () => {
     await waitFor(() => expect(percent()).toHaveValue(100));
     expect(percent()).toHaveAttribute('readonly');
     expect(slider()).toBeDisabled();
+    // And they look inactive: dimmed, with a not-allowed cursor — styles tied to exactly those two
+    // states (jsdom has no CSS; the computed look is checked in Chrome).
+    expect(slider()).toHaveClass('disabled:opacity-45', 'disabled:cursor-not-allowed');
+    expect(percent()).toHaveClass('read-only:opacity-45', 'read-only:cursor-not-allowed');
   });
 
   it('non-admin: a task left complete below 100% still starts at 100', async () => {
