@@ -2,7 +2,7 @@ import React from 'react'; // explicit import — see src/App.jsx's comment for 
 import clsx from 'clsx';
 import EmptyState from '../common/EmptyState.jsx';
 import { formatDateShortYear, formatTimeStatusLabel } from '../../utils/formatDate.js';
-import { getStatusMeta, getPerformanceMeta, isSyntheticRating } from '../../utils/taskDisplay.js';
+import { getStatusMeta, getPerformanceMeta, isSyntheticRating, formatCompletionPercent } from '../../utils/taskDisplay.js';
 import SyntheticBadge from './SyntheticBadge.jsx';
 import { COLUMN_DEFINITIONS } from '../../utils/dashboardColumns.js';
 
@@ -69,7 +69,7 @@ function PrintView({ tasks, isVisible }) {
                 {isVisible('timeStatus') && (
                   <td className="whitespace-nowrap px-2 py-1">{formatTimeStatusLabel(task.timeStatus)}</td>
                 )}
-                {isVisible('completionPercent') && <td className="whitespace-nowrap px-2 py-1">{task.completionPercent}%</td>}
+                {isVisible('completionPercent') && <td className="whitespace-nowrap px-2 py-1">{formatCompletionPercent(task)}</td>}
                 {isVisible('performance') && (
                   <td className="whitespace-nowrap px-2 py-1">
                     <span className={clsx('rounded-full px-1.5 py-0.5', performanceMeta.badgeClass)}>{performanceMeta.label}</span>

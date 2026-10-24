@@ -20,8 +20,9 @@ vi.mock('../../../src/services/taskUpdates.api.js', () => ({
 
 import { getTask } from '../../../src/services/tasks.api.js';
 
-// Wherever a rating is shown, a developer-assigned one is marked "تخمینی" — and the task's REAL
-// completion percent is always shown as stored, never replaced by the assumed one.
+// Wherever a rating is shown, a developer-assigned one is marked "تخمینی" — and the completion
+// percent shown is never the assumed one: the real percent as stored, or "—" for a closed imported
+// task with no recorded completion (utils/taskDisplay.js hasNoRecordedCompletion).
 const base = {
   id: 't1',
   codeNumber: '260801',
@@ -36,7 +37,7 @@ const base = {
   performanceRating: 'excellent',
   syntheticRating: null,
 };
-// Closed at a real 0%, rated "بہتر" from an assumed 80% — expected, and must stay visible as-is.
+// Closed at 0% with nothing recorded, rated "بہتر" from an assumed 80% — its percent reads "—".
 const closedSynthetic = { ...base, id: 't2', codeNumber: '250103', title: 'Closed synthetic', completionPercent: 0, performanceRating: 'good', syntheticRating: { isSynthetic: true, assumedPercent: 80, assignedAt: '2026-10-05T09:20:22.000Z' } };
 const pendingSynthetic = { ...base, id: 't3', codeNumber: '250124', title: 'Pending synthetic', status: 'pending', completionPercent: 25, performanceRating: 'weak', syntheticRating: { isSynthetic: true, assumedPercent: 40, assignedAt: '2026-10-05T09:20:22.000Z' } };
 // Its synthetic rating was replaced by a real one: the marker is off.
@@ -98,13 +99,14 @@ describe('TaskTable — the "تخمینی" badge', () => {
     expect(badge).toHaveTextContent('تخمینی 40%');
   });
 
-  it('keeps the REAL completion percent exactly as stored — a closed task at 0% rated "بہتر" stays 0%', () => {
+  it('never shows the assumed percent as the completion: a closed imported task with no recorded completion reads "—", every other task its real percent', () => {
     renderTable();
 
     const closedRow = rowOf('250103');
-    expect(closedRow).toHaveTextContent('0%');
+    expect(closedRow).toHaveTextContent('—'); // closed, 0%, carries the estimate marker (taskDisplay.js hasNoRecordedCompletion)
     expect(closedRow).not.toHaveTextContent('80%'); // the assumed percent is only in the badge's tooltip
     expect(rowOf('250124')).toHaveTextContent('25%');
+    expect(rowOf('250104')).toHaveTextContent('0%'); // closed at 0% with no marker: a real 0%
   });
 
   it('shows no badge on a real rating, on an unrated task, or once a synthetic rating is no longer in force', () => {
@@ -177,14 +179,14 @@ describe('PreviousUpdatesContent (task detail) — the rating line', () => {
     );
   }
 
-  it('shows the rating with "تخمینی N%" beside it for a synthetic rating; the completion percent stays the real one', async () => {
+  it('shows the rating with "تخمینی N%" beside it for a synthetic rating; the completion is never the assumed percent', async () => {
     renderDetail(closedSynthetic);
 
     const line = (await screen.findByText('کارکردگی:')).parentElement;
     expect(line).toHaveTextContent('بہتر');
     expect(line).toHaveTextContent('تخمینی 80%');
     const summaryRow = screen.getAllByRole('table')[0].querySelector('tbody tr');
-    expect(summaryRow).toHaveTextContent('0%');
+    expect(summaryRow).toHaveTextContent('—'); // closed, imported, no recorded completion
     expect(summaryRow).not.toHaveTextContent('80%');
   });
 

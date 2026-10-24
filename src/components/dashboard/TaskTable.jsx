@@ -11,7 +11,7 @@ import AcknowledgeButton, { ReceiptDoneChip } from '../task/AcknowledgeButton.js
 import { useFloatingMenu } from '../../hooks/useFloatingMenu.js';
 import { COLUMN_DEFINITIONS } from '../../utils/dashboardColumns.js';
 import { formatDateShortYear, formatTimeStatusLabel, getTimeStatusColorClass } from '../../utils/formatDate.js';
-import { getStatusMeta, getPerformanceMeta, isSyntheticRating, isFinalRating, FINAL_RATING_NOTE, SYNTHETIC_LABEL } from '../../utils/taskDisplay.js';
+import { getStatusMeta, getPerformanceMeta, isSyntheticRating, isFinalRating, formatCompletionPercent, FINAL_RATING_NOTE, SYNTHETIC_LABEL } from '../../utils/taskDisplay.js';
 import { getRatingTone, getStatusTone } from '../../utils/mobileTheme.js';
 import { progressFillClass } from '../../utils/dashboardTheme.js';
 import { RECEIPT_TEXT, canAcknowledge, isAcknowledged, receiptSummary } from '../../utils/taskReceipt.js';
@@ -340,7 +340,7 @@ function TaskTable({
                               style={{ width: `${task.completionPercent}%` }}
                             />
                           </div>
-                          <span className="min-w-[28px] text-xs text-tk-muted">{task.completionPercent}%</span>
+                          <span className="min-w-[28px] text-xs text-tk-muted">{formatCompletionPercent(task)}</span>
                         </div>
                       </td>
                     )}

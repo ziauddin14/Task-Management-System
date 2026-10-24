@@ -13,6 +13,7 @@ import {
   LATE_DOWNGRADE_HINT,
   LATE_DOWNGRADE_SENTENCE,
   finalRatingFor,
+  formatCompletionPercent,
   getPerformanceMeta,
   SYNTHETIC_LABEL,
 } from '../../utils/taskDisplay.js';
@@ -131,7 +132,7 @@ function SyntheticRatingDialog({ isOpen, onClose, task }) {
             <div className="rounded-tk-tile border border-transparent bg-tk-surface px-[14px] py-[8px]">
               <dt className="text-[12px] text-tk-muted">اصل تکمیل فیصد</dt>
               <dd className="text-[16px] font-semibold text-tk-ink" dir="ltr">
-                {task.completionPercent}%
+                {formatCompletionPercent(task)}
               </dd>
             </div>
             <div className="rounded-tk-tile border border-dashed border-tk-amber-line bg-tk-amber-bg px-[14px] py-[8px]">
