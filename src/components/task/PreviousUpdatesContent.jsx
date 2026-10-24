@@ -8,7 +8,7 @@ import SyntheticBadge from '../dashboard/SyntheticBadge.jsx';
 import { useTask } from '../../hooks/useTask.js';
 import { useTaskUpdates } from '../../hooks/useTaskUpdates.js';
 import { formatDateShortYear, formatTime, formatTimeStatusLabel, getTimeStatusColorClass } from '../../utils/formatDate.js';
-import { getPerformanceMeta, isSyntheticRating } from '../../utils/taskDisplay.js';
+import { formatCompletionPercent, getPerformanceMeta, isSyntheticRating } from '../../utils/taskDisplay.js';
 import ReceiptDetailRow from './ReceiptDetailRow.jsx';
 
 const TH_CLASS = 'whitespace-nowrap px-3 py-2 text-start font-medium';
@@ -78,7 +78,7 @@ const PreviousUpdatesContent = forwardRef(function PreviousUpdatesContent({ task
                   <td className={clsx(TD_CLASS, getTimeStatusColorClass(task?.timeStatus))}>
                     {formatTimeStatusLabel(task?.timeStatus)}
                   </td>
-                  <td className={TD_CLASS}>{task?.completionPercent}%</td>
+                  <td className={TD_CLASS}>{formatCompletionPercent(task)}</td>
                 </tr>
               </tbody>
             </table>

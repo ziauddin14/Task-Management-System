@@ -88,6 +88,24 @@ export const LATE_DOWNGRADE_SENTENCE = 'کام تاخیر سے مکمل ہوا �
 // reopens it (backend task.service.js applyNewUpdateToTask).
 export const REOPEN_WARNING = 'یہ کام مکمل ہو چکا ہے۔ 100 سے کم فیصد درج کرنے پر یہ دوبارہ کھل جائے گا۔';
 
+// A closed task the historical import brought in with no recorded completion. Its 0% was never
+// reported by anyone — the import stored 0 because the sheet had no percentage — so it shows "—"
+// rather than a "0%" that reads like a real figure. Recognised by the estimated-rating marker:
+// the synthetic-ratings script gave one ONLY to imported tasks that had no real rating, and the
+// marker stays on the task even once the rating is finalized or replaced. An open task, an app task
+// closed at 0%, or an imported task whose sheet recorded 0% has no marker, so it keeps its "0%".
+// THE RULE LIVES ONLY HERE — to switch it off, make this return false.
+export function hasNoRecordedCompletion(task) {
+  return task?.status === 'closed' && !(task.completionPercent > 0) && task.syntheticRating != null;
+}
+
+// The completion percent as shown everywhere a task's percent is displayed: "—" for the tasks
+// above, otherwise "N%". Display only — sorting, filters, ratings and the progress bars keep using
+// the real number.
+export function formatCompletionPercent(task) {
+  return hasNoRecordedCompletion(task) ? '—' : `${task?.completionPercent ?? 0}%`;
+}
+
 export function getStatusMeta(status) {
   return STATUS_META[status] || { label: status || '-', badgeClass: 'bg-gray-100 text-gray-600' };
 }

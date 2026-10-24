@@ -69,7 +69,8 @@ describe('SyntheticRatingDialog (admin: change a synthetic rating)', () => {
 
     const real = screen.getByText('اصل تکمیل فیصد').parentElement;
     const current = screen.getByText('موجودہ تخمینی درجہ بندی').parentElement;
-    expect(real).toHaveTextContent('0%');
+    expect(real).toHaveTextContent('—'); // closed, imported, no recorded completion — never the assumed 80%
+    expect(real).not.toHaveTextContent('80%');
     expect(current).toHaveTextContent('بہتر');
     expect(current).toHaveTextContent('80%');
     // The only number field is the assumed percent.

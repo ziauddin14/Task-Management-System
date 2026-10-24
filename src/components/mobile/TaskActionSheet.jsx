@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import { Bell, Gauge, History, Pencil, Upload } from 'lucide-react';
 import BottomSheet from './BottomSheet.jsx';
 import { formatDateShortYear, formatTimeStatusLabel } from '../../utils/formatDate.js';
-import { getPerformanceMeta, getStatusMeta, isSyntheticRating, isFinalRating, FINAL_RATING_NOTE, SYNTHETIC_LABEL } from '../../utils/taskDisplay.js';
+import { getPerformanceMeta, getStatusMeta, isSyntheticRating, isFinalRating, formatCompletionPercent, FINAL_RATING_NOTE, SYNTHETIC_LABEL } from '../../utils/taskDisplay.js';
 import { getRatingTone, getStatusTone } from '../../utils/mobileTheme.js';
 import { RECEIPT_TEXT, canAcknowledge, isAcknowledged, receiptSummary } from '../../utils/taskReceipt.js';
 import ReceiptStatus, { ReceiptPeopleList } from '../task/ReceiptStatus.jsx';
@@ -97,7 +97,7 @@ function TaskActionSheet({ task, onClose, isAdmin, onUpdate, onViewUpdates, onEd
               <span className="h-[8px] min-w-0 flex-1 overflow-hidden rounded-tk-pill bg-tk-track">
                 <span className={clsx('block h-full rounded-tk-pill', statusTone.bar)} style={{ width: `${percent}%` }} />
               </span>
-              <span dir="ltr">{percent}%</span>
+              <span dir="ltr">{formatCompletionPercent(task)}</span>
             </span>
           </Fact>
           {/* Task receipt: an admin sees who has and who has not confirmed; a user, their own state.

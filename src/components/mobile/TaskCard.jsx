@@ -2,7 +2,7 @@ import React from 'react'; // explicit import — see src/App.jsx's comment for 
 import clsx from 'clsx';
 import { CalendarDays, UserRound } from 'lucide-react';
 import { formatDateShortYear, formatTimeStatusLabel } from '../../utils/formatDate.js';
-import { assigneeSummary, getPerformanceMeta, getStatusMeta, isSyntheticRating, SYNTHETIC_LABEL } from '../../utils/taskDisplay.js';
+import { assigneeSummary, formatCompletionPercent, getPerformanceMeta, getStatusMeta, isSyntheticRating, SYNTHETIC_LABEL } from '../../utils/taskDisplay.js';
 import { getRatingTone, getStatusTone } from '../../utils/mobileTheme.js';
 import { canAcknowledge, isAcknowledged } from '../../utils/taskReceipt.js';
 import ReceiptStatus from '../task/ReceiptStatus.jsx';
@@ -96,7 +96,7 @@ function TaskCard({ task, onOpen, isAdmin = false }) {
           <div className={clsx('h-full rounded-tk-pill', statusTone.bar)} style={{ width: `${percent}%` }} />
         </div>
         <span data-completion-percent className="min-w-[34px] text-left text-[12px] text-tk-muted" dir="ltr">
-          {percent}%
+          {formatCompletionPercent(task)}
         </span>
       </div>
 

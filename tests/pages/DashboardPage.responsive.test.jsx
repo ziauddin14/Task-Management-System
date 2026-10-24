@@ -307,7 +307,7 @@ describe('DashboardPage below 768px — the tasks tab ("/tasks")', () => {
     expect(synthetic.querySelector('[data-overdue-pill]')).toBeNull();
     expect(synthetic.querySelector('[data-rating-chip]')).toHaveTextContent('بہتر');
     expect(synthetic.querySelector('[data-synthetic-marker]')).toHaveTextContent('تخمینی');
-    expect(synthetic.querySelector('[data-completion-percent]')).toHaveTextContent(/^0%$/); // not the assumed 80
+    expect(synthetic.querySelector('[data-completion-percent]')).toHaveTextContent(/^—$/); // closed, imported, no recorded completion — not the assumed 80
   });
 
   it('reads the same filters from the URL as the desktop table does', async () => {

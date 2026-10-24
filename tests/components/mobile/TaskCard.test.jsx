@@ -130,12 +130,12 @@ describe('TaskCard — one task as a card (the mobile replacement for a table ro
       expect(container.querySelector('[data-completion-percent]')).toHaveTextContent(/^25%$/);
     });
 
-    it('a synthetic rating never replaces it: a real 0% rated from an assumed 80% still reads 0%', () => {
+    it('a synthetic rating never replaces it: a closed imported task with no recorded completion reads "—", its bar stays empty', () => {
       const { container } = renderCard(syntheticTask);
       const bar = screen.getByRole('progressbar', { name: 'تکمیل' });
       expect(bar).toHaveAttribute('aria-valuenow', '0');
       expect(bar.firstElementChild).toHaveStyle({ width: '0%' });
-      expect(container.querySelector('[data-completion-percent]')).toHaveTextContent(/^0%$/);
+      expect(container.querySelector('[data-completion-percent]')).toHaveTextContent(/^—$/);
       // The assumed 80 appears nowhere on the card.
       expect(container).not.toHaveTextContent('80');
     });

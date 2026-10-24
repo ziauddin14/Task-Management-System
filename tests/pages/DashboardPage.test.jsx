@@ -666,13 +666,13 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
       getTasks.mockResolvedValue({ items: [sampleTask], meta: { page: 1, limit: 25, total: 1, totalPages: 1 } });
     });
 
-    it('a synthetic rating carries the "تخمینی" badge; the REAL completion percent is shown unchanged', async () => {
+    it('a synthetic rating carries the "تخمینی" badge; the completion is never the assumed percent', async () => {
       withSyntheticRow();
       renderDashboard('user');
       const row = (await screen.findByText('250103')).closest('tr');
 
       expect(row).toHaveTextContent('بہتر');
-      expect(row).toHaveTextContent('0%'); // the real figure, not the assumed 80
+      expect(row).toHaveTextContent('—'); // closed, imported, no recorded completion — not the assumed 80
       const badge = screen.getByRole('button', { name: /تخمینی درجہ بندی/ });
       expect(row).toContainElement(badge);
       expect(badge).toHaveAttribute('title', 'تخمینی 80%');

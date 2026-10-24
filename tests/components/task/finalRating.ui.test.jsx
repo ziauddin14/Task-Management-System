@@ -96,7 +96,8 @@ describe('a final rating — no "تخمینی" badge, in all five places', () =>
     expect(within(rowOf('250103')).getByText('تخمینی')).toBeInTheDocument();
     expect(within(rowOf('250126')).queryByText(/تخمینی/)).not.toBeInTheDocument();
     expect(rowOf('250126')).toHaveTextContent('ممتاز');
-    expect(rowOf('250126')).toHaveTextContent('0%'); // the real completion percent, as stored
+    expect(rowOf('250126')).toHaveTextContent('—'); // closed, imported, no recorded completion — never the 95% of the final rating
+    expect(rowOf('250126')).not.toHaveTextContent('95%');
     expect(within(rowOf('250104')).getByText('تخمینی')).toBeInTheDocument(); // older backend: as today
   });
 
