@@ -14,7 +14,7 @@ import { useCreateTaskUpdate } from '../../hooks/useCreateTaskUpdate.js';
 import { useUpdateTask } from '../../hooks/useUpdateTask.js';
 import { useAssignableUsers } from '../../hooks/useAssignableUsers.js';
 import { BUTTON_AMBER, BUTTON_DANGER, BUTTON_GHOST, BUTTON_PRIMARY, FIELD, FIELD_ERROR, FIELD_LABEL, FIELD_TEXTAREA } from '../../utils/uiClasses.js';
-import { REOPEN_WARNING } from '../../utils/taskDisplay.js';
+import { REOPEN_ADMIN_ONLY_NOTE, REOPEN_WARNING } from '../../utils/taskDisplay.js';
 
 // docs/09-frontend-features.md §3 — description required min 3 chars; completionPercent required
 // 0-100 (mirrors backend/src/validators/taskUpdate.validator.js's createTaskUpdateSchema).
@@ -90,18 +90,29 @@ function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
   // task starts undefined while useTask() is loading — this effect (separate from the one above,
   // which fires immediately on open before the fetch resolves) applies the real completionPercent
   // once the task data actually arrives, exactly once per open session.
+  // Only an admin may reopen a complete task (an update below 100%). For anyone else the percent is
+  // fixed at 100 — they can still post an update at 100% — and a note says why. The backend refuses
+  // below 100% anyway (403 REOPEN_ADMIN_ONLY): it stays the authority.
+  const percentFixedAt100 = !isAdmin && task?.status === 'complete';
+
   useEffect(() => {
     if (!isOpen || !task || initializedRef.current) return;
-    reset({ description: '', completionPercent: task.completionPercent ?? 0 });
+    reset({ description: '', completionPercent: percentFixedAt100 ? 100 : task.completionPercent ?? 0 });
     initializedRef.current = true;
-  }, [isOpen, task, reset]);
+  }, [isOpen, task, reset, percentFixedAt100]);
+
+  // The task can become complete while the form is open (someone else completed it): the percent
+  // then moves to 100, in view, with the note beside it.
+  useEffect(() => {
+    if (isOpen && percentFixedAt100) setValue('completionPercent', 100, { shouldValidate: true });
+  }, [isOpen, percentFixedAt100, setValue]);
 
   const completionPercent = watch('completionPercent');
   // Same rule for both admin-only footer actions — neither makes sense once a task is terminal.
   const canManageTask = isAdmin && task && task.status !== 'closed';
 
   async function onSubmit(values) {
-    const payload = { description: values.description, completionPercent: values.completionPercent };
+    const payload = { description: values.description, completionPercent: percentFixedAt100 ? 100 : values.completionPercent };
     if (attachment) payload.attachment = attachment;
     try {
       await createUpdate.mutateAsync(payload);
@@ -239,22 +250,25 @@ function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
                   max={100}
                   value={completionPercent}
                   onChange={(event) => setValue('completionPercent', Number(event.target.value), { shouldValidate: true })}
+                  disabled={percentFixedAt100}
                   aria-label="Completion % slider"
                   className="tk-range min-w-0 flex-1"
                   style={{ '--tk-range': `${sliderPercent}%` }}
                 />
+                {/* readOnly, not disabled: a disabled field would be left out of the submitted values. */}
                 <input
                   id="update-percent"
                   type="number"
                   min={0}
                   max={100}
+                  readOnly={percentFixedAt100}
                   {...register('completionPercent', { valueAsNumber: true })}
                   className="h-[44px] w-[76px] shrink-0 rounded-tk-input border-[1.5px] border-transparent bg-tk-surface px-1 text-center text-[16px] font-semibold text-tk-ink focus:border-tk-green-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-tk-green-700/25"
                 />
               </div>
               {task?.status === 'complete' && (
                 <p role="note" className="mt-2 rounded-tk-tile border border-tk-amber-line bg-tk-amber-bg px-[14px] py-[8px] text-[13px] leading-tk-label text-tk-amber-text">
-                  {REOPEN_WARNING}
+                  {isAdmin ? REOPEN_WARNING : REOPEN_ADMIN_ONLY_NOTE}
                 </p>
               )}
               {errors.completionPercent && (

@@ -84,9 +84,14 @@ export function finalRatingFor(percent, task) {
 export const LATE_DOWNGRADE_HINT = 'تاخیر کی وجہ سے ایک درجہ کم';
 export const LATE_DOWNGRADE_SENTENCE = 'کام تاخیر سے مکمل ہوا تھا، اس لیے درجہ بندی ایک درجہ کم رکھی گئی ہے۔';
 
-// The owner-approved warning in the update form while a task is complete: an update below 100%
-// reopens it (backend task.service.js applyNewUpdateToTask).
+// The owner-approved warning in the update form while a task is complete, shown to an admin: an
+// admin's update below 100% reopens it (backend task.service.js applyNewUpdateToTask).
 export const REOPEN_WARNING = 'یہ کام مکمل ہو چکا ہے۔ 100 سے کم فیصد درج کرنے پر یہ دوبارہ کھل جائے گا۔';
+
+// The owner-approved note shown instead to anyone else: only an admin may reopen a complete task,
+// so their percent is fixed at 100. The backend refuses below 100% with the same sentence (403
+// REOPEN_ADMIN_ONLY, taskUpdate.service.js), which is what the error toast shows.
+export const REOPEN_ADMIN_ONLY_NOTE = 'مکمل کام میں 100 سے کم فیصد صرف ایڈمن درج کر سکتا ہے۔';
 
 // A closed task the historical import brought in with no recorded completion. Its 0% was never
 // reported by anyone — the import stored 0 because the sheet had no percentage — so it shows "—"
