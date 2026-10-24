@@ -14,6 +14,7 @@ import { useCreateTaskUpdate } from '../../hooks/useCreateTaskUpdate.js';
 import { useUpdateTask } from '../../hooks/useUpdateTask.js';
 import { useAssignableUsers } from '../../hooks/useAssignableUsers.js';
 import { BUTTON_AMBER, BUTTON_DANGER, BUTTON_GHOST, BUTTON_PRIMARY, FIELD, FIELD_ERROR, FIELD_LABEL, FIELD_TEXTAREA } from '../../utils/uiClasses.js';
+import { REOPEN_WARNING } from '../../utils/taskDisplay.js';
 
 // docs/09-frontend-features.md §3 — description required min 3 chars; completionPercent required
 // 0-100 (mirrors backend/src/validators/taskUpdate.validator.js's createTaskUpdateSchema).
@@ -251,6 +252,11 @@ function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
                   className="h-[44px] w-[76px] shrink-0 rounded-tk-input border-[1.5px] border-transparent bg-tk-surface px-1 text-center text-[16px] font-semibold text-tk-ink focus:border-tk-green-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-tk-green-700/25"
                 />
               </div>
+              {task?.status === 'complete' && (
+                <p role="note" className="mt-2 rounded-tk-tile border border-tk-amber-line bg-tk-amber-bg px-[14px] py-[8px] text-[13px] leading-tk-label text-tk-amber-text">
+                  {REOPEN_WARNING}
+                </p>
+              )}
               {errors.completionPercent && (
                 <p role="alert" className={FIELD_ERROR}>
                   {errors.completionPercent.message}

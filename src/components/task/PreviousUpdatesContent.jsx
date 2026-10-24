@@ -69,7 +69,9 @@ const PreviousUpdatesContent = forwardRef(function PreviousUpdatesContent({ task
               <tbody>
                 <tr className="border-t border-brand/20 bg-white">
                   <td className={clsx(TD_CLASS, 'font-mono')}>{task?.codeNumber}</td>
-                  <td className={clsx(TD_CLASS, 'max-w-[220px] truncate')} title={task?.title}>
+                  {/* Cut off with "…" on screen; data-export-wrap lets it wrap in the PNG export
+                      instead (useExportNodeAsImage.js), where a cut-off Urdu title breaks apart. */}
+                  <td className={clsx(TD_CLASS, 'max-w-[220px] truncate')} title={task?.title} data-export-wrap="">
                     {task?.title}
                   </td>
                   <td className={TD_CLASS}>{formatDateShortYear(task?.deadline)}</td>

@@ -84,6 +84,10 @@ export function finalRatingFor(percent, task) {
 export const LATE_DOWNGRADE_HINT = 'تاخیر کی وجہ سے ایک درجہ کم';
 export const LATE_DOWNGRADE_SENTENCE = 'کام تاخیر سے مکمل ہوا تھا، اس لیے درجہ بندی ایک درجہ کم رکھی گئی ہے۔';
 
+// The owner-approved warning in the update form while a task is complete: an update below 100%
+// reopens it (backend task.service.js applyNewUpdateToTask).
+export const REOPEN_WARNING = 'یہ کام مکمل ہو چکا ہے۔ 100 سے کم فیصد درج کرنے پر یہ دوبارہ کھل جائے گا۔';
+
 export function getStatusMeta(status) {
   return STATUS_META[status] || { label: status || '-', badgeClass: 'bg-gray-100 text-gray-600' };
 }
