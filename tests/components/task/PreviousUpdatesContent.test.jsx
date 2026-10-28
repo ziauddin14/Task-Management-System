@@ -92,9 +92,14 @@ describe('PreviousUpdatesContent (docs/08-ui-ux.md §7, docs/09-frontend-feature
     expect(screen.getByText('First update')).toBeInTheDocument();
     expect(screen.queryByText('Edit')).not.toBeInTheDocument();
     expect(screen.queryByText('Delete')).not.toBeInTheDocument();
-    // Attachment renders as a clickable chip/button, never a raw pasted URL.
-    const attachmentLink = screen.getByText('proof.pdf');
-    expect(attachmentLink.closest('a')).toHaveAttribute('href', 'https://drive/d1');
+    // Attachment renders as a clickable icon button, never a raw pasted URL: the file name is its
+    // tooltip and accessible name, not printed in the table.
+    const attachmentLink = screen.getByRole('link', { name: 'proof.pdf' });
+    expect(attachmentLink).toHaveAttribute('href', 'https://drive/d1');
+    expect(attachmentLink).toHaveAttribute('target', '_blank');
+    expect(attachmentLink).toHaveAttribute('rel', 'noopener noreferrer');
+    expect(attachmentLink).toHaveAttribute('title', 'proof.pdf');
+    expect(screen.queryByText('proof.pdf')).not.toBeInTheDocument();
   });
 
   // Prompt 5A.3 — strictly date+time descending: the 4:30 PM entry (up2) must render as the FIRST
@@ -231,5 +236,55 @@ describe('PreviousUpdatesContent (docs/08-ui-ux.md §7, docs/09-frontend-feature
 
     await screen.findByText('First update');
     expect(screen.getByText('کوئی اٹیچمنٹ نہیں')).toBeInTheDocument();
+  });
+
+  // A long file name used to take the attachment column's width and squeeze the description to one
+  // word per line; and names stored before the upload fix are garbled (UTF-8 read as Latin-1).
+  describe('the attachment icon and the description column', () => {
+    const garble = (name) => Array.from(new TextEncoder().encode(name), (byte) => String.fromCharCode(byte)).join('');
+    const withAttachment = (fileName) => ({
+      items: [
+        {
+          id: 'a1',
+          description: 'اس ماہ کے اجتماع میں تمام ذمہ داران کی حاضری مکمل رہی',
+          completionPercent: 60,
+          attachment: { driveFileId: 'd9', fileName, url: 'https://drive/d9' },
+          updatedBy: { name: 'Ali', role: 'user', responsibility: 'IT' },
+          createdAt: '2026-08-28T16:30:00.000Z',
+        },
+      ],
+      meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
+    });
+    const link = async () => {
+      await screen.findByText('اس ماہ کے اجتماع میں تمام ذمہ داران کی حاضری مکمل رہی');
+      return screen.getByRole('link');
+    };
+
+    it.each([
+      ['a garbled stored name, shown repaired', garble('اجلاس کی رپورٹ اکتوبر.pdf'), 'اجلاس کی رپورٹ اکتوبر.pdf'],
+      ['a correct Urdu name, as it is', 'اجلاس کی رپورٹ.pdf', 'اجلاس کی رپورٹ.pdf'],
+      ['an English name, as it is', 'receipt (1).pdf', 'receipt (1).pdf'],
+      ['a real Latin-1 name, as it is', 'café.pdf', 'café.pdf'],
+      ['no name at all: the column header', '', 'اٹیچمنٹ'],
+    ])('the icon names %s', async (_label, stored, shown) => {
+      getTaskUpdates.mockResolvedValue(withAttachment(stored));
+      renderContent(<PreviousUpdatesContent taskId="t1" />);
+
+      const icon = await link();
+      expect(icon).toHaveAccessibleName(shown);
+      expect(icon).toHaveAttribute('title', shown);
+      expect(icon).toHaveAttribute('href', 'https://drive/d9');
+      expect(icon.textContent).toBe(''); // the paperclip only — no visible file name
+      expect(icon.querySelector('svg')).not.toBeNull();
+    });
+
+    it('the description keeps at least 180px and wraps up to 240px', async () => {
+      getTaskUpdates.mockResolvedValue(withAttachment('receipt.pdf'));
+      renderContent(<PreviousUpdatesContent taskId="t1" />);
+
+      const description = await screen.findByText('اس ماہ کے اجتماع میں تمام ذمہ داران کی حاضری مکمل رہی');
+      expect(description.tagName).toBe('TD');
+      expect(description).toHaveClass('min-w-[180px]', 'max-w-[240px]', 'whitespace-normal');
+    });
   });
 });
