@@ -9,6 +9,7 @@ import { useTask } from '../../hooks/useTask.js';
 import { useTaskUpdates } from '../../hooks/useTaskUpdates.js';
 import { formatDateShortYear, formatTime, formatTimeStatusLabel, getTimeStatusColorClass } from '../../utils/formatDate.js';
 import { formatCompletionPercent, getPerformanceMeta, isSyntheticRating } from '../../utils/taskDisplay.js';
+import { repairFileName } from '../../utils/fileName.js';
 import ReceiptDetailRow from './ReceiptDetailRow.jsx';
 
 const TH_CLASS = 'whitespace-nowrap px-3 py-2 text-start font-medium';
@@ -136,18 +137,24 @@ const PreviousUpdatesContent = forwardRef(function PreviousUpdatesContent({ task
                           {update.updatedBy?.name} ({isAdminEntry ? 'Admin' : 'User'})
                         </td>
                         <td className={TD_CLASS}>{update.updatedBy?.responsibility}</td>
-                        <td className="max-w-[240px] whitespace-normal px-3 py-2">{update.description}</td>
+                        {/* At least 180px: the only column that wraps, so the others can never
+                            squeeze it to one word per line. */}
+                        <td className="min-w-[180px] max-w-[240px] whitespace-normal px-3 py-2">{update.description}</td>
                         <td className={TD_CLASS}>{update.completionPercent}%</td>
                         <td className={TD_CLASS}>
                           {update.attachment ? (
+                            // The paperclip alone — a long file name took the column's width and
+                            // squeezed the description. The full name (repaired if it was stored
+                            // garbled) is the tooltip and the accessible name; it opens as before.
                             <a
                               href={update.attachment.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex h-10 w-fit items-center gap-1 rounded-full border border-gray-300 px-2 text-brand hover:bg-brand-light"
+                              title={repairFileName(update.attachment.fileName) || 'اٹیچمنٹ'}
+                              aria-label={repairFileName(update.attachment.fileName) || 'اٹیچمنٹ'}
+                              className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-300 text-brand hover:bg-brand-light"
                             >
-                              <Paperclip className="h-3 w-3" aria-hidden="true" />
-                              {update.attachment.fileName}
+                              <Paperclip className="h-4 w-4" aria-hidden="true" />
                             </a>
                           ) : (
                             <span className="text-gray-400">کوئی اٹیچمنٹ نہیں</span>
