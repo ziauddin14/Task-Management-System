@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'; // explicit import — see src/App.jsx's comment for why
-import { Pencil } from 'lucide-react';
+import clsx from 'clsx';
+import { CircleCheck, Paperclip, Pencil, TriangleAlert } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,6 +13,7 @@ import PreviousUpdatesContent from './PreviousUpdatesContent.jsx';
 import { useTask } from '../../hooks/useTask.js';
 import { useCreateTaskUpdate } from '../../hooks/useCreateTaskUpdate.js';
 import { useUpdateTask } from '../../hooks/useUpdateTask.js';
+import { useCloseTask } from '../../hooks/useCloseTask.js';
 import { useAssignableUsers } from '../../hooks/useAssignableUsers.js';
 import { BUTTON_AMBER, BUTTON_DANGER, BUTTON_GHOST, BUTTON_PRIMARY, FIELD, FIELD_ERROR, FIELD_LABEL, FIELD_TEXTAREA } from '../../utils/uiClasses.js';
 import { REOPEN_ADMIN_ONLY_NOTE, REOPEN_WARNING } from '../../utils/taskDisplay.js';
@@ -27,23 +29,42 @@ const updateSchema = z.object({
 // description, completion % (number + slider kept in sync), optional attachment, Save/Cancel,
 // and a "Purani Updates dekhein" link that expands the shared PreviousUpdatesContent inline.
 //
-// Prompt — Close Task moved here (out of the table row) as a footer button, next to Save/Cancel;
-// still Admin-only and hidden once the task is already closed. onCloseTask is a thin trigger —
-// DashboardPage.jsx owns the actual confirmation dialog + close mutation, same as before, so
-// nothing about the underlying close flow itself changed.
+// Close Task — a footer button next to Save/Cancel, Admin-only and hidden once the task is closed.
+// This dialog is where a task is closed (nothing else in the app offers it), so it owns the whole
+// flow: an inline step (like the reassign step below) asks the existing confirmation question —
+// no second dialog on top of this one — and closes through useCloseTask.
+// - An ADMIN's save does not close the dialog: the reply is saved, the form is emptied for the next
+//   one and "اپڈیٹ محفوظ ہو گئی" stays in view — so he can close the task right here without
+//   finding it again in a list it may have left. A normal user's save closes the dialog as always.
+// - A reply typed and not saved goes WITH the close, in the same request: the backend saves it and
+//   closes the task in one transaction (PATCH /tasks/:id/close with a body — the reply never
+//   reopens the task, never sends a notice and never makes it later). The step shows it. A percent
+//   (or file) without a description is not sent silently: the form's own message shows and nothing
+//   is closed. Nothing typed: the plain close, without a body.
+// - Escape, the backdrop or × while the step is open only leave the step, back to the form with
+//   the draft as it was. A failed close leaves the step and the draft in place (the error is the
+//   global toast) so it can simply be tried again.
 //
 // Prompt — Change Assignee (reassign mid-task, without losing update history) added alongside
 // it, same Admin-only/not-closed visibility rule. Its own inline "کیا آپ یہ کام کسی دوسرے ذمہ دار
-// کو دینا چاہتے ہیں؟" step reuses onCloseTask DIRECTLY for the "نہیں" answer — same close
+// کو دینا چاہتے ہیں؟" step leads to the close step for the "نہیں" answer — the same close
 // flow as the standalone button, not a second copy of it. "ہاں" reveals a single-select dropdown
 // (useAssignableUsers — the same source as the Naya Kaam form's assignee picker) and PATCHes the
 // task via useUpdateTask with { assignees: [newId] } — a full replacement of the array (per
 // client decision), which the backend's updateTaskFields already treats as an ordinary field
 // patch: status/completionPercent/timeStatus and every existing TaskUpdate are left untouched.
-function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
+function UpdateModal({ isOpen, onClose, taskId, isAdmin }) {
   const { data: task, isLoading: isTaskLoading } = useTask(taskId);
   const createUpdate = useCreateTaskUpdate(taskId);
   const reassignTask = useUpdateTask(taskId);
+  const closeTask = useCloseTask(taskId);
+  // null, or the close step in view: { reply } — the final reply going with the close, or null.
+  const [closeStep, setCloseStep] = useState(null);
+  // An admin's save succeeded and the dialog stayed open (see onSubmit).
+  const [justSaved, setJustSaved] = useState(false);
+  const closeButtonRef = useRef(null);
+  const stepCancelRef = useRef(null);
+  const closeStepWasOpen = useRef(false);
   const [attachmentStatus, setAttachmentStatus] = useState('idle');
   const [attachment, setAttachment] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
@@ -64,6 +85,8 @@ function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
     handleSubmit,
     watch,
     setValue,
+    getValues,
+    trigger,
     reset,
     formState: { errors, isSubmitting },
   } = useForm({
@@ -85,7 +108,17 @@ function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
     setAttachmentKey((prev) => prev + 1);
     setReassignStep(null);
     setNewAssigneeId('');
+    setCloseStep(null);
+    setJustSaved(false);
   }, [isOpen, taskId]);
+
+  // Into the close step: focus its "منسوخ کریں" (the safe choice). Back out of it: focus "کام بند
+  // کریں" again, where the admin left off.
+  useEffect(() => {
+    if (closeStep) stepCancelRef.current?.focus();
+    else if (closeStepWasOpen.current) closeButtonRef.current?.focus();
+    closeStepWasOpen.current = Boolean(closeStep);
+  }, [closeStep]);
 
   // task starts undefined while useTask() is loading — this effect (separate from the one above,
   // which fires immediately on open before the fetch resolves) applies the real completionPercent
@@ -108,26 +141,75 @@ function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
   }, [isOpen, percentFixedAt100, setValue]);
 
   const completionPercent = watch('completionPercent');
+  const description = watch('description');
   // Same rule for both admin-only footer actions — neither makes sense once a task is terminal.
   const canManageTask = isAdmin && task && task.status !== 'closed';
+  // The saved line stays until a new reply is started (text, percent or file).
+  const showSaved =
+    justSaved && !String(description ?? '').trim() && Number(completionPercent) === (task?.completionPercent ?? 0) && !attachment && attachmentStatus !== 'uploading';
 
   async function onSubmit(values) {
     const payload = { description: values.description, completionPercent: percentFixedAt100 ? 100 : values.completionPercent };
     if (attachment) payload.attachment = attachment;
+    let saved;
     try {
-      await createUpdate.mutateAsync(payload);
+      saved = await createUpdate.mutateAsync(payload);
     } catch {
       return; // global mutations.onError (App.jsx) already toasted the error.
     }
     toast.success('اپڈیٹ محفوظ ہو گئی');
+    if (!isAdmin) {
+      onClose();
+      return;
+    }
+    // An admin stays: an empty form for the next reply (so the same one is never posted twice), the
+    // percent as saved, a fresh attachment picker.
+    reset({ description: '', completionPercent: saved?.task?.completionPercent ?? payload.completionPercent });
+    setAttachment(null);
+    setAttachmentStatus('idle');
+    setAttachmentKey((prev) => prev + 1);
+    setJustSaved(true);
+  }
+
+  // "کام بند کریں": what is typed decides what the close carries (see the comment above).
+  async function startClose() {
+    const values = getValues();
+    const typed = String(values.description ?? '').trim();
+    if (typed) {
+      if (!(await trigger())) return;
+      setCloseStep({ reply: { description: typed, completionPercent: Number(values.completionPercent), ...(attachment ? { attachment } : {}) } });
+      return;
+    }
+    if (Number(values.completionPercent) !== (task?.completionPercent ?? 0) || attachment) {
+      await trigger(); // the form's own messages; nothing is closed
+      return;
+    }
+    setCloseStep({ reply: null });
+  }
+
+  async function handleCloseConfirm() {
+    try {
+      await closeTask.mutateAsync(closeStep.reply ?? undefined);
+    } catch {
+      return; // the global toast shows the error; the step and the draft stay for another try
+    }
     onClose();
   }
 
-  // "نہیں" — reuses onCloseTask directly, the exact same trigger the standalone Close Task
-  // button calls; DashboardPage's confirmation dialog + closeTask mutation handle the rest.
+  // The dialog's own dismissals (Escape, backdrop, ×): inside the close step they only leave the
+  // step — never the dialog, so the draft is never lost — and not while the close is under way.
+  function handleDismiss() {
+    if (closeStep) {
+      if (!closeTask.isPending) setCloseStep(null);
+      return;
+    }
+    onClose();
+  }
+
+  // "نہیں" — leads to the close step, the exact same flow as the standalone Close Task button.
   function handleReassignNo() {
     setReassignStep(null);
-    onCloseTask();
+    startClose();
   }
 
   async function handleReassignSave() {
@@ -152,13 +234,62 @@ function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
   );
   const sliderPercent = Number.isFinite(Number(completionPercent)) ? Math.min(Math.max(Number(completionPercent), 0), 100) : 0;
 
+  const savedLine = (
+    <p role="status" className="mt-3 flex items-center gap-2 rounded-tk-tile border border-tk-green-100 bg-tk-green-50 px-[14px] py-[8px] text-[13px] leading-tk-label text-tk-green-700">
+      <CircleCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
+      اپڈیٹ محفوظ ہو گئی
+    </p>
+  );
+
+  // The close step: the existing confirmation, with the final reply it will carry (if any) shown
+  // above it — labelled with the form's own field names.
+  const reply = closeStep?.reply;
+  const closeStepView = closeStep && (
+    <div data-close-step className="flex flex-col gap-[14px]">
+      {taskBanner}
+      <p className="flex items-center gap-2 text-[15px] font-semibold leading-tk-label text-tk-danger">
+        <TriangleAlert className="h-5 w-5 shrink-0" aria-hidden="true" />
+        کام بند کریں
+      </p>
+      {reply && (
+        <div data-final-reply className="flex flex-col gap-2 rounded-tk-tile border border-tk-line px-[14px] py-[10px] text-[14px] leading-tk-label text-tk-ink">
+          <div>
+            <span className={FIELD_LABEL}>تفصیل</span>
+            <p className="whitespace-pre-wrap break-words">{reply.description}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[13px] text-tk-ink-soft">تکمیل فیصد</span>
+            <span className="font-semibold" dir="ltr">
+              {reply.completionPercent}%
+            </span>
+          </div>
+          {reply.attachment && (
+            <div className="flex min-w-0 items-center gap-2 text-tk-ink-soft">
+              <Paperclip className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span className="min-w-0 truncate">{reply.attachment.fileName}</span>
+            </div>
+          )}
+        </div>
+      )}
+      <p className="text-[15px] leading-tk-label text-tk-ink-soft">اس کام کو بند کرنے کے بعد کوئی نئی اپڈیٹ درج نہیں کی جا سکے گی۔ کیا واقعی بند کرنا چاہتے ہیں؟</p>
+      <ModalFooter>
+        <BusyButton onClick={handleCloseConfirm} busy={closeTask.isPending} className={`${BUTTON_DANGER} flex-1 font-semibold`}>
+          ہاں، بند کریں
+        </BusyButton>
+        <button ref={stepCancelRef} type="button" onClick={() => setCloseStep(null)} disabled={closeTask.isPending} className={BUTTON_GHOST}>
+          منسوخ کریں
+        </button>
+      </ModalFooter>
+    </div>
+  );
+
   // Desktop redesign (approved mockup "4 — کام اپڈیٹ کریں") — the look only: the task banner, the
   // تفصیل box, a styled slider kept in step with the number box beside it (they are two views of
   // the one form value, as before), the attachment picker as a dashed drop area (the same hidden
   // file input underneath), "پرانی اپڈیٹس دیکھیں" as a link, and a footer whose buttons wrap on a
   // narrow screen. The reassign and close-task steps behave exactly as they did.
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="کام اپڈیٹ کریں" variant="redesign" icon={Pencil} subtitle="پیش رفت درج کریں" maxWidthClassName="max-w-[720px]">
+    <Modal isOpen={isOpen} onClose={handleDismiss} title="کام اپڈیٹ کریں" variant="redesign" icon={Pencil} subtitle="پیش رفت درج کریں" maxWidthClassName="max-w-[720px]">
       {isTaskLoading ? (
         <LoadingPhrase label="لوڈ ہو رہا ہے…" />
       ) : reassignStep ? (
@@ -224,9 +355,12 @@ function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
         </div>
       ) : (
         <>
-          {taskBanner}
+          {closeStep ? closeStepView : taskBanner}
+          {!closeStep && showSaved && savedLine}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="mt-3 flex flex-col gap-3">
+          {/* Kept mounted (only hidden) while the close step is open, so the draft — text, percent
+              and the attachment picker's own state — is exactly as it was when the admin returns. */}
+          <form onSubmit={handleSubmit(onSubmit)} hidden={Boolean(closeStep)} className={clsx('mt-3 flex flex-col gap-3', closeStep && 'hidden')}>
             <div>
               <label htmlFor="update-description" className={FIELD_LABEL}>
                 تفصیل
@@ -321,7 +455,7 @@ function UpdateModal({ isOpen, onClose, taskId, isAdmin, onCloseTask }) {
                   <button type="button" onClick={() => setReassignStep('confirm')} className={BUTTON_AMBER}>
                     ذمہ دار تبدیل کریں
                   </button>
-                  <button type="button" onClick={onCloseTask} className={BUTTON_DANGER}>
+                  <button ref={closeButtonRef} type="button" onClick={startClose} disabled={attachmentStatus === 'uploading'} className={BUTTON_DANGER}>
                     کام بند کریں
                   </button>
                 </>

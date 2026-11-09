@@ -92,8 +92,7 @@ describe('UpdateModal — the slider and the number box stay in sync', () => {
   });
 
   it('the footer: save, cancel — and for an Admin on an open task, reassign (amber) and close (danger)', async () => {
-    const onCloseTask = vi.fn();
-    renderModal({ isAdmin: true, onCloseTask });
+    renderModal({ isAdmin: true });
     await waitFor(() => expect(numberBox()).toHaveValue(40));
 
     expect(screen.getByRole('button', { name: 'محفوظ کریں' })).toHaveClass('flex-1', 'bg-tk-green-700');
@@ -104,7 +103,8 @@ describe('UpdateModal — the slider and the number box stay in sync', () => {
     expect(close.parentElement).toHaveClass('flex-wrap'); // the row wraps on a narrow screen
 
     fireEvent.click(close);
-    expect(onCloseTask).toHaveBeenCalledTimes(1); // the existing confirm flow takes over
+    // The close step takes over, inside this dialog.
+    expect(await screen.findByRole('button', { name: 'ہاں، بند کریں' })).toHaveClass('bg-tk-danger-bg', 'flex-1');
   });
 
   it('a normal user gets only save and cancel', async () => {

@@ -58,7 +58,7 @@ describe('the update form while a task is complete', () => {
 
   it('admin: the warning, and the percent stays free', async () => {
     getTask.mockResolvedValue(task('complete', 100));
-    renderModal({ isAdmin: true, onCloseTask: vi.fn() });
+    renderModal({ isAdmin: true });
 
     expect(await screen.findByRole('note')).toHaveTextContent(REOPEN_WARNING);
     expect(slider()).not.toBeDisabled();
@@ -67,7 +67,7 @@ describe('the update form while a task is complete', () => {
 
   it('admin: an update below 100% on a complete task is sent as entered', async () => {
     getTask.mockResolvedValue(task('complete', 100));
-    renderModal({ isAdmin: true, onCloseTask: vi.fn() });
+    renderModal({ isAdmin: true });
     await screen.findByRole('note');
     await waitFor(() => expect(percent()).toHaveValue(100));
 
