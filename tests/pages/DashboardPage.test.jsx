@@ -214,28 +214,29 @@ describe('DashboardPage (docs/08-ui-ux.md §3-6, docs/09-frontend-features.md §
     expect(screen.queryByLabelText('ترمیم کریں')).not.toBeInTheDocument();
   });
 
-  // Prompt — Close Task moved out of the row and into the Update Task modal's own footer
-  // (UpdateModal.test.jsx covers the button's own Admin-only/not-closed visibility rule); these
-  // integration tests just confirm DashboardPage still wires the SAME confirmation dialog +
-  // closeTask mutation to it, now reached by opening Update first.
-  it('close action (from inside the Update modal): opens a confirmation with the documented wording; Cancel does not call closeTask', async () => {
+  // Close Task lives in the Update Task modal's own footer, and its confirmation is a step inside
+  // that same dialog (UpdateModal.test.jsx covers the step itself); these integration tests confirm
+  // the page reaches it by opening Update first, and that closing calls closeTask.
+  it('close action (from inside the Update modal): asks the documented question in the same dialog; Cancel does not call closeTask', async () => {
     renderDashboard('admin');
     await screen.findByText('260801');
 
     fireEvent.click(screen.getByLabelText('اقدامات'));
     fireEvent.click(screen.getByLabelText('اپڈیٹ کریں'));
     await screen.findByRole('dialog', { name: 'کام اپڈیٹ کریں' });
-    fireEvent.click(await screen.findByText('کام بند کریں'));
+    fireEvent.click(await screen.findByRole('button', { name: 'کام بند کریں' }));
 
     expect(
       await screen.findByText('اس کام کو بند کرنے کے بعد کوئی نئی اپڈیٹ درج نہیں کی جا سکے گی۔ کیا واقعی بند کرنا چاہتے ہیں؟')
     ).toBeInTheDocument();
+    expect(screen.getAllByRole('dialog', { name: 'کام اپڈیٹ کریں' })).toHaveLength(1);
 
-    fireEvent.click(screen.getByText('منسوخ کریں'));
+    fireEvent.click(screen.getByRole('button', { name: 'منسوخ کریں' }));
     expect(closeTask).not.toHaveBeenCalled();
     expect(
       screen.queryByText('اس کام کو بند کرنے کے بعد کوئی نئی اپڈیٹ درج نہیں کی جا سکے گی۔ کیا واقعی بند کرنا چاہتے ہیں؟')
     ).not.toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'کام اپڈیٹ کریں' })).toBeInTheDocument(); // back to the form
   });
 
   it('close action (from inside the Update modal): confirming calls closeTask with the task id', async () => {

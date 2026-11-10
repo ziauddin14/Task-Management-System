@@ -16,6 +16,7 @@ vi.mock('../../../src/services/tasks.api.js', () => ({
     timeStatus: { type: 'remaining', days: 5 },
   }),
   updateTask: vi.fn().mockResolvedValue({ id: 't1', status: 'ongoing' }),
+  closeTask: vi.fn(),
 }));
 vi.mock('../../../src/services/taskUpdates.api.js', () => ({
   createTaskUpdate: vi.fn().mockResolvedValue({
@@ -38,9 +39,19 @@ vi.mock('react-hot-toast', () => ({ default: { success: vi.fn(), error: vi.fn() 
 
 import { createTaskUpdate } from '../../../src/services/taskUpdates.api.js';
 import { getTaskUpdates } from '../../../src/services/taskUpdates.api.js';
-import { getTask, updateTask } from '../../../src/services/tasks.api.js';
+import { getTask, updateTask, closeTask } from '../../../src/services/tasks.api.js';
 import { getUsers } from '../../../src/services/users.api.js';
+import { uploadAttachment } from '../../../src/services/uploads.api.js';
 import toast from 'react-hot-toast';
+
+const CLOSE_QUESTION = 'اس کام کو بند کرنے کے بعد کوئی نئی اپڈیٹ درج نہیں کی جا سکے گی۔ کیا واقعی بند کرنا چاہتے ہیں؟';
+const DESCRIPTION_ERROR = 'تفصیل کم از کم 3 حروف کی ہونی چاہیے';
+const button = (name) => screen.getByRole('button', { name });
+const typeReply = (text, percent) => {
+  if (text !== undefined) fireEvent.change(screen.getByLabelText('تفصیل'), { target: { value: text } });
+  if (percent !== undefined) fireEvent.change(screen.getByLabelText('تکمیل فیصد'), { target: { value: String(percent) } });
+};
+const selectFile = (file) => fireEvent.change(screen.getByLabelText('منسلکہ فائل'), { target: { files: [file] } });
 
 function renderModal(props) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
@@ -58,6 +69,9 @@ describe('UpdateModal (docs/08-ui-ux.md §7, docs/09-frontend-features.md §3)',
     updateTask.mockClear();
     getUsers.mockClear();
     toast.success.mockClear();
+    closeTask.mockReset();
+    closeTask.mockResolvedValue({ id: 't1', codeNumber: '260801', title: 'Sample task', status: 'closed', completionPercent: 40 });
+    uploadAttachment.mockReset();
   });
 
   it('pre-fills completion % from the task and shows the read-only header', async () => {
@@ -85,7 +99,7 @@ describe('UpdateModal (docs/08-ui-ux.md §7, docs/09-frontend-features.md §3)',
     expect(screen.getByLabelText('تکمیل فیصد')).toHaveValue(75);
   });
 
-  it('a valid submission (no attachment) calls createTaskUpdate, toasts, and closes', async () => {
+  it("a normal user's valid submission (no attachment) calls createTaskUpdate, toasts, and closes — as always", async () => {
     const onClose = vi.fn();
     renderModal({ onClose });
     await screen.findByText('Sample task');
@@ -121,15 +135,21 @@ describe('UpdateModal (docs/08-ui-ux.md §7, docs/09-frontend-features.md §3)',
       expect(screen.queryByText('کام بند کریں')).not.toBeInTheDocument();
     });
 
-    it('Admin + not-already-closed task: shows the button and calls onCloseTask on click', async () => {
-      const onCloseTask = vi.fn();
-      renderModal({ isAdmin: true, onCloseTask });
+    it('Admin + not-already-closed task: shows the button, which opens the inline close step (the existing wording)', async () => {
+      const onClose = vi.fn();
+      renderModal({ isAdmin: true, onClose });
       await screen.findByText('Sample task');
 
-      const closeButton = screen.getByText('کام بند کریں');
-      expect(closeButton).toBeInTheDocument();
-      fireEvent.click(closeButton);
-      expect(onCloseTask).toHaveBeenCalled();
+      fireEvent.click(button('کام بند کریں'));
+
+      expect(await screen.findByText(CLOSE_QUESTION)).toBeInTheDocument();
+      expect(button('ہاں، بند کریں')).toBeInTheDocument();
+      // The same dialog — no second one on top — and the form is out of view, not gone.
+      expect(screen.getAllByRole('dialog')).toHaveLength(1);
+      expect(screen.queryByRole('button', { name: 'محفوظ کریں' })).not.toBeInTheDocument();
+      expect(screen.getByLabelText('تفصیل', { selector: 'textarea' })).toBeInTheDocument();
+      expect(closeTask).not.toHaveBeenCalled();
+      expect(onClose).not.toHaveBeenCalled();
     });
 
     it('Admin + already-closed task: the button is hidden entirely (not just disabled)', async () => {
@@ -151,7 +171,7 @@ describe('UpdateModal (docs/08-ui-ux.md §7, docs/09-frontend-features.md §3)',
   });
 
   // Prompt — reassign mid-task without losing update history; same Admin-only/not-closed
-  // visibility rule as Close Task, and "نہیں" reuses onCloseTask directly (no duplicated flow).
+  // visibility rule as Close Task, and "نہیں" leads to the same close step (no duplicated flow).
   describe('Change Assignee footer button', () => {
     it('is not shown for a non-Admin user', async () => {
       renderModal({ isAdmin: false });
@@ -187,15 +207,16 @@ describe('UpdateModal (docs/08-ui-ux.md §7, docs/09-frontend-features.md §3)',
       expect(getUsers).not.toHaveBeenCalled();
     });
 
-    it('"نہیں" calls onCloseTask directly — the exact same trigger as the standalone Close Task button', async () => {
-      const onCloseTask = vi.fn();
-      renderModal({ isAdmin: true, onCloseTask });
+    it('"نہیں" leads to the close step — the exact same flow as the standalone Close Task button', async () => {
+      renderModal({ isAdmin: true });
       await screen.findByText('Sample task');
 
       fireEvent.click(screen.getByText('ذمہ دار تبدیل کریں'));
       fireEvent.click(screen.getByText('نہیں'));
 
-      expect(onCloseTask).toHaveBeenCalled();
+      expect(await screen.findByText(CLOSE_QUESTION)).toBeInTheDocument();
+      fireEvent.click(button('ہاں، بند کریں'));
+      await waitFor(() => expect(closeTask).toHaveBeenCalledWith('t1'));
       expect(updateTask).not.toHaveBeenCalled();
     });
 
@@ -259,6 +280,221 @@ describe('UpdateModal (docs/08-ui-ux.md §7, docs/09-frontend-features.md §3)',
       await screen.findByLabelText('نیا ذمہ دار منتخب کریں');
 
       expect(screen.getByText('محفوظ کریں')).toBeDisabled();
+    });
+  });
+
+  // An admin's save no longer closes the dialog — so the task can be closed right here afterwards,
+  // without finding it again in a list it may have left.
+  describe("an admin's save keeps the dialog open", () => {
+    it('saves, toasts, stays open: an empty form, the percent as saved, "اپڈیٹ محفوظ ہو گئی" in view', async () => {
+      const onClose = vi.fn();
+      renderModal({ isAdmin: true, onClose });
+      await screen.findByText('Sample task');
+
+      typeReply('آج کافی کام ہوا', 70);
+      fireEvent.click(button('محفوظ کریں'));
+
+      await waitFor(() => expect(createTaskUpdate).toHaveBeenCalledWith('t1', { description: 'آج کافی کام ہوا', completionPercent: 70 }));
+      expect(toast.success).toHaveBeenCalledWith('اپڈیٹ محفوظ ہو گئی');
+      expect(await screen.findByText('اپڈیٹ محفوظ ہو گئی')).toHaveAttribute('role', 'status');
+      expect(screen.getByLabelText('تفصیل')).toHaveValue('');
+      expect(screen.getByLabelText('تکمیل فیصد')).toHaveValue(70);
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it('never posts the same reply twice: saving the emptied form again shows the message and posts nothing', async () => {
+      renderModal({ isAdmin: true });
+      await screen.findByText('Sample task');
+      typeReply('آج کافی کام ہوا', 70);
+      fireEvent.click(button('محفوظ کریں'));
+      await screen.findByText('اپڈیٹ محفوظ ہو گئی');
+
+      fireEvent.click(button('محفوظ کریں'));
+
+      expect(await screen.findByText(DESCRIPTION_ERROR)).toBeInTheDocument();
+      expect(createTaskUpdate).toHaveBeenCalledTimes(1);
+    });
+
+    it('the attachment goes with the save once, then the picker is fresh again', async () => {
+      uploadAttachment.mockResolvedValue({ driveFileId: 'd1', fileName: 'report.pdf', url: 'https://drive/d1' });
+      renderModal({ isAdmin: true });
+      await screen.findByText('Sample task');
+      typeReply('رپورٹ لگا دی', 70);
+      selectFile(new File(['x'], 'report.pdf', { type: 'application/pdf' }));
+      await waitFor(() => expect(button('محفوظ کریں')).not.toBeDisabled());
+      expect(screen.getByText('report.pdf')).toBeInTheDocument();
+
+      fireEvent.click(button('محفوظ کریں'));
+
+      await waitFor(() =>
+        expect(createTaskUpdate).toHaveBeenCalledWith('t1', {
+          description: 'رپورٹ لگا دی',
+          completionPercent: 70,
+          attachment: { driveFileId: 'd1', fileName: 'report.pdf', url: 'https://drive/d1' },
+        })
+      );
+      await screen.findByText('اپڈیٹ محفوظ ہو گئی');
+      expect(screen.queryByText('report.pdf')).not.toBeInTheDocument();
+    });
+
+    it('the saved line goes once a new reply is started', async () => {
+      renderModal({ isAdmin: true });
+      await screen.findByText('Sample task');
+      typeReply('آج کافی کام ہوا', 70);
+      fireEvent.click(button('محفوظ کریں'));
+      await screen.findByText('اپڈیٹ محفوظ ہو گئی');
+
+      typeReply('اگلی بات');
+
+      expect(screen.queryByText('اپڈیٹ محفوظ ہو گئی')).not.toBeInTheDocument();
+    });
+
+    it('then closing from the same dialog: the saved reply is not sent again — a plain close', async () => {
+      const onClose = vi.fn();
+      renderModal({ isAdmin: true, onClose });
+      await screen.findByText('Sample task');
+      typeReply('آج کافی کام ہوا', 70);
+      fireEvent.click(button('محفوظ کریں'));
+      await screen.findByText('اپڈیٹ محفوظ ہو گئی');
+
+      fireEvent.click(button('کام بند کریں'));
+      fireEvent.click(await screen.findByRole('button', { name: 'ہاں، بند کریں' }));
+
+      await waitFor(() => expect(onClose).toHaveBeenCalled());
+      expect(closeTask).toHaveBeenCalledTimes(1);
+      expect(closeTask.mock.calls[0]).toEqual(['t1']);
+      expect(createTaskUpdate).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('closing with what is typed (decision 6)', () => {
+    it('nothing typed: a plain close, without a body, and the dialog closes', async () => {
+      const onClose = vi.fn();
+      renderModal({ isAdmin: true, onClose });
+      await screen.findByText('Sample task');
+
+      fireEvent.click(button('کام بند کریں'));
+      expect(document.querySelector('[data-final-reply]')).toBeNull();
+      fireEvent.click(button('ہاں، بند کریں'));
+
+      await waitFor(() => expect(onClose).toHaveBeenCalled());
+      expect(closeTask.mock.calls[0]).toEqual(['t1']);
+    });
+
+    it('a typed reply goes WITH the close, in the same request — shown in the step, never posted on its own', async () => {
+      const onClose = vi.fn();
+      renderModal({ isAdmin: true, onClose });
+      await screen.findByText('Sample task');
+      typeReply('  حتمی جواب: باقی کام اگلے ماہ  ', 70);
+
+      fireEvent.click(button('کام بند کریں'));
+
+      const preview = await screen.findByText('حتمی جواب: باقی کام اگلے ماہ');
+      expect(preview.closest('[data-final-reply]')).toHaveTextContent('70%');
+      fireEvent.click(button('ہاں، بند کریں'));
+
+      await waitFor(() => expect(closeTask).toHaveBeenCalledWith('t1', { description: 'حتمی جواب: باقی کام اگلے ماہ', completionPercent: 70 }));
+      expect(createTaskUpdate).not.toHaveBeenCalled();
+      await waitFor(() => expect(onClose).toHaveBeenCalled());
+    });
+
+    it('an attachment goes with the reply', async () => {
+      uploadAttachment.mockResolvedValue({ driveFileId: 'd1', fileName: 'report.pdf', url: 'https://drive/d1' });
+      renderModal({ isAdmin: true });
+      await screen.findByText('Sample task');
+      typeReply('رپورٹ ساتھ ہے', 90);
+      selectFile(new File(['x'], 'report.pdf', { type: 'application/pdf' }));
+      await waitFor(() => expect(button('کام بند کریں')).not.toBeDisabled());
+
+      fireEvent.click(button('کام بند کریں'));
+      fireEvent.click(await screen.findByRole('button', { name: 'ہاں، بند کریں' }));
+
+      await waitFor(() =>
+        expect(closeTask).toHaveBeenCalledWith('t1', {
+          description: 'رپورٹ ساتھ ہے',
+          completionPercent: 90,
+          attachment: { driveFileId: 'd1', fileName: 'report.pdf', url: 'https://drive/d1' },
+        })
+      );
+    });
+
+    it('only the percent changed, no description: the form message shows, no step, nothing closed', async () => {
+      renderModal({ isAdmin: true });
+      await screen.findByText('Sample task');
+      typeReply(undefined, 70);
+
+      fireEvent.click(button('کام بند کریں'));
+
+      expect(await screen.findByText(DESCRIPTION_ERROR)).toBeInTheDocument();
+      expect(screen.queryByText(CLOSE_QUESTION)).not.toBeInTheDocument();
+      expect(screen.getByLabelText('تکمیل فیصد')).toHaveValue(70);
+      expect(closeTask).not.toHaveBeenCalled();
+    });
+
+    it('a description under 3 characters: the form message shows, no step', async () => {
+      renderModal({ isAdmin: true });
+      await screen.findByText('Sample task');
+      typeReply('ok', 70);
+
+      fireEvent.click(button('کام بند کریں'));
+
+      expect(await screen.findByText(DESCRIPTION_ERROR)).toBeInTheDocument();
+      expect(screen.queryByText(CLOSE_QUESTION)).not.toBeInTheDocument();
+      expect(closeTask).not.toHaveBeenCalled();
+    });
+
+    it('Escape in the step closes only the step: the dialog stays, the draft is intact', async () => {
+      const onClose = vi.fn();
+      renderModal({ isAdmin: true, onClose });
+      await screen.findByText('Sample task');
+      typeReply('حتمی جواب', 70);
+      fireEvent.click(button('کام بند کریں'));
+      await screen.findByText(CLOSE_QUESTION);
+
+      fireEvent.keyDown(window, { key: 'Escape' });
+
+      await waitFor(() => expect(screen.queryByText(CLOSE_QUESTION)).not.toBeInTheDocument());
+      expect(onClose).not.toHaveBeenCalled();
+      expect(screen.getByLabelText('تفصیل')).toHaveValue('حتمی جواب');
+      expect(screen.getByLabelText('تکمیل فیصد')).toHaveValue(70);
+      await waitFor(() => expect(button('کام بند کریں')).toHaveFocus()); // focus moves in an effect
+      expect(closeTask).not.toHaveBeenCalled();
+    });
+
+    it("the step's own منسوخ کریں goes back to the form, also with the draft intact; the step opens on it", async () => {
+      renderModal({ isAdmin: true });
+      await screen.findByText('Sample task');
+      typeReply('حتمی جواب', 70);
+      fireEvent.click(button('کام بند کریں'));
+      await screen.findByText(CLOSE_QUESTION);
+      await waitFor(() => expect(button('منسوخ کریں')).toHaveFocus()); // focus moves in an effect
+
+      fireEvent.click(button('منسوخ کریں'));
+
+      expect(screen.queryByText(CLOSE_QUESTION)).not.toBeInTheDocument();
+      expect(screen.getByLabelText('تفصیل')).toHaveValue('حتمی جواب');
+    });
+
+    it('a failed close keeps the step and the draft; trying again closes', async () => {
+      const onClose = vi.fn();
+      closeTask.mockRejectedValueOnce(new Error('نیٹ ورک کا مسئلہ'));
+      renderModal({ isAdmin: true, onClose });
+      await screen.findByText('Sample task');
+      typeReply('حتمی جواب', 70);
+      fireEvent.click(button('کام بند کریں'));
+
+      fireEvent.click(await screen.findByRole('button', { name: 'ہاں، بند کریں' }));
+      await waitFor(() => expect(closeTask).toHaveBeenCalledTimes(1));
+      await waitFor(() => expect(button('ہاں، بند کریں')).not.toBeDisabled());
+      expect(screen.getByText(CLOSE_QUESTION)).toBeInTheDocument();
+      expect(onClose).not.toHaveBeenCalled();
+      expect(screen.getByLabelText('تفصیل', { selector: 'textarea' })).toHaveValue('حتمی جواب');
+
+      fireEvent.click(button('ہاں، بند کریں'));
+
+      await waitFor(() => expect(onClose).toHaveBeenCalled());
+      expect(closeTask).toHaveBeenCalledTimes(2);
+      expect(closeTask.mock.calls[1]).toEqual(['t1', { description: 'حتمی جواب', completionPercent: 70 }]);
     });
   });
 });

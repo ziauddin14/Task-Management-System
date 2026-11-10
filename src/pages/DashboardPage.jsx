@@ -7,7 +7,6 @@ import { useDashboardFilters } from '../hooks/useDashboardFilters.js';
 import { usePageSize } from '../hooks/usePageSize.js';
 import { useTasks } from '../hooks/useTasks.js';
 import { useDashboardSummary } from '../hooks/useDashboardSummary.js';
-import { useCloseTask } from '../hooks/useCloseTask.js';
 import { useColumnVisibility } from '../hooks/useColumnVisibility.js';
 import { useExportReport } from '../hooks/useExportReport.js';
 import { useTriggerReminders } from '../hooks/useTriggerReminders.js';
@@ -25,7 +24,6 @@ import UpdateModal from '../components/task/UpdateModal.jsx';
 import PreviousUpdatesModal from '../components/task/PreviousUpdatesModal.jsx';
 import SyntheticRatingDialog from '../components/task/SyntheticRatingDialog.jsx';
 import SendNotificationDialog from '../components/admin/SendNotificationDialog.jsx';
-import ConfirmDialog from '../components/common/ConfirmDialog.jsx';
 import LoadingPhrase from '../components/common/LoadingPhrase.jsx';
 import BusyButton from '../components/common/BusyButton.jsx';
 import BusyRegion from '../components/common/BusyRegion.jsx';
@@ -79,7 +77,7 @@ function DashboardPage({ view = 'dashboard' }) {
   const isSummaryRefreshing = statusSummaryQuery.isPlaceholderData || ratingSummaryQuery.isPlaceholderData;
 
   const [formModal, setFormModal] = useState(null); // { mode: 'create' } | { mode: 'edit', task }
-  const [closingTask, setClosingTask] = useState(null);
+  // The update dialog is also where a task is closed (UpdateModal owns that step).
   const [updatingTask, setUpdatingTask] = useState(null);
   const [viewingUpdatesTask, setViewingUpdatesTask] = useState(null);
   // null (closed) | { task: null } (general "نئی اطلاع بھیجیں") | { task } (row's "یاددہانی
@@ -88,7 +86,6 @@ function DashboardPage({ view = 'dashboard' }) {
   const [sendNotificationState, setSendNotificationState] = useState(null);
   // Admin-only: the task whose synthetic ("تخمینی") rating is being changed, or null.
   const [syntheticRatingTask, setSyntheticRatingTask] = useState(null);
-  const closeTaskMutation = useCloseTask(closingTask?.id);
 
   // Lifted here (rather than owned inside TaskTable, as it was through Phase 10.5) — TaskTable
   // reads it to decide which columns to render, and the header's "ایکشن" menu's "کالمز" item
@@ -101,12 +98,6 @@ function DashboardPage({ view = 'dashboard' }) {
 
   function handleKpiClick(paramKey, value) {
     toggleKpiFilter(paramKey, value);
-  }
-
-  function handleCloseConfirm() {
-    closeTaskMutation.mutate(undefined, {
-      onSuccess: () => setClosingTask(null),
-    });
   }
 
   // docs/09-frontend-features.md §8 step 2 — "automatically carries the dashboard's current URL
@@ -136,29 +127,11 @@ function DashboardPage({ view = 'dashboard' }) {
         />
       )}
 
-      {isAdmin && (
-        <ConfirmDialog
-          isOpen={Boolean(closingTask)}
-          title="کام بند کریں"
-          message="اس کام کو بند کرنے کے بعد کوئی نئی اپڈیٹ درج نہیں کی جا سکے گی۔ کیا واقعی بند کرنا چاہتے ہیں؟"
-          confirmLabel="ہاں، بند کریں"
-          cancelLabel="منسوخ کریں"
-          tone="danger"
-          onConfirm={handleCloseConfirm}
-          onCancel={() => setClosingTask(null)}
-          isLoading={closeTaskMutation.isPending}
-        />
-      )}
-
       <UpdateModal
         isOpen={Boolean(updatingTask)}
         taskId={updatingTask?.id}
         onClose={() => setUpdatingTask(null)}
         isAdmin={isAdmin}
-        onCloseTask={() => {
-          setClosingTask(updatingTask);
-          setUpdatingTask(null);
-        }}
       />
 
       <PreviousUpdatesModal

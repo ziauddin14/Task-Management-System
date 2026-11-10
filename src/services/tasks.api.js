@@ -30,8 +30,11 @@ export async function updateTask(taskId, payload) {
 }
 
 // PATCH /tasks/:id/close — no body.
-export async function closeTask(taskId) {
-  const response = await apiClient.patch(`/tasks/${taskId}/close`);
+// PATCH /tasks/:id/close — without a body the plain close; with a final reply
+// ({ description, completionPercent, attachment? }) the reply is saved and the task closed together.
+export async function closeTask(taskId, finalReply) {
+  const url = `/tasks/${taskId}/close`;
+  const response = finalReply ? await apiClient.patch(url, finalReply) : await apiClient.patch(url);
   return response.data.data;
 }
 
